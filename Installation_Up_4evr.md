@@ -20,7 +20,7 @@ You’ll need to go through and turn off or disable several different automatic 
 
 In System Preferences:
 
- - **Desktop and Screensaver:** Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo
+ - **Desktop and Screensaver:** Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
  - **Energy Saver:** Turn Display Sleep and Computer Sleep to Never. Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
  - **Users and Groups:** ->Login Options: Enable Automatic Login
  - **Software update:** Disable automatic updates.
@@ -71,7 +71,7 @@ Also note (!) that you may need to point your launch daemon to a file within you
 
 A launchd example from admsyn: https://gist.github.com/4140204
 
-Of course you could make the launchd plist yourself for free from a template like above. One quick method to setting up Launchd is to use Lingon ($4.99 in the App Store) or [Lingon X][11] 
+Of course you could make the launchd plist yourself for free from a template like above. You can read all about them with the command "man launchd.plist" typed into terminal to get an idea of what each toggle controls. One quick method to setting up Launchd is to use Lingon ($4.99 in the App Store) or [Lingon X][11] 
 
 In Lingon, hit the + to create a new launchd plist. Just make it a standard launch agent. Now Set up your plist like so:
 
