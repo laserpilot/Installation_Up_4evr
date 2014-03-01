@@ -1,5 +1,6 @@
-
 The original version of the article is [here][1] - I wanted to post it here to more easily/consistently update it and open it up to other people's modifications tips and suggestions - a Linux/Windows version would be great to build out too!
+
+Edited the article with https://stackedit.io/# for help with rendering Github Flavored Markup
 
 ---------
 At work I recently had to set up a four installations of different configurations that would need to run all day, every day, 24 hours a day for a couple months with as few crashes or glitches as possible and without anyone going to check on them. This is something that a lot of media artists need to do all the time, and there are a bunch of different tricks and tips to keeping things up for an extended period, I figured I’d share my findings. There are alternate ways to do many of these tasks and this is only one road so please share some tips you’ve picked up out in the field down in the comments box below.
