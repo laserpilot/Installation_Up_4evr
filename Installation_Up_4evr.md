@@ -46,6 +46,10 @@ I would also look at this filepath and you can rename files in here to temporari
 
 You can rename "Notification Center" to "Notification Center_DEACTIVATE" or something (or you can move it) - and then you won't get any obnoxiously "helpful" Notification Center popups.
 
+If necessary, You can also hide all of the desktop icons with this terminal command:
+
+> defaults write com.apple.finder CreateDesktop -bool false
+
 
 **Step 2: Boot into your software**
 -------------------------------
