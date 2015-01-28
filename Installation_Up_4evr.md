@@ -22,18 +22,21 @@ In System Preferences:
 
  - **Desktop and Screensaver:** Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
  - **Energy Saver:** Turn Display Sleep and Computer Sleep to Never. Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
- - **Users and Groups:** ->Login Options: Enable Automatic Login
+ - **Users and Groups:** Go to Login Options (above the padlock) and enable "Automatic Login"
  - **Software update:** Disable automatic updates.
- - **Notifications:** Disable any potential Notification Center alerts (banners or popups) from specific apps
  - **Sharing:**  If you are running your main computer without a monitor or in an inaccessible area, don’t forget to turn on File sharing and Screen sharing. This will allow you to access the computer and control it if you're on the same network (optional if you’re concerned about security).
  - **Network:** If you don’t need remote access or don’t need Internet access for the installation, it’s not a bad idea to disable the Wifi so the “please select a wireless network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
- - **Bluetooth** :If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
+ - **Bluetooth** If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
  - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
+ - **Notification Center:** You can either ![disable Notification Center completely][30], or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
 
 ![BluetoothSettings][3]
 ![SecuritySettings][4]
 ![SharingSettings][5]
 ![Login_items][6]
+![Power_settings][29]
+![Update_disable][27]
+![Notification_Center][28]
 
 You can also disable the "This Application Unexpectedly Quit" and the subsequent bug report that comes with it by running this command in terminal OR renaming the Problem Reporter app:
 
@@ -81,9 +84,7 @@ In Lingon, hit the + to create a new launchd plist. Just make it a standard laun
 
 ![LingonSetup][12]
 
-One additional/optional thing you can add to this is to put an additional key in the plist for a “Successful Exit”. By adding this, your app won’t re-open when it has detected that it closed normally (ie You just hit escape intentionally, it didn’t crash). Can be useful if you’re trying to check something and OS X won’t stop re-opening the app on you. To easily add this to the key, just hit “expert mode” on the bottom of the Lingon window after selecting your newly made script on the left. Then modify the relevant bits highlighted in the screenshot:
-
-![LingonplistSetup][13]
+One additional/optional thing you can add to this is to put an additional key in the plist for a “Successful Exit”. By adding this, your app won’t re-open when it has detected that it closed normally (ie You just hit escape intentionally, it didn’t crash). Can be useful if you’re trying to check something and OS X won’t stop re-opening the app on you. To easily add this to the key, click the advanced tab and click the checkbox for "Successful exit" - or just add it manually as it in the above screenshot.
 
 **Shell script+Cron Job method**
 
@@ -101,7 +102,7 @@ Save that file as something like “KeepOpen.sh” and keep it next to your appl
 After creating that file, you’ll need to make it executable. To do this, open the Terminal and in a new window type “chmod +x ” and then enter the path to the shell script you just created (you can either drag the shell script into the terminal window or manually type it). It would look something like this:
 
     	
-    Laser-MacBook-Pro:~ laser$ chmod +x /Users/laser/Desktop/KeepOpen.sh
+    4Evr-MacBook-Pro:~ Forever4Evr$ chmod +x /Users/Forever4Evr/Desktop/KeepOpen.sh
 
 After you have made it executable, you’re now ready to set it up as a cronjob. Tip: to test the script, you can change the extension at the end to KeepOpen.command as an alternative to opening it with Terminal, but the same thing gets done.
 
@@ -308,3 +309,7 @@ Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windo
   [24]: http://blairneal.com/blog/memory-leak-murderer/
   [25]: http://blairneal.com/blog/applescript-to-automatically-fullscreen-madmapper-for-installations/
   [26]: http://www.bantherewind.com/stayup
+  [27]: https://raw.githubusercontent.com/laserpilot/Installation_Up_4evr/master/Images/Auto_update_disable.png
+  [28]: https://raw.githubusercontent.com/laserpilot/Installation_Up_4evr/master/Images/Notification_Center_disable.png
+  [29]: https://github.com/laserpilot/Installation_Up_4evr/blob/master/Images/PowerSettings.png
+  [30]: http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/
