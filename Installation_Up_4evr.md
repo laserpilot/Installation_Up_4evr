@@ -275,10 +275,13 @@ Alternate resources:
 This is an amazing addon for openFrameworks apps that keeps your application open even after a large range of failures: https://github.com/toolbits/ofxWatchdog
 
 http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations
+
 **LINUX**
+
 https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md
 
 **RASPBERRY PI**
+
 https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54
 
 **WINDOWS:** 
