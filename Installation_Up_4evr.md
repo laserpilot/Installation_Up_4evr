@@ -28,7 +28,7 @@ In System Preferences:
  - **Network:** If you don’t need remote access or don’t need Internet access for the installation, it’s not a bad idea to disable the Wifi so the “please select a wireless network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
  - **Bluetooth** If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
  - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
- - **Notification Center:** You can either ![disable Notification Center completely][30], or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
+ - **Notification Center:** You can either [disable Notification Center completely][30], or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
 
 ![BluetoothSettings][3]
 ![SecuritySettings][4]
