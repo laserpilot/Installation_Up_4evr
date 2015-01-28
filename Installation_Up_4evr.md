@@ -275,9 +275,13 @@ Alternate resources:
 This is an amazing addon for openFrameworks apps that keeps your application open even after a large range of failures: https://github.com/toolbits/ofxWatchdog
 
 http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations
+**LINUX**
+https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md
 
-http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
+**RASPBERRY PI**
+https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54
 
+**WINDOWS:** 
 If you’re looking for help with this task with Windows, check out this awesome script [StayUp][26] from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html 
 
 Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
