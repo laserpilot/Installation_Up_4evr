@@ -293,6 +293,8 @@ This is an amazing addon for openFrameworks apps that keeps your application ope
 [http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations](http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations
 )
 
+[Similar guide meant for live visuals/VJing](http://vjforums.info/wiki/setting-up-os-x-for-vjing/)
+
 [Nick Hardeman's utility for setting all of these from one location](http://nickhardeman.com/610/openframeworks-configuring-osx-for-a-long-term-installation/)
 
 Nick Hardeman's [ofxMacUtils](https://github.com/NickHardeman/ofxMacUtils)
