@@ -58,6 +58,8 @@ I would also look at this filepath and you can rename files in here to temporari
 
 You can rename "Notification Center" to "Notification Center_DEACTIVATE" or something (or you can move it) - and then you won't get any obnoxiously "helpful" Notification Center popups.
 
+After OSX 10.9 - Apple enabled this strange feature called App Nap that detects when an App isn't doing much and makes it use even less resources - could be problematic - [check this page out for how to disable for now](http://www.tekrevue.com/tip/disable-app-nap-os-x-mavericks/)
+
 If necessary, You can also hide all of the desktop icons with this terminal command:
 
 ```bash
