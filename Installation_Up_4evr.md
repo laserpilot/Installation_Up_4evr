@@ -108,11 +108,13 @@ One additional/optional thing you can add to this is to put an additional key in
 This method is sort of deprecated in relation to the launchd method - you can run shell scripts with Lingon and launchd in the same manner as what we've got here. Shell scripting is your best friend. With the help of the script below and an application called CronniX (or use Lingon) , you will be able to use a cronjob to check the system’s list of currently running processes. If your app does not appear on the list, then the script will open it again, otherwise it won’t do anything. Either download the script or type the following into a text editor, replacing Twitter.app with your app’s name and filepath. Don’t forget the “.app” extension in the if statement!:
 
 	\#!/bin/sh 
-		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ] then
-		echo "Twitter not running. opening..."
-		open /Applications/Twitter.app 
+		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ] 
+		then
+			echo "Twitter not running. opening..."
+			open /Applications/Twitter.app 
 		else
-		echo "Twitter running" fi
+			echo "Twitter running"
+		fi
 
 Save that file as something like “KeepOpen.sh” and keep it next to your application or somewhere convenient.
 
