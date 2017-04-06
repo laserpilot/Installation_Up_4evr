@@ -20,39 +20,78 @@ You’ll need to go through and turn off or disable several different automatic 
 
 Nick Hardeman has made a utility application for setting all of these attributes and more from one location - [check it out here](http://nickhardeman.com/610/openframeworks-configuring-osx-for-a-long-term-installation/)
 
+**Note:** As of macOS 10.11 some system settings can only be altered by turning off Apples System Integrity Protection (SIP) setting. It is recommended that you leave SIP enabled unless you absolutely need to. For example if you would like to completely disable the Notification Center by unloading the launch agent you must disable SIP.
+
+As Apple describes it : "System Integrity Protection is a security technology in OS X El Capitan and later that's designed to help prevent potentially malicious software from modifying protected files and folders on your Mac. System Integrity protection restricts the root user account and limits the actions that the root user can perform on protected parts of the Mac operating system"
+
+SIP will not allow you (even if you are an admin) to modify files or settings located in
+* /System
+* /usr
+* /bin
+* /sbin
+* Apps that are pre-installed with OS X
+
+To disable SIP
+1. Restart your Mac.
+1. Before OS X starts up, hold down Command-R and keep it held down until you see an Apple icon and a progress bar. Release. This boots you into Recovery.
+1. From the Utilities menu, select Terminal.
+1. At the prompt type exactly the following and then press Return:
+```bash
+csrutil disable
+```
+1. Terminal should display a message that SIP was disabled.
+From the  menu, select Restart.
+
 In System Preferences:
 
  - **Desktop and Screensaver:** Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
+
  - **Energy Saver:** Turn Display Sleep and Computer Sleep to Never. Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
- - **Users and Groups:** Go to Login Options (above the padlock) and enable "Automatic Login"
- - **Software update:** Disable automatic updates.
- - **Sharing:**  If you are running your main computer without a monitor or in an inaccessible area, don’t forget to turn on File sharing and Screen sharing. This will allow you to access the computer and control it if you're on the same network (optional if you’re concerned about security).
- - **Network:** If you don’t need remote access or don’t need Internet access for the installation, it’s not a bad idea to disable the Wifi so the “please select a wireless network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
- - **Bluetooth** If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
- - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
- - **Notification Center:** You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/), or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
+ Restart automatically after computer freezes is enabled by default as of 10.8. You can view the current status of both of these settings in the terminal with the following command.
+ ```bash
+sudo systemsetup -getrestartfreeze -getrestartpowerfailure
+ ```
+ ![Power_settings](images/PowerSettings.png)
 
-![BluetoothSettings](images/Bluetooth_settings.png)
-
-![SecuritySettings](images/Security_settings.png)
-
-![SharingSettings](images/Sharing_settings.png)
+ - **Users and Groups:** Go to Login Options (above the padlock) and enable "Automatic Login" <br> <br>
+**IMPORTANT:** If you have any security concerns at all do  not automatically login to an admin user. Create a new standard user and use this setting to login to that account.
 
 ![Login_items](images/Auto_login.png)
 
-![Power_settings](images/PowerSettings.png)
+ - **Software update:** Disable automatic updates.
 
-![Update_disable](images/Auto_update_disable.png)
+  1. Go to System Preferences from the  Apple menu, then choose “Software Update”
+  1. Uncheck the box for “Automatically Check for Updates”
+
+ ![Update_disable](images/Auto_update_disable.png)
+
+ - **Sharing:**  If you are running your main computer without a monitor or in an inaccessible area, don’t forget to turn on File sharing and Screen sharing. This will allow you to access the computer and control it if you're on the same network (optional if you’re concerned about security).
+
+ ![SharingSettings](images/Sharing_settings.png)
+
+ - **Network:** If you don’t need remote access or don’t need Internet access for the installation, it’s not a bad idea to disable the Wifi so the “please select a wireless network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
+
+ - **Bluetooth** If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
+
+ ![BluetoothSettings](images/Bluetooth_settings.png)
+
+ - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
+
+ ![SecuritySettings](images/Security_settings.png)
+
+ - **Notification Center:** You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/) (requires disabling SIP) , or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
 
 ![Notification_Center](images/Notification_Center_disable.png)
 
 You can also disable the "This Application Unexpectedly Quit" and the subsequent bug report that comes with it by running this command in terminal OR renaming the Problem Reporter app:
 
+(Requires disabling SIP)
+
 ```bash
 sudo chmod 000 /System/Library/CoreServices/Problem\ Reporter.app
 ```
 
-Another useful tool for modifying certain OSX .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover. 
+Another useful tool for modifying certain OSX .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover.
 
 I would also look at this filepath and you can rename files in here to temporarily disable them on the computer you're using: /System/Library/CoreServices
 
@@ -77,7 +116,7 @@ Things get unplugged, power goes out, not everyone has budget or space for a bat
 **Step 3: Keep it up (champ!)**
 ---------------------------
 
-There are several ways to make sure your application goes up and stays up - 
+There are several ways to make sure your application goes up and stays up -
 
 **Launchd**
 
@@ -91,8 +130,8 @@ Also note (!) that you may need to point your launch daemon to a file within you
 
 A launchd example from [admsyn](https://gist.github.com/4140204)
 
-Of course you could make the launchd plist yourself for free from a template like above. You can read all about them with the command "man launchd.plist" typed into terminal to get an idea of what each toggle controls. One quick method to setting up Launchd is to use Lingon ($4.99 in the App Store) or [Lingon X](http://www.peterborgapps.com/lingon/) 
- 
+Of course you could make the launchd plist yourself for free from a template like above. You can read all about them with the command "man launchd.plist" typed into terminal to get an idea of what each toggle controls. One quick method to setting up Launchd is to use Lingon ($4.99 in the App Store) or [Lingon X](http://www.peterborgapps.com/lingon/)
+
 
 In Lingon, hit the + to create a new launchd plist. Just make it a standard launch agent. Now Set up your plist like so:
 
@@ -107,10 +146,10 @@ One additional/optional thing you can add to this is to put an additional key in
 
 This method is sort of deprecated in relation to the launchd method - you can run shell scripts with Lingon and launchd in the same manner as what we've got here. Shell scripting is your best friend. With the help of the script below and an application called CronniX (or use Lingon) , you will be able to use a cronjob to check the system’s list of currently running processes. If your app does not appear on the list, then the script will open it again, otherwise it won’t do anything. Either download the script or type the following into a text editor, replacing Twitter.app with your app’s name and filepath. Don’t forget the “.app” extension in the if statement!:
 
-	\#!/bin/sh 
+	\#!/bin/sh
 		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ] then
 		echo "Twitter not running. opening..."
-		open /Applications/Twitter.app 
+		open /Applications/Twitter.app
 		else
 		echo "Twitter running" fi
 
@@ -118,7 +157,7 @@ Save that file as something like “KeepOpen.sh” and keep it next to your appl
 
 After creating that file, you’ll need to make it executable. To do this, open the Terminal and in a new window type “chmod +x ” and then enter the path to the shell script you just created (you can either drag the shell script into the terminal window or manually type it). It would look something like this:
 
-    	
+
     4Evr-MacBook-Pro:~ Forever4Evr$ chmod +x /Users/Forever4Evr/Desktop/KeepOpen.sh
 
 After you have made it executable, you’re now ready to set it up as a cronjob. Tip: to test the script, you can change the extension at the end to KeepOpen.command as an alternative to opening it with Terminal, but the same thing gets done.
@@ -136,7 +175,7 @@ This is a great tool if there is an unintended crash because the app will never 
 **Non-Cronjob - Shell Script Method**
 
     \#!/bin/bash
-     
+
     while true
     do
     #using open to get focus
@@ -184,7 +223,7 @@ Determining the IP of the machine on a dynamically allocated network can be a pa
 Step 6: Test, test, test.
 -------------------------
 
- 
+
 You’ve already tested and perfected your software for the installation, so make sure to test all of the above methods and automatic scripts in as realistic manner as you can before you leave it alone for the first day at school.
 
 You can’t account for everything, so don’t beat yourself up if something does eventually happen, but this list will hopefully alleviate a little bit of frustration. Good luck!
@@ -204,7 +243,7 @@ There is a terminal command you can use to get a list of all of the currently ru
 (more info above ps commands [here](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ps.1.html))) – Further more you can filter this list to only return applications you’re interested in learning about:
 
     ps aux | grep "TweetDeck"
-    
+
 This will return a line like this:
 
     USER             PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND
@@ -224,7 +263,7 @@ Now we just need to make this an executable shell script and set it up as a laun
 Let’s also take this one step further and say, hypothetically, that the Triplehead2Go display adapter you have is fairly wonky and you don’t always get the displays or projectors to connect after reboot – or maybe a projector is shutting itself off and disrupting things. Well we can log the currently available resolutions too! Try entering the line below in your own terminal:
 
     system_profiler SPDisplaysDataType
-    
+
 This will return a list of connected displays and some metadata about them including resolution and names.
 
 Let’s say you want to make sure you’re running a resolution of 3840×720 at all times…or you want a log of resolution changes. You would do something like:
@@ -269,9 +308,9 @@ Second step is to combine this new found ability to send emails from the Termina
          EMAILMESSAGE="This could be for adding an attachment/logfile"
          echo "The program isn't open - trying to re-open">$SUBJECT
          date | mail -s "$SUBJECT" "$EMAIL"  "$EMAILMESSAGE"
-     
+
             echo "YourApp not running. Opening..."
-     
+
         open /Applications/YourApp.app #reopen the app - set this to an exact filepath
     else
         echo "YourApp is running"
@@ -309,8 +348,7 @@ Nick Hardeman's [ofxMacUtils](https://github.com/NickHardeman/ofxMacUtils)
 
 [https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54](https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54)
 
-**WINDOWS:** 
-If you’re looking for help with this task with Windows, check out this awesome script [StayUp](http://www.bantherewind.com/stayup) from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html 
+**WINDOWS:**
+If you’re looking for help with this task with Windows, check out this awesome script [StayUp](http://www.bantherewind.com/stayup) from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html
 
 Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
-
