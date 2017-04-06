@@ -55,6 +55,11 @@ sudo systemsetup -getrestartfreeze -getrestartpowerfailure
 
  - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
 
+ For macOS 10.12 you can make applications open from anywhere with this command:
+  ```bash
+  sudo spctl --master-disable
+  ```
+
  ![SecuritySettings](images/Security_settings.png)
 
  - **Users and Groups:** Go to Login Options (above the padlock) and enable "Automatic Login" <br> <br>
