@@ -53,6 +53,10 @@ sudo systemsetup -getrestartfreeze -getrestartpowerfailure
  ```
  ![Power_settings](images/PowerSettings.png)
 
+ - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
+
+ ![SecuritySettings](images/Security_settings.png)
+
  - **Users and Groups:** Go to Login Options (above the padlock) and enable "Automatic Login" <br> <br>
 **IMPORTANT:** If you have any security concerns at all do  not automatically login to an admin user. Create a new standard user and use this setting to login to that account.
 
@@ -74,10 +78,6 @@ sudo systemsetup -getrestartfreeze -getrestartpowerfailure
  - **Bluetooth** If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
 
  ![BluetoothSettings](images/Bluetooth_settings.png)
-
- - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
-
- ![SecuritySettings](images/Security_settings.png)
 
  - **Notification Center:** You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/) (requires disabling SIP) , or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
 
