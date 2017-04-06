@@ -98,17 +98,20 @@ sudo chmod 000 /System/Library/CoreServices/Problem\ Reporter.app
 
 Another useful tool for modifying certain OSX .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover.
 
-I would also look at this filepath and you can rename files in here to temporarily disable them on the computer you're using: /System/Library/CoreServices
+I would also look at this filepath and you can rename files in here to temporarily disable them on the computer you're using: /System/Library/CoreServices (requires disabling SIP)
 
-You can rename "Notification Center" to "Notification Center_DEACTIVATE" or something (or you can move it) - and then you won't get any obnoxiously "helpful" Notification Center popups.
+You can rename "Notification Center" to "Notification Center_DEACTIVATE" or something (or you can move it) - and then you won't get any obnoxiously "helpful" Notification Center popups. (requires disabling SIP)
 
 After OSX 10.9 - Apple enabled this strange feature called App Nap that detects when an App isn't doing much and makes it use even less resources - could be problematic - [check this page out for how to disable for now](http://www.tekrevue.com/tip/disable-app-nap-os-x-mavericks/)
 
 If necessary, You can also hide all of the desktop icons with this terminal command:
 
 ```bash
-defaults write com.apple.finder CreateDesktop -bool false
+defaults write com.apple.finder CreateDesktop -bool false;
+killall Finder
 ```
+To re-enable the desktop run the same command but set the bool to 'true'
+
 
 
 **Step 2: Boot into your software**
@@ -117,6 +120,14 @@ defaults write com.apple.finder CreateDesktop -bool false
 Things get unplugged, power goes out, not everyone has budget or space for a battery backup etc etc. Above, I covered how to have everything reboot automatically after power failures or freezes, but you’ll also need your app to be ready to go from boot and not leave the desktop open to prying eyes. There are many ways to have your application load automatically - the simplest is using OSX's built in tools: In the System Preferences “Accounts” panel, select “Login Items” and drag your application into there to have it open automatically on launch.
 
 ![Login Items](images/Login_items.png)
+
+Sometimes you may need to have several processes start in order for your installation to run properly. My favorite tool when it comes to starting up complicated installations is Apples built in [Automator](https://developer.apple.com/library/content/documentation/AppleApplications/Conceptual/AutomatorConcepts/Articles/AutomatorOverview.html#//apple_ref/doc/uid/TP40001508-BCIJAFHH).
+
+Using Automator you can easily create complicated startup sequences that include delays and shell scripts as needed.
+
+![Automator Application](images/automator example3.png)
+
+After you've created and tested your automator script you can save it as an application and add it to your startup items list.
 
 **Step 3: Keep it up (champ!)**
 ---------------------------
@@ -135,14 +146,21 @@ Also note (!) that you may need to point your launch daemon to a file within you
 
 A launchd example from [admsyn](https://gist.github.com/4140204)
 
-Of course you could make the launchd plist yourself for free from a template like above. You can read all about them with the command "man launchd.plist" typed into terminal to get an idea of what each toggle controls. One quick method to setting up Launchd is to use Lingon ($4.99 in the App Store) or [Lingon X](http://www.peterborgapps.com/lingon/)
+Of course you could make the launchd plist yourself for free from a template like above. You can read all about them with the command "man launchd.plist" typed into terminal to get an idea of what each toggle controls. One quick method to setting up Launchd is to use [LaunchControl](http://www.soma-zone.com/LaunchControl/). LaunchControl is available for $10 however its developers do not enforce copyright protection. If you do use their software please be nice and purchase a license. For non-profit and educational institutios soma-zone allows free use. Another alternative is Lingon ($4.99 in the App Store) or [Lingon X](http://www.peterborgapps.com/lingon/)
 
-
+**Lingon**
+<br>
 In Lingon, hit the + to create a new launchd plist. Just make it a standard launch agent. Now Set up your plist like so:
 
 ![LingonSetup](images/LingonSetup.png)
 
 One additional/optional thing you can add to this is to put an additional key in the plist for a “Successful Exit”. By adding this, your app won’t re-open when it has detected that it closed normally (ie You just hit escape intentionally, it didn’t crash). Can be useful if you’re trying to check something and OS X won’t stop re-opening the app on you. To easily add this to the key, click the advanced tab and click the checkbox for "Successful exit" - or just add it manually as it in the above screenshot.
+
+**LaunchControl**
+<br>
+In LaunchControl press Command + N to create a new User Agent. You can rename the new agent to whatever you like. the default name is "local.job". You can then setup your agent using the GUI items on the right side of the application by dragging and dropping them in place. There are several powerful options for scheduling and setting up conditional tasks. Checkout soma-zones [FAQ](http://www.soma-zone.com/LaunchControl/a/FAQ.html) if you run into any problems. You can also checkout this primer on Launch Daemons at http://www.launchd.info
+
+![LaunchControl](images/launchcontrol_example.png)
 
 **Shell script+Cron Job method**
 
@@ -204,7 +222,7 @@ The simplest option by far would be to go to System Preferences->Energy Saver an
 
 ![Auto-reboot](images/Auto_reboot.png)
 
-You could also set up another shell script with a crontab as above with CronniX that reboots the system with as often as you specify.
+You could also set up another shell script with a crontab as above with CronniX or setup a User Agent with LaunchControl that closes applications and reboots the system as often as you specify.
 
 Another option (if you don’t want to deal with the terminal and shell scripting) is to use iCal to call an Automator iCal event. This method is perhaps a little easier to schedule and visualize when you will reboot. Within Automator, create a new file with the iCal event template to do something like this:
 
