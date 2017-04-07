@@ -6,6 +6,17 @@ The original version of the article is [here](http://blairneal.com/blog/installa
 Edited the article with https://stackedit.io/# for help with rendering Github Flavored Markup
 
 ---------
+
+## Table of Contents
+
+1. [Step 1: Prep your software and the computer](#prep-your software-and-the-computer)
+1. [Step 2: Boot into your software](#boot-into-your-software)
+1. [Step 3: Keep it up (champ!)](#keep-it-up-champ!)
+1. [Step 4: Reboot periodically](#reboot-periodically)
+1. [Step 5: Check in on it from afar](#check-in-on-it-from-afar)
+
+
+
 At work I recently had to set up a four installations of different configurations that would need to run all day, every day, 24 hours a day for a couple months with as few crashes or glitches as possible and without anyone going to check on them. This is something that a lot of media artists need to do all the time, and there are a bunch of different tricks and tips to keeping things up for an extended period, I figured I’d share my findings. There are alternate ways to do many of these tasks and this is only one road so please share some tips you’ve picked up out in the field down in the comments box below.
 
 I had to do several searches in a couple different places to find all the information I needed to keep everything consistently up and bug free. Luckily most of the installations I was dealing with this time were fairly light in terms of resources and complications, but it’s always best practices to have a safety net.
@@ -14,7 +25,7 @@ I usually run these off brand new, unboxed computers so this is sort of starting
 
 Tip: if you’re doing multiple computers, do these prep steps on one of them and just boot the others into target disk mode and use something like [Carbon Copy Cloner](http://www.bombich.com/) to mirror the first one on the next so everything is as consistent as possible.
 
-**Step 1: Prep your software and the computer**
+## Prep your software and the computer
 -----------------------------------------------
 
 When building your software or whatever it might be, always keep the long running installation in mind. Plan which things will need to be adjusted by whoever is watching over the installation from the beginning (or at least don’t save it for the end). In my experience, keep it as simple as possible, so that it’s easy for the caretaker to get in there to fix or adjust what they need without opening Xcode and compiling or even exiting out of your app. Time you spend now to make things simple will save you hours of remote debugging when something breaks.
@@ -117,7 +128,7 @@ To re-enable the desktop run the same command but set the bool to 'true'
 
 
 
-**Step 2: Boot into your software**
+## Boot into your software
 -------------------------------
 
 Things get unplugged, power goes out, not everyone has budget or space for a battery backup etc etc. Above, I covered how to have everything reboot automatically after power failures or freezes, but you’ll also need your app to be ready to go from boot and not leave the desktop open to prying eyes. There are many ways to have your application load automatically - the simplest is using OSX's built in tools: In the System Preferences “Accounts” panel, select “Login Items” and drag your application into there to have it open automatically on launch.
@@ -132,12 +143,12 @@ Using Automator you can easily create complicated startup sequences that include
 
 After you've created and tested your automator script you can save it as an application and add it to your startup items list.
 
-**Step 3: Keep it up (champ!)**
+## Keep it up champ!
 ---------------------------
 
 There are several ways to make sure your application goes up and stays up -
 
-**Launchd**
+#### Launchd
 
 Using Launch Daemons is an alternate way to get apps to load on boot and to continuously re-open them if they go down. Launchd plists are very useful alternatives to cron jobs and can be used to run things on a periodic basis or on calendar days. You could achieve similar results with a combination of automator and iCal, but it depends on what you’re comfortable with.
 
@@ -151,7 +162,7 @@ A launchd example from [admsyn](https://gist.github.com/4140204)
 
 Of course you could make the launchd plist yourself for free from a template like above. You can read all about them with the command "man launchd.plist" typed into terminal to get an idea of what each toggle controls. One quick method to setting up Launchd is to use [LaunchControl](http://www.soma-zone.com/LaunchControl/). LaunchControl is available for $10 however its developers do not enforce copyright protection. If you do use their software please be nice and purchase a license. For non-profit and educational institutios soma-zone allows free use. Another alternative is Lingon ($4.99 in the App Store) or [Lingon X](http://www.peterborgapps.com/lingon/)
 
-**Lingon**
+#### Lingon
 <br>
 In Lingon, hit the + to create a new launchd plist. Just make it a standard launch agent. Now Set up your plist like so:
 
@@ -159,13 +170,13 @@ In Lingon, hit the + to create a new launchd plist. Just make it a standard laun
 
 One additional/optional thing you can add to this is to put an additional key in the plist for a “Successful Exit”. By adding this, your app won’t re-open when it has detected that it closed normally (ie You just hit escape intentionally, it didn’t crash). Can be useful if you’re trying to check something and OS X won’t stop re-opening the app on you. To easily add this to the key, click the advanced tab and click the checkbox for "Successful exit" - or just add it manually as it in the above screenshot.
 
-**LaunchControl**
+#### LaunchControl
 <br>
 In LaunchControl press Command + N to create a new User Agent. You can rename the new agent to whatever you like. the default name is "local.job". You can then setup your agent using the GUI items on the right side of the application by dragging and dropping them in place. There are several powerful options for scheduling and setting up conditional tasks. Checkout soma-zones [FAQ](http://www.soma-zone.com/LaunchControl/a/FAQ.html) if you run into any problems. You can also checkout this primer on Launch Daemons at http://www.launchd.info
 
 ![LaunchControl](images/launchcontrol_example.png)
 
-**Shell script+Cron Job method**
+#### Shell script+Cron Job method
 
 (I got the following super helpful tip from [Kyle McDonald](http://kylemcdonald.net/))
 )
@@ -198,7 +209,7 @@ Now just hit “New” and then make sure to hit “Save” to save it into the 
 
 This is a great tool if there is an unintended crash because the app will never be down longer than a minute.
 
-**Non-Cronjob - Shell Script Method**
+#### Non-Cronjob - Shell Script Method
 
     \#!/bin/bash
 
@@ -216,7 +227,7 @@ Make sure to check the Console.app for any errors that may have come through whe
 
 Applescript is also a very solid choice for doing some more OS specific work in terms of having odd menus clicked or keypresses sent in some order.
 
-**Step 4: Reboot periodically**
+## Reboot periodically
 ---------------------------
 
 This one is a little more preventative, or maybe superstitious so hopefully someone can point out a concrete reason why this is a good idea. Depending on your app and the amount of stuff it reaches into, there could be some memory leaks or other OS bugs that you haven’t accounted for. Rebooting every day or week is a good idea to keep everything tidy, system wise.
@@ -237,7 +248,7 @@ If you’d like to just close your programs and re-open them and there is a back
 
 ![AutomatorPause](images/Automator_example.png)
 
-**Step 5: Check in on it from afar.**
+## Check in on it from afar
 ---------------------------------
 
 There are a bunch of options here from various paid web services (like [Logmein](http://www.logmein.com/) or [Teamviewer](http://teamviewer.com/)), to VNC (many options for this: [RealVNC](http://realvnc.com/) and Chicken of the VNC tend to come up a bunch) to [SSHing](http://www.mactricksandtips.com/2009/06/ssh-into-your-mac.html). The choice here depends on your comfort level and how much you need to do to perform maintenance from far away. Also - see below for tips on logging the status of your app as an alternative way
@@ -354,7 +365,7 @@ Bonus – if using MadMapper – see [this link](http://blairneal.com/blog/apple
 Alternate resources:
 --------------------
 
-**MAC OS X**
+### MAC OS X
 This is an amazing addon for openFrameworks apps that keeps your application open even after a large range of failures: [ofxWatchdog](https://github.com/toolbits/ofxWatchdog
 )
 [http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations](http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations
@@ -366,15 +377,15 @@ This is an amazing addon for openFrameworks apps that keeps your application ope
 
 Nick Hardeman's [ofxMacUtils](https://github.com/NickHardeman/ofxMacUtils)
 
-**LINUX**
+### LINUX
 
 [https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md](https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md)
 
-**RASPBERRY PI**
+### RASPBERRY PI
 
 [https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54](https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54)
 
-**WINDOWS:**
+### WINDOWS
 If you’re looking for help with this task with Windows, check out this awesome script [StayUp](http://www.bantherewind.com/stayup) from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html
 
 Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
