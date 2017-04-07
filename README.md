@@ -9,12 +9,13 @@ Edited the article with https://stackedit.io/# for help with rendering Github Fl
 
 ## Table of Contents
 
-1. [Step 1: Prep your software and the computer](#prep-your software-and-the-computer)
+1. [Step 1: Prep your software and the computer](#prep-your-software-and-the-computer)
 1. [Step 2: Boot into your software](#boot-into-your-software)
-1. [Step 3: Keep it up (champ!)](#keep-it-up-champ!)
+1. [Step 3: Keep it up (champ!)](#keep-it-up-champ)
 1. [Step 4: Reboot periodically](#reboot-periodically)
 1. [Step 5: Check in on it from afar](#check-in-on-it-from-afar)
-
+1. [Step 6: Test, test, test](#test-test-test)
+1. [Additional Tips: Logging](#additional-Tips--Logging)
 
 
 At work I recently had to set up a four installations of different configurations that would need to run all day, every day, 24 hours a day for a couple months with as few crashes or glitches as possible and without anyone going to check on them. This is something that a lot of media artists need to do all the time, and there are a bunch of different tricks and tips to keeping things up for an extended period, I figured I’d share my findings. There are alternate ways to do many of these tasks and this is only one road so please share some tips you’ve picked up out in the field down in the comments box below.
@@ -257,7 +258,7 @@ Leaving a Dropbox connected to the computer and your own is super useful for fil
 
 Determining the IP of the machine on a dynamically allocated network can be a pain, especially in screenless/headless installations. To make this a little easier, Robb Godshaw wrote a little Automator Script that says the IP aloud using Text-to-Speech 30 seconds after the computer boots. [Download link on Instructables.](http://www.instructables.com/id/Configuring-a-Mac-for-an-always-on-operation/steps/9)
 
-Step 6: Test, test, test.
+## Test test test
 -------------------------
 
 
@@ -266,7 +267,7 @@ You’ve already tested and perfected your software for the installation, so mak
 You can’t account for everything, so don’t beat yourself up if something does eventually happen, but this list will hopefully alleviate a little bit of frustration. Good luck!
 
 
-Additional Tips: Logging
+## Additional Tips + Logging
 ------------------------
 
 If you have an installation that runs for weeks or months, you might want a way to keep tabs on it that doesn’t involve remotely logging in and checking on it. A good thing to have would be to have something on the system that writes certain info to a text file (kept on a linked Dropbox), or better write that file to a web server that you can then check.
