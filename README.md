@@ -10,12 +10,17 @@ Edited the article with https://stackedit.io/# for help with rendering Github Fl
 ## Table of Contents
 
 1. [Step 1: Prep your software and the computer](#prep-your-software-and-the-computer)
+    1. [Desktop and Screensaver](#desktop-and-screensaver)
+    1. [Energy Saver](#energy-saver)
+    1. [Security](#security)
+    1. [Users and Groups](#users-and-groups)
+    1. [Software update](#software-update)
 1. [Step 2: Boot into your software](#boot-into-your-software)
 1. [Step 3: Keep it up (champ!)](#keep-it-up-champ)
 1. [Step 4: Reboot periodically](#reboot-periodically)
 1. [Step 5: Check in on it from afar](#check-in-on-it-from-afar)
 1. [Step 6: Test, test, test](#test-test-test)
-1. [Additional Tips: Logging](#additional-Tips--Logging)
+1. [Additional Tips: Logging](#additional-Tips)
 
 
 At work I recently had to set up a four installations of different configurations that would need to run all day, every day, 24 hours a day for a couple months with as few crashes or glitches as possible and without anyone going to check on them. This is something that a lot of media artists need to do all the time, and there are a bunch of different tricks and tips to keeping things up for an extended period, I figured I’d share my findings. There are alternate ways to do many of these tasks and this is only one road so please share some tips you’ve picked up out in the field down in the comments box below.
@@ -59,33 +64,37 @@ From the  menu, select Restart.
 
 In System Preferences:
 
- - **Desktop and Screensaver:** Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
+-  ###### Desktop and Screensaver
+      Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
 
- - **Energy Saver:** Turn Display Sleep and Computer Sleep to Never. Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
- Restart automatically after computer freezes is enabled by default as of 10.8. You can view the current status of both of these settings in the terminal with the following command.
- ```bash
-sudo systemsetup -getrestartfreeze -getrestartpowerfailure
- ```
+- ###### Energy Saver
+    Turn Display Sleep and Computer Sleep to Never. Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
+    Restart automatically after computer freezes is enabled by default as of 10.8. You can view the current status of both of these settings in the terminal with the following command.
+    ```bash
+    sudo systemsetup -getrestartfreeze -getrestartpowerfailure
+     ```
  ![Power_settings](images/PowerSettings.png)
 
- - **Security:** I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
+- ###### Security
+    I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
 
- For macOS 10.12 you can make applications open from anywhere with this command:
-  ```bash
-  sudo spctl --master-disable
-  ```
+    For macOS 10.12 you can make applications open from anywhere with this command:
+    ```bash
+      sudo spctl --master-disable
+      ```
 
- ![SecuritySettings](images/Security_settings.png)
+     ![SecuritySettings](images/Security_settings.png)
 
- - **Users and Groups:** Go to Login Options (above the padlock) and enable "Automatic Login" <br> <br>
-**IMPORTANT:** If you have any security concerns at all do  not automatically login to an admin user. Create a new standard user and use this setting to login to that account.
+- ###### Users and Groups
+    Go to Login Options (above the padlock) and enable "Automatic Login" <br> <br>
+    **IMPORTANT:** If you have any security concerns at all do  not automatically login to an admin user. Create a new standard user and use this setting to login to that account.
 
-![Login_items](images/Auto_login.png)
+    ![Login_items](images/Auto_login.png)
 
- - **Software update:** Disable automatic updates.
-
-  1. Go to System Preferences from the  Apple menu, then choose “Software Update”
-  1. Uncheck the box for “Automatically Check for Updates”
+- ###### Software Update
+    Disable automatic updates.
+      1. Go to System Preferences from the  Apple menu, then choose “Software Update”
+      1. Uncheck the box for “Automatically Check for Updates”
 
  ![Update_disable](images/Auto_update_disable.png)
 
