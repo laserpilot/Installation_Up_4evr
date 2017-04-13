@@ -24,12 +24,12 @@ Edited the article with https://stackedit.io/# for help with rendering Github Fl
     1. [Launchd](#launchd)
     1. [Lingon](#lingon)
     1. [LaunchControl](#launchcontrol)
-    1. [Sheel Script+Cron Job m=Method](#shell-script+cron-job-method)
-    1. [Non-Cronjob - Shell Script Method](#non-cronjob)
+    1. [Shell Script+Cron Job Method](#shell-script)
+    1. [Non-Cronjob - Shell Script Method](#non)
 1. [Step 4: Reboot periodically](#reboot-periodically)
 1. [Step 5: Check in on it from afar](#check-in-on-it-from-afar)
 1. [Step 6: Test, test, test](#test-test-test)
-1. [Additional Tips: Logging](#additional-Tips)
+1. [Additional Tips: Logging](#additional-tips)
 1. [Memory lead murderer](#memory-leak-murderer)
 1. [Alternate Resources](#alternate-resources)
     1. [MAC OS X](#mac-os-x)
@@ -126,7 +126,7 @@ In System Preferences:
 
  ![BluetoothSettings](images/Bluetooth_settings.png)
 
- - ##### Notification
+ - ##### Notification Center
     Center You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/) (requires disabling SIP) , or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
 
 ![Notification_Center](images/Notification_Center_disable.png)
