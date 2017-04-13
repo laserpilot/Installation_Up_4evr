@@ -15,12 +15,27 @@ Edited the article with https://stackedit.io/# for help with rendering Github Fl
     1. [Security](#security)
     1. [Users and Groups](#users-and-groups)
     1. [Software update](#software-update)
+    1. [Sharing](#sharing)
+    1. [Network](#network)
+    1. [Bluetooth](#bluetooth)
+    1. [Notification Center](#notification-center)
 1. [Step 2: Boot into your software](#boot-into-your-software)
 1. [Step 3: Keep it up (champ!)](#keep-it-up-champ)
+    1. [Launchd](#launchd)
+    1. [Lingon](#lingon)
+    1. [LaunchControl](#launchcontrol)
+    1. [Sheel Script+Cron Job m=Method](#shell-script+cron-job-method)
+    1. [Non-Cronjob - Shell Script Method](#non-cronjob)
 1. [Step 4: Reboot periodically](#reboot-periodically)
 1. [Step 5: Check in on it from afar](#check-in-on-it-from-afar)
 1. [Step 6: Test, test, test](#test-test-test)
 1. [Additional Tips: Logging](#additional-Tips)
+1. [Memory lead murderer](#memory-leak-murderer)
+1. [Alternate Resources](#alternate-resources)
+    1. [MAC OS X](#mac-os-x)
+    1. [Linux](#linux)
+    1. [Raspberry Pi](#raspberry-pi)
+    1. [Windows](#windows)
 
 
 At work I recently had to set up a four installations of different configurations that would need to run all day, every day, 24 hours a day for a couple months with as few crashes or glitches as possible and without anyone going to check on them. This is something that a lot of media artists need to do all the time, and there are a bunch of different tricks and tips to keeping things up for an extended period, I figured I’d share my findings. There are alternate ways to do many of these tasks and this is only one road so please share some tips you’ve picked up out in the field down in the comments box below.
@@ -64,10 +79,10 @@ From the  menu, select Restart.
 
 In System Preferences:
 
--  ###### Desktop and Screensaver
+-  ##### Desktop and Screensaver
       Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
 
-- ###### Energy Saver
+- ##### Energy Saver
     Turn Display Sleep and Computer Sleep to Never. Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
     Restart automatically after computer freezes is enabled by default as of 10.8. You can view the current status of both of these settings in the terminal with the following command.
     ```bash
@@ -75,7 +90,7 @@ In System Preferences:
      ```
  ![Power_settings](images/PowerSettings.png)
 
-- ###### Security
+- ##### Security
     I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
 
     For macOS 10.12 you can make applications open from anywhere with this command:
@@ -85,30 +100,34 @@ In System Preferences:
 
      ![SecuritySettings](images/Security_settings.png)
 
-- ###### Users and Groups
+- ##### Users and Groups
     Go to Login Options (above the padlock) and enable "Automatic Login" <br> <br>
     **IMPORTANT:** If you have any security concerns at all do  not automatically login to an admin user. Create a new standard user and use this setting to login to that account.
 
     ![Login_items](images/Auto_login.png)
 
-- ###### Software Update
+- ##### Software Update
     Disable automatic updates.
       1. Go to System Preferences from the  Apple menu, then choose “Software Update”
       1. Uncheck the box for “Automatically Check for Updates”
 
  ![Update_disable](images/Auto_update_disable.png)
 
- - **Sharing:**  If you are running your main computer without a monitor or in an inaccessible area, don’t forget to turn on File sharing and Screen sharing. This will allow you to access the computer and control it if you're on the same network (optional if you’re concerned about security).
+- ##### Sharing
+    If you are running your main computer without a monitor or in an inaccessible area, don’t forget to turn on File sharing and Screen sharing. This will allow you to access the computer and control it if you're on the same network (optional if you’re concerned about security).
 
  ![SharingSettings](images/Sharing_settings.png)
 
- - **Network:** If you don’t need remote access or don’t need Internet access for the installation, it’s not a bad idea to disable the Wifi so the “please select a wireless network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
+ - ##### Network
+    If you don’t need remote access or don’t need Internet access for the installation, it’s not a bad idea to disable the Wifi so the “please select a wireless network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
 
- - **Bluetooth** If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
+ - ##### Bluetooth
+    If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
 
  ![BluetoothSettings](images/Bluetooth_settings.png)
 
- - **Notification Center:** You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/) (requires disabling SIP) , or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
+ - ##### Notification
+    Center You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/) (requires disabling SIP) , or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
 
 ![Notification_Center](images/Notification_Center_disable.png)
 
@@ -365,14 +384,14 @@ Second step is to combine this new found ability to send emails from the Termina
 
 Now you just need to follow the instructions from Step 3 above to set this shell script up to run with launchd – you can check it every 5 minutes and have it email you if it crashed. You could also adapt the If statement to email you if the resolution isn’t right or some other process condition.
 
-Memory leak murderer
+### Memory leak murderer
 --------------------
 
 See [this article](http://blairneal.com/blog/memory-leak-murderer/) about combining the above process with something that kills and restarts an app if it crosses a memory usage threshold
 
 Bonus – if using MadMapper – see [this link](http://blairneal.com/blog/applescript-to-automatically-fullscreen-madmapper-for-installations/) for an AppleScript that will open MadMapper and have it enter fullscreen – and enter “OK” on a pesky dialog box.
 
-Alternate resources:
+## Alternate resources:
 --------------------
 
 ### MAC OS X
