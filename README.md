@@ -1,6 +1,3 @@
-This is an article with tips about how to keep an installation up forever forked from [laserpilots](https://github.com/laserpilot/Installation_Up_4evr) awesome guide!
-
----------
 The original version of the article is [here](http://blairneal.com/blog/installation-up-4evr/) - I wanted to post it here to more easily/consistently update it and open it up to other people's modifications tips and suggestions - a Linux/Windows version would be great to build out too!
 
 Edited the article with https://stackedit.io/# for help with rendering Github Flavored Markup
@@ -264,6 +261,23 @@ This one is a little more preventative, or maybe superstitious so hopefully some
 The simplest option by far would be to go to System Preferences->Energy Saver and then click “Schedule…” and enter in some values if you need to turn the computer off to rest for a longer period of time to save it some stress when it might not be used at night time or something. Heat can do funny things sometimes, so if you have a chance to get your computer to rest and the time to test it, definitely give this a shot…saves some energy too which is nice.
 
 ![Auto-reboot](images/Auto_reboot.png)
+
+If you'd like to have more fine grained control of your power schedule with OSX's built in capabilities you can use the power of 'pmset' in the terminal to configure sleep/shutdown and wake/poweron dates and times. Using 'pmset' is also handy if you ever need to change your power settings from afar and/or without interrupting the operation of your installation.
+
+```bash
+# this script will set your computer to shutdown everyday at 10pm and power on at 9am.
+
+pmset repeat wakeorpoweron MTWRFSU 09:00:00 shutdown MTWRFSU 22:00:00
+```
+
+You can also get the current schedule for your machine with the following command.
+
+```bash
+pmset -g sched
+
+# pmset also offers several other powerful settings and tools.
+# Checkout the pmset manual for more information and examples.
+```
 
 You could also set up another shell script with a crontab as above with CronniX or setup a User Agent with LaunchControl that closes applications and reboots the system as often as you specify.
 
