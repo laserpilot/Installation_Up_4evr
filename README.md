@@ -16,6 +16,7 @@ Edited the article with https://stackedit.io/# for help with rendering Github Fl
     1. [Network](#network)
     1. [Bluetooth](#bluetooth)
     1. [Notification Center](#notification-center)
+    1. [Web Based Apps](#web-based-apps)
 1. [Step 2: Boot into your software](#boot-into-your-software)
 1. [Step 3: Keep it up (champ!)](#keep-it-up-champ)
     1. [Launchd](#launchd)
@@ -152,7 +153,24 @@ killall Finder
 ```
 To re-enable the desktop run the same command but set the bool to 'true'
 
+##### Web Based Apps
 
+If the sofware you are running is web based you may want to checkout (nativefier)[https://github.com/jiahaog/nativefier]. Nativefier is an Elektron based wrapper generator which lets you create standalone desktop apps that run a website. If you want you can also point nativefier to localhost if you are hosting your content/app locally.
+
+```bash
+# example nativefier setup
+
+nativefier --full-screen "https://google.com"
+
+```
+
+<strong>TIP!!!</strong><br>
+To keep your app from showing the finder bar at the top of the screen on mouse over you can go into the app contents folder and add the following key to the applications info.plist
+
+```
+<key>LSUIPresentationMode</key>
+<integer>3</integer>
+```
 
 ## Boot into your software
 -------------------------------
