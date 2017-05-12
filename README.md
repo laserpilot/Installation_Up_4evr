@@ -1,6 +1,3 @@
-This is an article with tips about how to keep an installation up forever forked from [laserpilots](https://github.com/laserpilot/Installation_Up_4evr) awesome guide!
-
----------
 The original version of the article is [here](http://blairneal.com/blog/installation-up-4evr/) - I wanted to post it here to more easily/consistently update it and open it up to other people's modifications tips and suggestions - a Linux/Windows version would be great to build out too!
 
 Edited the article with https://stackedit.io/# for help with rendering Github Flavored Markup
@@ -19,6 +16,7 @@ Edited the article with https://stackedit.io/# for help with rendering Github Fl
     1. [Network](#network)
     1. [Bluetooth](#bluetooth)
     1. [Notification Center](#notification-center)
+    1. [Web Based Apps](#web-based-apps)
 1. [Step 2: Boot into your software](#boot-into-your-software)
 1. [Step 3: Keep it up (champ!)](#keep-it-up-champ)
     1. [Launchd](#launchd)
@@ -155,7 +153,24 @@ killall Finder
 ```
 To re-enable the desktop run the same command but set the bool to 'true'
 
+##### Web Based Apps
 
+If the sofware you are running is web based you may want to checkout (nativefier)[https://github.com/jiahaog/nativefier]. Nativefier is an Elektron based wrapper generator which lets you create standalone desktop apps that run a website. If you want you can also point nativefier to localhost if you are hosting your content/app locally.
+
+```bash
+# example nativefier setup
+
+nativefier --full-screen "https://google.com"
+
+```
+
+<strong>TIP!!!</strong><br>
+To keep your app from showing the finder bar at the top of the screen on mouse over you can go into the app contents folder and add the following key to the applications info.plist
+
+```
+<key>LSUIPresentationMode</key>
+<integer>3</integer>
+```
 
 ## Boot into your software
 -------------------------------
@@ -264,6 +279,23 @@ This one is a little more preventative, or maybe superstitious so hopefully some
 The simplest option by far would be to go to System Preferences->Energy Saver and then click “Schedule…” and enter in some values if you need to turn the computer off to rest for a longer period of time to save it some stress when it might not be used at night time or something. Heat can do funny things sometimes, so if you have a chance to get your computer to rest and the time to test it, definitely give this a shot…saves some energy too which is nice.
 
 ![Auto-reboot](images/Auto_reboot.png)
+
+If you'd like to have more fine grained control of your power schedule with OSX's built in capabilities you can use the power of 'pmset' in the terminal to configure sleep/shutdown and wake/poweron dates and times. Using 'pmset' is also handy if you ever need to change your power settings from afar and/or without interrupting the operation of your installation.
+
+```bash
+# this script will set your computer to shutdown everyday at 10pm and power on at 9am.
+
+pmset repeat wakeorpoweron MTWRFSU 09:00:00 shutdown MTWRFSU 22:00:00
+```
+
+You can also get the current schedule for your machine with the following command.
+
+```bash
+pmset -g sched
+
+# pmset also offers several other powerful settings and tools.
+# Checkout the pmset manual for more information and examples.
+```
 
 You could also set up another shell script with a crontab as above with CronniX or setup a User Agent with LaunchControl that closes applications and reboots the system as often as you specify.
 
@@ -416,5 +448,7 @@ Nick Hardeman's [ofxMacUtils](https://github.com/NickHardeman/ofxMacUtils)
 
 ### WINDOWS
 If you’re looking for help with this task with Windows, check out this awesome script [StayUp](http://www.bantherewind.com/stayup) from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html
+
+For VR Installations checkout https://github.com/wjrro/vr-up-forever
 
 Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
