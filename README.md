@@ -431,4 +431,6 @@ Nick Hardeman's [ofxMacUtils](https://github.com/NickHardeman/ofxMacUtils)
 ### WINDOWS
 If you’re looking for help with this task with Windows, check out this awesome script [StayUp](http://www.bantherewind.com/stayup) from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html
 
+For VR Installations checkout https://github.com/wjrro/vr-up-forever
+
 Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
