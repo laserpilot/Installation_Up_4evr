@@ -1,9 +1,13 @@
-This is an article with tips about how to keep an installation up forever forked from [laserpilots](https://github.com/laserpilot/Installation_Up_4evr) awesome guide!
-
 ---------
-The original version of the article is [here](http://blairneal.com/blog/installation-up-4evr/) - I wanted to post it here to more easily/consistently update it and open it up to other people's modifications tips and suggestions - a Linux/Windows version would be great to build out too!
+The original outdated version of the article from 2012 is [here](http://blairneal.com/blog/installation-up-4evr/) 
 
-Edited the article with https://stackedit.io/# for help with rendering Github Flavored Markup
+Posted to Git for other people's modifications - please contribute if you'd like!
+
+##[Windows Version from Branger Briz](https://github.com/brangerbriz/up-4evr-windows-10)
+
+##[Ubuntu Linux Version from Branger Briz](https://github.com/brangerbriz/up-4evr-ubuntu)
+
+
 
 ---------
 
@@ -79,7 +83,7 @@ From the  menu, select Restart.
 
 In System Preferences:
 
--  ##### Desktop and Screensaver
+- ##### Desktop and Screensaver
       Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
 
 - ##### Energy Saver
@@ -172,7 +176,7 @@ Using Automator you can easily create complicated startup sequences that include
 
 After you've created and tested your automator script you can save it as an application and add it to your startup items list.
 
-## Keep it up champ!
+## Keep it running forever
 ---------------------------
 
 There are several ways to make sure your application goes up and stays up -
@@ -213,11 +217,13 @@ In LaunchControl press Command + N to create a new User Agent. You can rename th
 This method is sort of deprecated in relation to the launchd method - you can run shell scripts with Lingon and launchd in the same manner as what we've got here. Shell scripting is your best friend. With the help of the script below and an application called CronniX (or use Lingon) , you will be able to use a cronjob to check the system’s list of currently running processes. If your app does not appear on the list, then the script will open it again, otherwise it won’t do anything. Either download the script or type the following into a text editor, replacing Twitter.app with your app’s name and filepath. Don’t forget the “.app” extension in the if statement!:
 
 	\#!/bin/sh
-		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ] then
+		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ]
+		then
 		echo "Twitter not running. opening..."
 		open /Applications/Twitter.app
 		else
-		echo "Twitter running" fi
+		echo "Twitter running" 
+		fi
 
 Save that file as something like “KeepOpen.sh” and keep it next to your application or somewhere convenient.
 
@@ -408,13 +414,14 @@ Nick Hardeman's [ofxMacUtils](https://github.com/NickHardeman/ofxMacUtils)
 
 ### LINUX
 
-[https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md](https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md)
+[Ubuntu Guide from Branger Briz](https://github.com/brangerbriz/up-4evr-ubuntu)
 
-### RASPBERRY PI
-
-[https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54](https://sfpc.hackpad.com/rPi-run-4-ever-qFgafqYPM54)
+[ofBook guide](https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md)
 
 ### WINDOWS
+
+[Windows Version from Branger Briz](https://github.com/brangerbriz/up-4evr-windows-10)
+
 If you’re looking for help with this task with Windows, check out this awesome script [StayUp](http://www.bantherewind.com/stayup) from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html
 
 Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
