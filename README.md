@@ -50,22 +50,27 @@ August 2019 - modified article to remove old tips that are less helpful. Added a
 
 - System Preferences:
 	- **Recommended:**
-	- [ ] Set Screensaver to Never (Screensaver)
-	- Disable Automatic Software Updates (Software Update)
-	- Set Computer and Display Sleep to Never (Energy Saver)
-	- Set Desktop background to solid black (Desktop)
-	- Uncheck "Disable Automatic Login" (Security)
-	- Enable Automatic Login for a specific user (Users & Groups)
+		- [ ] Set Screensaver to Never (Screensaver)
+		- [ ] Disable Automatic Software Updates (Software Update)
+		- [ ] Set Computer and Display Sleep to Never (Energy Saver)
+		- [ ] Set Desktop background to solid black (Desktop)
+		- [ ] Uncheck "Disable Automatic Login" (Security)
+		- [ ] Enable Automatic Login for a specific user (Users & Groups)
 	- **Optional:**
-	- Enable Screensharing and Filesharing (Sharing)
-	- Disable Bluetooth Setup Assistant(Bluetooth)
-	- Disable Notification Center/Set Do Not Disturb to be 24hrs (Notification Center)
+		- [ ] Enable Screensharing and Filesharing (Sharing)
+		- [ ] Disable Bluetooth Setup Assistant(Bluetooth)
+		- [ ] Disable Notification Center/Set Do Not Disturb to be 24hrs (Notification Center)
 	
 - Booting into your software
-- Keeping the software running at all times
+	- [ ] placeholder
+- Keeping the software running at all times\
+	- [ ] placeholder
 - Rebooting automatically
+	- [ ] placeholder
 - Remote access and logging
+	- [ ] placeholder
 - Testing
+	- [ ] placeholder
 
 ## 2019 preface: 
 This article was put together in 2012 as a personal guide for how to set up installation computers for professional creative technology installations, particularly for Mac computers. I needed something that put various tips in one space so that I could refer back to it when a new project came along. 
