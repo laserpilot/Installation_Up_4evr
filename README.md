@@ -47,20 +47,32 @@ August 2019 - modified article to remove old tips that are less helpful. Added a
 
 
 ## TL;DR Quick Checklist
-- Computer Prep
-	- 
+
+- System Preferences:
+	- **Recommended:**
+	- [ ] Set Screensaver to Never (Screensaver)
+	- Disable Automatic Software Updates (Software Update)
+	- Set Computer and Display Sleep to Never (Energy Saver)
+	- Set Desktop background to solid black (Desktop)
+	- Uncheck "Disable Automatic Login" (Security)
+	- Enable Automatic Login for a specific user (Users & Groups)
+	- **Optional:**
+	- Enable Screensharing and Filesharing (Sharing)
+	- Disable Bluetooth Setup Assistant(Bluetooth)
+	- Disable Notification Center/Set Do Not Disturb to be 24hrs (Notification Center)
+	
 - Booting into your software
 - Keeping the software running at all times
 - Rebooting automatically
 - Remote access and logging
 - Testing
 
-##2019 preface: 
+## 2019 preface: 
 This article was put together in 2012 as a personal guide for how to set up installation computers for professional creative technology installations, particularly for Mac computers. I needed something that put various tips in one space so that I could refer back to it when a new project came along. 
 
 There was nothing like it at the time and it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy and had some tips that end up being more distacting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly.
 
-##Intro:
+## Intro:
 
 When developing your project, always keep the long running installation in mind. Plan which things will need to be adjusted by whoever is watching over the installation from the beginning (or at least don’t save it for the end). In my experience, keep your uptime solutions as simple as possible, so that it’s easy for the caretaker to get in there to fix or adjust what they need without re-compiling or even exiting out of your app. The time you spend now to make things simple will save you hours of remote debugging when something breaks.
 
@@ -128,7 +140,9 @@ In System Preferences, you'll need to make some changes to each of these:
  ![SharingSettings](images/Sharing_settings.png)
 
  - ##### Network
-    Your computer should almsot always be hardwired to the network with ethernet - do not trust wifi. However, If you dont need remote access or don’t need internet access for the installation, it’s not a bad idea to disable the Wifi completely so the “Please select a Wireless Network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
+    Your computer should almost always be hardwired to the network with ethernet - do not trust wifi :)
+    
+     However, If you dont need remote access or don’t need internet access for the installation, it’s not a bad idea to disable the Wifi completely. If Wifi is turned off, the “Please select a Wireless Network” window won't pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
 
  - ##### Bluetooth
     If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location after clicking Advanced on the Bluetooth setting.
