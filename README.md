@@ -79,15 +79,17 @@ There was nothing like it at the time and it has become a cult reference guide f
 
 ## Intro:
 
-When developing your project, always keep the long running installation in mind. Plan which things will need to be adjusted by whoever is watching over the installation from the beginning (or at least don’t save it for the end). In my experience, keep your uptime solutions as simple as possible, so that it’s easy for the caretaker to get in there to fix or adjust what they need without re-compiling or even exiting out of your app. The time you spend now to make things simple will save you hours of remote debugging when something breaks.
+When developing your project, at every stage, always think about the final installation and what things you'll need to do to keep it running forever. Getting a frantic call on a vacation day or weekend is never pleasant. I do not recommend relying on caretakers to know how to address bugs or get something running again. You will need to ensure the process to fix issues is extremely simple, especially if you're installing at a retail store or event that may not have technically savvy people there to help diagnose an issue.
 
-Also, a security disclaimer. Many of these tips, like enabling automatic login, do weaken the intended security of Mac OS. Make sure to take extra precautions that your computer is not physically accessible by the public and that it is not easily accessed over the network by malicious actors.
+This is a guide with tips on how to keep your MacOS-based installation running forever.
+
+_As a security disclaimer. Many of these tips, like enabling automatic login, do weaken the intended security of Mac OS. Make sure to take extra precautions that your computer is not physically accessible by the public and that it is not easily accessed over the network by malicious actors._
 
 
-## Prep your software and the computer
+## Prep System Preferences
 -----------------------------------------------
 
-This section covers the various OS settings you'll need to check and enable to keep them from interfering with your application running 24/7. You’ll need to go through and turn off or disable several different automatic settings to keep things from popping up over top of your application. Some of these screens have subtle changes depending on the OS version and whether you're on a desktop or laptop. Some settings have disappeared or been obscured since writing this in 2012 and may require a quick search to find if they are still accessible.
+This section covers the various MacOS settings you'll need to check and enable to keep them from interfering with your application running 24/7. You’ll need to go through and turn off or disable several different automatic settings to keep things from popping up over top of your application. Some of these screens have subtle changes depending on the OS version and whether you're on a desktop or laptop. Some settings have disappeared or been obscured since writing this in 2012 and may require a quick search to find if they are still accessible.
 
 In System Preferences, you'll need to make some changes to each of these:
 
@@ -190,6 +192,8 @@ csrutil disable
 ```
 1. Terminal should display a message that SIP was disabled.
 From the  menu, select Restart.
+
+
 Another useful tool for modifying certain OSX .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover.
 
 I would also look at this filepath and you can rename files in here to temporarily disable them on the computer you're using: /System/Library/CoreServices (requires disabling SIP)
@@ -225,6 +229,11 @@ After you've created and tested your automator script you can save it as an appl
 
 ## Keep it running forever
 ---------------------------
+
+#### Prepare your software first!
+
+Plan which things will need to be adjusted and accessed by you or a caretaker throughout your project's lifespan. Debug menus, hidden sliders, key commands and config files are great when you can't compile the app anymore. The time you spend now to make things simple will save you hours of remote debugging when something breaks.
+
 
 There are several ways to make sure your application goes up and stays up -
 
