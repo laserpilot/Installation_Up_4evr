@@ -1,19 +1,22 @@
 ---------
-The original outdated version of the article from 2012 is [here](http://blairneal.com/blog/installation-up-4evr/) 
 
 Posted to Git for other people's modifications - please contribute if you'd like!
 
-##[Windows Version from Branger Briz](https://github.com/brangerbriz/up-4evr-windows-10)
+[Windows Version from Branger Briz](https://github.com/brangerbriz/up-4evr-windows-10)
 
-##[Ubuntu Linux Version from Branger Briz](https://github.com/brangerbriz/up-4evr-ubuntu)
+[Ubuntu Linux Version from Branger Briz](https://github.com/brangerbriz/up-4evr-ubuntu)
 
-
+Changelog:
+August 2019 - modified article to remove old tips that are less helpful. Added a quick checklist
 
 ---------
 
 ## Table of Contents
 
-1. [Step 1: Prep your software and the computer](#prep-your-software-and-the-computer)
+
+
+1. [TL;DR Quick Checklist](#TL;DR-Quick-Checklist)
+2. [Step 1: Prep your software and the computer](#prep-your-software-and-the-computer)
     1. [Desktop and Screensaver](#desktop-and-screensaver)
     1. [Energy Saver](#energy-saver)
     1. [Security](#security)
@@ -23,6 +26,7 @@ Posted to Git for other people's modifications - please contribute if you'd like
     1. [Network](#network)
     1. [Bluetooth](#bluetooth)
     1. [Notification Center](#notification-center)
+    2. [System Integrity Protection](#system-integirty-protection)
 1. [Step 2: Boot into your software](#boot-into-your-software)
 1. [Step 3: Keep it up (champ!)](#keep-it-up-champ)
     1. [Launchd](#launchd)
@@ -42,24 +46,111 @@ Posted to Git for other people's modifications - please contribute if you'd like
     1. [Windows](#windows)
 
 
-At work I recently had to set up a four installations of different configurations that would need to run all day, every day, 24 hours a day for a couple months with as few crashes or glitches as possible and without anyone going to check on them. This is something that a lot of media artists need to do all the time, and there are a bunch of different tricks and tips to keeping things up for an extended period, I figured I’d share my findings. There are alternate ways to do many of these tasks and this is only one road so please share some tips you’ve picked up out in the field down in the comments box below.
+## TL;DR Quick Checklist
+- Computer Prep
+	- 
+- Booting into your software
+- Keeping the software running at all times
+- Rebooting automatically
+- Remote access and logging
+- Testing
 
-I had to do several searches in a couple different places to find all the information I needed to keep everything consistently up and bug free. Luckily most of the installations I was dealing with this time were fairly light in terms of resources and complications, but it’s always best practices to have a safety net.
+##2019 preface: 
+This article was put together in 2012 as a personal guide for how to set up installation computers for professional creative technology installations, particularly for Mac computers. I needed something that put various tips in one space so that I could refer back to it when a new project came along. 
 
-I usually run these off brand new, unboxed computers so this is sort of starting from scratch. Most of the things I point out are set to the opposite by default.
+There was nothing like it at the time and it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy and had some tips that end up being more distacting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly.
 
-Tip: if you’re doing multiple computers, do these prep steps on one of them and just boot the others into target disk mode and use something like [Carbon Copy Cloner](http://www.bombich.com/) to mirror the first one on the next so everything is as consistent as possible.
+##Intro:
+
+When developing your project, always keep the long running installation in mind. Plan which things will need to be adjusted by whoever is watching over the installation from the beginning (or at least don’t save it for the end). In my experience, keep your uptime solutions as simple as possible, so that it’s easy for the caretaker to get in there to fix or adjust what they need without re-compiling or even exiting out of your app. The time you spend now to make things simple will save you hours of remote debugging when something breaks.
+
+Also, a security disclaimer. Many of these tips, like enabling automatic login, do weaken the intended security of Mac OS. Make sure to take extra precautions that your computer is not physically accessible by the public and that it is not easily accessed over the network by malicious actors.
+
 
 ## Prep your software and the computer
 -----------------------------------------------
 
-When building your software or whatever it might be, always keep the long running installation in mind. Plan which things will need to be adjusted by whoever is watching over the installation from the beginning (or at least don’t save it for the end). In my experience, keep it as simple as possible, so that it’s easy for the caretaker to get in there to fix or adjust what they need without opening Xcode and compiling or even exiting out of your app. Time you spend now to make things simple will save you hours of remote debugging when something breaks.
+This section covers the various OS settings you'll need to check and enable to keep them from interfering with your application running 24/7. You’ll need to go through and turn off or disable several different automatic settings to keep things from popping up over top of your application. Some of these screens have subtle changes depending on the OS version and whether you're on a desktop or laptop. Some settings have disappeared or been obscured since writing this in 2012 and may require a quick search to find if they are still accessible.
 
-You’ll need to go through and turn off or disable several different automatic settings to keep things from popping up over top of your application. This can differ depending on whether you’re running 10.7, 10.8, 10.9, 10.10 etc etc.
+In System Preferences, you'll need to make some changes to each of these:
 
-Nick Hardeman has made a utility application for setting all of these attributes and more from one location - [check it out here](http://nickhardeman.com/610/openframeworks-configuring-osx-for-a-long-term-installation/)
+![System preferences](images/Relevant_System_Settings.png)
 
-**Note:** As of macOS 10.11 some system settings can only be altered by turning off Apples System Integrity Protection (SIP) setting. It is recommended that you leave SIP enabled unless you absolutely need to. For example if you would like to completely disable the Notification Center by unloading the launch agent you must disable SIP.
+- ##### Screensaver
+      Disable your screensaver. Set it’s time to **Never** 
+      
+- ##### Desktop
+      I also suggest changing your desktop background to either black, a screenshot of your app, or your client's logo. Having the MacOS default backgrounds show up is a dead giveaway that something is wrong, and having the background be less loud can help fly under the radar. Another reason to do this is because of this simple fact: _it's not really broken until someone notices :)_
+      
+      If you're running multiple screens or computers, I've also found it helpful to make desktop backgrounds that have numbers, names or colors in them so you more easily tell them apart if you're mapping them together or something like that.
+
+- ##### Energy Saver
+    - Turn Display Sleep and Computer Sleep to **Never**. 
+    - Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
+    - Restart automatically after computer power failure or kernel panic is enabled by default as of 10.8. You can view the current status of both of these settings in the terminal with the following command.
+    ```bash
+    sudo systemsetup -getrestartfreeze -getrestartpowerfailure
+     ```
+     
+     ```systemsetup``` in the terminal is actually a great way to check and potentially script all of these settings. Maybe the next version of this article will put together a script that sets many of these with a simple command.
+     
+ ![Power_settings](images/PowerSettings.png)
+
+- ##### Security
+    These tips in particular open up a range of vulnerabilities. Proceed with caution.
+    
+    I would make sure that **"Disable Automatic Login"** is unchecked so that your computer boots to the desktop instead of the password entry login screen. More about this in the following section.
+
+    If necessary, for macOS 10.12 and beyond, you can re-enable and show the "Allow apps downloaded from Anywhere" option with this command:
+    ```bash
+      sudo spctl --master-disable
+      ```
+ ![SecuritySettings](images/Security_settings.png)
+
+- ##### Users and Groups
+    Go to Login Options (above the padlock) and enable "Automatic Login" for the user that will be running the installation.
+    
+    **IMPORTANT:** If you have any security concerns _at all_ do  not automatically login to an admin user. Create a new standard user and use this setting to login to that account. Using a standard user may make certain sudo commands more difficult though.
+
+    ![Login_items](images/Auto_login.png)
+
+- ##### Software Update
+    Disable automatic updates. Again, this could be a security risk down the line, but its helpful if future versions of MacOS break something in your app.
+      
+
+ ![Update_disable](images/Auto_update_disable1.png)
+  ![Update_disable](images/Auto_update_disable2.png)
+
+
+- ##### Sharing
+    If you are running your main computer without a monitor or if it's in an inaccessible area, it can be a lifesaver to turn on File sharing and Screen sharing. This will allow you to access the computer and control it if you're on the same network (optional if you’re concerned about security). Screensharing is built into MacOS and you can access computers from a finder window with the Network sidebar item and click screenshare. 
+
+ ![SharingSettings](images/Sharing_settings.png)
+
+ - ##### Network
+    Your computer should almsot always be hardwired to the network with ethernet - do not trust wifi. However, If you dont need remote access or don’t need internet access for the installation, it’s not a bad idea to disable the Wifi completely so the “Please select a Wireless Network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
+
+ - ##### Bluetooth
+    If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location after clicking Advanced on the Bluetooth setting.
+
+ ![BluetoothSettings](images/Bluetooth_settings.png)
+
+
+ - ##### Notification Center and Popups
+ 
+You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/) (requires disabling SIP) , or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
+
+![Notification_Center](images/Notification_Center_disable.png)
+
+You can also disable the "This Application Unexpectedly Quit" and the subsequent bug report that comes with it by running this command in terminal OR renaming the Problem Reporter app:
+
+_(Requires disabling SIP)_
+
+```bash
+sudo chmod 000 /System/Library/CoreServices/Problem\ Reporter.app
+```
+ - ##### System Integrity Protection  (SIP)
+**Note:** As of macOS 10.11 some system settings can only be altered by turning off Apple's System Integrity Protection (SIP) setting. It is recommended that you leave SIP enabled unless you absolutely need to disable it. For example, if you would like to completely disable the Notification Center by unloading the launch agent you must disable SIP.
 
 As Apple describes it : "System Integrity Protection is a security technology in OS X El Capitan and later that's designed to help prevent potentially malicious software from modifying protected files and folders on your Mac. System Integrity protection restricts the root user account and limits the actions that the root user can perform on protected parts of the Mac operating system"
 
@@ -80,69 +171,6 @@ csrutil disable
 ```
 1. Terminal should display a message that SIP was disabled.
 From the  menu, select Restart.
-
-In System Preferences:
-
-- ##### Desktop and Screensaver
-      Disable your screensaver. Set it’s time to “Never." I also suggest changing your desktop background to either black/a screenshot of your app/you client's logo - you can even set these to change automatically - remember - **it's not broken until someone notices** :)
-
-- ##### Energy Saver
-    Turn Display Sleep and Computer Sleep to Never. Enable “Start up automatically after power failure” and “Restart automatically if the computer freezes” (these are only available in 10.7 and later)
-    Restart automatically after computer freezes is enabled by default as of 10.8. You can view the current status of both of these settings in the terminal with the following command.
-    ```bash
-    sudo systemsetup -getrestartfreeze -getrestartpowerfailure
-     ```
- ![Power_settings](images/PowerSettings.png)
-
-- ##### Security
-    I would make sure that "Disable Automatic Login" is unchecked so you don't hit any surprises on reboots. If you’re really paranoid, you can even disable things like the IR remote receiver that still exists on some macs and definitely on Macbooks. This would keep pranksters with Apple TV remotes from “Front Rowing” your installation. To disable, go to Security->General->Advanced (in >10.8) and “Disable remote control IR receiver”.
-
-    For macOS 10.12 you can make applications open from anywhere with this command:
-    ```bash
-      sudo spctl --master-disable
-      ```
-
-     ![SecuritySettings](images/Security_settings.png)
-
-- ##### Users and Groups
-    Go to Login Options (above the padlock) and enable "Automatic Login" <br> <br>
-    **IMPORTANT:** If you have any security concerns at all do  not automatically login to an admin user. Create a new standard user and use this setting to login to that account.
-
-    ![Login_items](images/Auto_login.png)
-
-- ##### Software Update
-    Disable automatic updates.
-      1. Go to System Preferences from the  Apple menu, then choose “Software Update”
-      1. Uncheck the box for “Automatically Check for Updates”
-
- ![Update_disable](images/Auto_update_disable.png)
-
-- ##### Sharing
-    If you are running your main computer without a monitor or in an inaccessible area, don’t forget to turn on File sharing and Screen sharing. This will allow you to access the computer and control it if you're on the same network (optional if you’re concerned about security).
-
- ![SharingSettings](images/Sharing_settings.png)
-
- - ##### Network
-    If you don’t need remote access or don’t need Internet access for the installation, it’s not a bad idea to disable the Wifi so the “please select a wireless network” window doesn’t pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
-
- - ##### Bluetooth
-    If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location in 10.6.
-
- ![BluetoothSettings](images/Bluetooth_settings.png)
-
- - ##### Notification Center
-    Center You can either [disable Notification Center completely](http://www.tekrevue.com/tip/how-to-completely-disable-notification-center-in-mac-os-x/) (requires disabling SIP) , or set your "Do Not Disturb" to basically on be on forever by setting it with overlapping times like the screenshot below
-
-![Notification_Center](images/Notification_Center_disable.png)
-
-You can also disable the "This Application Unexpectedly Quit" and the subsequent bug report that comes with it by running this command in terminal OR renaming the Problem Reporter app:
-
-(Requires disabling SIP)
-
-```bash
-sudo chmod 000 /System/Library/CoreServices/Problem\ Reporter.app
-```
-
 Another useful tool for modifying certain OSX .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover.
 
 I would also look at this filepath and you can rename files in here to temporarily disable them on the computer you're using: /System/Library/CoreServices (requires disabling SIP)
@@ -344,7 +372,7 @@ Let’s say you want to make sure you’re running a resolution of 3840×720 at 
 
 This will return “Resolution: 3840×720″ which you can combine with the above lines to write it all to a text file. So here would be your shell script file if you wanted to record the currently running processes and the current resolutions:
 
-        \#!/bin/bash
+        #!/bin/bash
     ps aux | grep 'YourAppName' >> /Users/you/filepath/Install6ProcessLog.txt
     system_profiler SPDisplaysDataType | grep Resolution >> /Users/you/Dropbox/Install6ProcessLog.txt
 
@@ -372,7 +400,7 @@ Now send a test email to yourself by running: echo “Hello” | mail -s “test
 
 Second step is to combine this new found ability to send emails from the Terminal with a process to check if your application is still running…something like the below would work with some tweaking for what you’re looking to do:
 
-    \#!/bin/sh
+    #!/bin/sh
     if [ $(ps ax | grep -v grep | grep "YourApp.app" | wc -l) -eq 0 ] ; #Replace YourApp.app with your own app's name     
     then
             SUBJECT="Shit broke"
@@ -390,27 +418,39 @@ Second step is to combine this new found ability to send emails from the Termina
 
 Now you just need to follow the instructions from Step 3 above to set this shell script up to run with launchd – you can check it every 5 minutes and have it email you if it crashed. You could also adapt the If statement to email you if the resolution isn’t right or some other process condition.
 
-### Memory leak murderer
---------------------
+### Appendix and uncategorized and out of date tips
+-------
+####Deploying an image to multiple computers and backing up:
+If you’re setting up multiple computers, you can do these prep steps on one of them and just boot the others into target disk mode and use something like [Carbon Copy Cloner](http://www.bombich.com/) to mirror the first one on the next so everything is as consistent as possible. I've noticed a few things don't always transfer like sleep and screensaver settings, so make sure to double check those are sticking.
 
-See [this article](http://blairneal.com/blog/memory-leak-murderer/) about combining the above process with something that kills and restarts an app if it crosses a memory usage threshold
+For Windows and Linux, I highly recommend the use of [Clonezilla](https://clonezilla.org) - on its surface it looks junky, but it is actually incredibly well made and robust if you can deal with the command line interface. I have used it on multiple WIndows and Linux projects and it's often worked like a charm. I first had to use it to clone a single disk image from one Windows 10 laptop to 150 identical laptops for an installation. I was able to set up an assembly line process with Clonezilla where I cloned one 15gb image to 150 computers in about 2 days with a thumbdrive. Clonezilla also offers the ability to work over a network connection if you are able to hardwire all of your computers and push an image out that way.
 
-Bonus – if using MadMapper – see [this link](http://blairneal.com/blog/applescript-to-automatically-fullscreen-madmapper-for-installations/) for an AppleScript that will open MadMapper and have it enter fullscreen – and enter “OK” on a pesky dialog box.
+Clonezilla and Carbon Copy Cloner are also a great tools for creating a backup image of a computer. Once you have the image, you can have it stored in the cloud or a company server in the event the installation computer fails and you don't want to start this setup from scratch.
+
+#### Memory leak murderer
+In 2019 I don't recommend this as a best practice, but its more of a thought experiment about how to catch an app with a memory leak and reboot it if you didn't catch it during development.
+
+See [this article](http://blairneal.com/blog/memory-leak-murderer/) about combining process with something that kills and restarts an app if it crosses a memory usage threshold
+
+####Madmapper Applescript
+
+[Note: Unsure if this still works in 2019.] If using MadMapper – see [this link](http://blairneal.com/blog/applescript-to-automatically-fullscreen-madmapper-for-installations/) for an AppleScript that will open MadMapper and have it enter fullscreen – and enter “OK” on a pesky dialog box.
 
 ## Alternate resources:
 --------------------
+The original outdated version of the article from 2012 is [here](http://blairneal.com/blog/installation-up-4evr/) 
 
 ### MAC OS X
 This is an amazing addon for openFrameworks apps that keeps your application open even after a large range of failures: [ofxWatchdog](https://github.com/toolbits/ofxWatchdog
 )
 [http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations](http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations
-)
+) - it definitely has its quirks depending on your installation and it can really interfere with some of the other tips in this guide, but it has been a lifesaver for a few of my installations.
 
 [Similar guide meant for live visuals/VJing](http://vjforums.info/wiki/setting-up-os-x-for-vjing/)
 
 [Nick Hardeman's utility for setting all of these from one location](http://nickhardeman.com/610/openframeworks-configuring-osx-for-a-long-term-installation/)
 
-Nick Hardeman's [ofxMacUtils](https://github.com/NickHardeman/ofxMacUtils)
+Nick Hardeman's [ofxMacUtils from 2015](https://github.com/NickHardeman/ofxMacUtils) used for helping create a one stop shop for setting common system settings for installations
 
 ### LINUX
 
