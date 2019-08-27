@@ -6,8 +6,14 @@ Posted to Git for other people's modifications - please contribute if you'd like
 
 [Ubuntu Linux Version from Branger Briz](https://github.com/brangerbriz/up-4evr-ubuntu)
 
+Todo: 
+
+ - fix table of contents linking 
+
+ 
 Changelog:
-August 2019 - modified article to remove old tips that are less helpful. Added a quick checklist
+
+ - August 2019 - modified article to remove old tips that are less helpful. Added a quick checklist
 
 ---------
 
@@ -17,18 +23,20 @@ August 2019 - modified article to remove old tips that are less helpful. Added a
 
 1. [TL;DR Quick Checklist](#TL;DR-Quick-Checklist)
 2. [Step 1: Prep your software and the computer](#prep-your-software-and-the-computer)
-    1. [Desktop and Screensaver](#desktop-and-screensaver)
+    1. [Screensaver](#screensaver)
+    2. [Desktop](#desktop)
     1. [Energy Saver](#energy-saver)
     1. [Security](#security)
     1. [Users and Groups](#users-and-groups)
-    1. [Software update](#software-update)
+    1. [Software Update](#software-update)
     1. [Sharing](#sharing)
     1. [Network](#network)
     1. [Bluetooth](#bluetooth)
-    1. [Notification Center](#notification-center)
-    2. [System Integrity Protection](#system-integirty-protection)
+    1. [Notification Center](#notification-center-and-popups)
+    2. [System Integrity Protection](#system-integrity-protection)
+    3. [Other Notes](#other-notes)
 1. [Step 2: Boot into your software](#boot-into-your-software)
-1. [Step 3: Keep it up (champ!)](#keep-it-up-champ)
+1. [Step 3: Keep it running forever](#keep-it-running-forever)
     1. [Launchd](#launchd)
     1. [Lingon](#lingon)
     1. [LaunchControl](#launchcontrol)
@@ -75,7 +83,7 @@ August 2019 - modified article to remove old tips that are less helpful. Added a
 ## 2019 preface: 
 This article was put together in 2012 as a personal guide for how to set up installation computers for professional creative technology installations, particularly for Mac computers. I needed something that put various tips in one space so that I could refer back to it when a new project came along. 
 
-There was nothing like it at the time and it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy and had some tips that end up being more distacting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly.
+There was nothing like it at the time and it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy and had some tips that end up being more distacting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly. There are also some tips that I've found I use every time, and some that are seldom or never used these days - I have deleted some and relegated the rest to the appendix.
 
 ## Intro:
 
@@ -163,14 +171,16 @@ You can either [disable Notification Center completely](http://www.tekrevue.com/
 
 ![Notification_Center](images/Notification_Center_disable.png)
 
-You can also disable the "This Application Unexpectedly Quit" and the subsequent bug report that comes with it by running this command in terminal OR renaming the Problem Reporter app:
+You can also disable the "This Application Unexpectedly Quit" modal popup and the subsequent bug report that comes with it by running this command in terminal OR renaming the Problem Reporter app. Just use with caution since you won't see certain important crash messages otherwise.
 
-_(Requires disabling SIP)_
+_(Requires disabling SIP...see below)_
 
 ```bash
 sudo chmod 000 /System/Library/CoreServices/Problem\ Reporter.app
 ```
- - ##### System Integrity Protection  (SIP)
+
+ - ##### System Integrity Protection
+ 
 **Note:** As of macOS 10.11 some system settings can only be altered by turning off Apple's System Integrity Protection (SIP) setting. It is recommended that you leave SIP enabled unless you absolutely need to disable it. For example, if you would like to completely disable the Notification Center by unloading the launch agent you must disable SIP.
 
 As Apple describes it : "System Integrity Protection is a security technology in OS X El Capitan and later that's designed to help prevent potentially malicious software from modifying protected files and folders on your Mac. System Integrity protection restricts the root user account and limits the actions that the root user can perform on protected parts of the Mac operating system"
@@ -186,17 +196,15 @@ To disable SIP
 1. Restart your Mac.
 1. Before OS X starts up, hold down Command-R and keep it held down until you see an Apple icon and a progress bar. Release. This boots you into Recovery.
 1. From the Utilities menu, select Terminal.
-1. At the prompt type exactly the following and then press Return:
-```bash
-csrutil disable
-```
+1. At the prompt type the following and then press Return: `csrutil disable`
 1. Terminal should display a message that SIP was disabled.
 From the  menu, select Restart.
 
+- ##### Other Tips
 
 Another useful tool for modifying certain OSX .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover.
 
-I would also look at this filepath and you can rename files in here to temporarily disable them on the computer you're using: /System/Library/CoreServices (requires disabling SIP)
+For other odd things, I would also look at this filepath and you can rename files in here to temporarily disable certain system services them on the computer you're using: `/System/Library/CoreServices` (requires disabling SIP)
 
 You can rename "Notification Center" to "Notification Center_DEACTIVATE" or something (or you can move it) - and then you won't get any obnoxiously "helpful" Notification Center popups. (requires disabling SIP)
 
@@ -223,7 +231,7 @@ Sometimes you may need to have several processes start in order for your install
 
 Using Automator you can easily create complicated startup sequences that include delays and shell scripts as needed.
 
-![Automator Application](images/automator example3.png)
+![Automator Application](images/automator_example3.png)
 
 After you've created and tested your automator script you can save it as an application and add it to your startup items list.
 
@@ -329,15 +337,7 @@ The simplest option by far would be to go to System Preferences->Energy Saver an
 
 You could also set up another shell script with a crontab as above with CronniX or setup a User Agent with LaunchControl that closes applications and reboots the system as often as you specify.
 
-Another option (if you don’t want to deal with the terminal and shell scripting) is to use iCal to call an Automator iCal event. This method is perhaps a little easier to schedule and visualize when you will reboot. Within Automator, create a new file with the iCal event template to do something like this:
 
-![Automator Shell Script](images/Automator_example2.png)
-
-Run it to see if it does what you expect and then save it out. When you save,it will open in iCal as an action that gets opened. Just set it to repeat as often as you’d like. You can also set things like having it email you when it reboots or runs the script.
-
-If you’d like to just close your programs and re-open them and there is a background and foreground do something like this (pauses are so the quitting and re-opening stuff has time to actually execute):
-
-![AutomatorPause](images/Automator_example.png)
 
 ## Check in on it from afar
 ---------------------------------
@@ -412,6 +412,32 @@ This will save a screenshot to the desktop (specify your own file path) with a f
 
 Bonus points would be to create an auto-generated table and webpage that takes all of this info and puts it into a nice view that you can use to check all of your installations at a glance.
 
+
+### Uncategorized and Out of Date Tips
+-------
+####Deploying an image to multiple computers and backing up:
+If you’re setting up multiple computers, you can do these prep steps on one of them and just boot the others into target disk mode and use something like [Carbon Copy Cloner](http://www.bombich.com/) to mirror the first one on the next so everything is as consistent as possible. I've noticed a few things don't always transfer like sleep and screensaver settings, so make sure to double check those are sticking.
+
+For Windows and Linux, I highly recommend the use of [Clonezilla](https://clonezilla.org) - on its surface it looks junky, but it is actually incredibly well made and robust if you can deal with the command line interface. I have used it on multiple WIndows and Linux projects and it's often worked like a charm. I first had to use it to clone a single disk image from one Windows 10 laptop to 150 identical laptops for an installation. I was able to set up an assembly line process with Clonezilla where I cloned one 15gb image to 150 computers in about 2 days with a thumbdrive. Clonezilla also offers the ability to work over a network connection if you are able to hardwire all of your computers and push an image out that way.
+
+Clonezilla and Carbon Copy Cloner are also a great tools for creating a backup image of a computer. Once you have the image, you can have it stored in the cloud or a company server in the event the installation computer fails and you don't want to start this setup from scratch.
+
+#### Automator Calendar actions
+_[I don't recommend this in 2019 - the calendar app and automator are problematic. Learning to do this with Launchd is a much safer and more reliable option - but I'll leave it here anyway]_
+
+Another option for rebooting an app periodically (if you don’t want to deal with the terminal and shell scripting) is to use iCal to call an Automator iCal event. This method is perhaps a little easier to schedule and visualize when you will reboot. Within Automator, create a new file with the iCal event template to do something like this:
+
+![Automator Shell Script](images/Automator_example2.png)
+
+Run it to see if it does what you expect and then save it out. When you save,it will open in iCal as an action that gets opened. Just set it to repeat as often as you’d like. You can also set things like having it email you when it reboots or runs the script.
+
+If you’d like to just close your programs and re-open them, do something like this (the pauses are so the quitting and re-opening stuff has time to actually execute):
+
+![AutomatorPause](images/Automator_example.png)
+
+#### Email logs
+[I have made this an out-of-date tip because I've never actually used this in production, and I think some of it no longer works - it would be much better to set up a web service that recieves log files and images...or even a Slackbot, those are super easy to set up with curl commands from a bash script]
+
 If the process logger isn’t enough, we can use what we learned in that process to actually set up a system to email you if something is amiss so you don’t have to manually check it. We can do this all with the command line and internal tools, it’s just a more involved setup. This is going to be fairly general and will need some tuning in your specific case.
 
 First you will need to configure postfix so you can easily send emails from the terminal – [follow the instructions here as closely as possible](http://benjaminrojas.net/configuring-postfix-to-send-mail-from-mac-os-x-mountain-lion/)
@@ -446,14 +472,6 @@ Second step is to combine this new found ability to send emails from the Termina
 
 Now you just need to follow the instructions from Step 3 above to set this shell script up to run with launchd – you can check it every 5 minutes and have it email you if it crashed. You could also adapt the If statement to email you if the resolution isn’t right or some other process condition.
 
-### Appendix and uncategorized and out of date tips
--------
-####Deploying an image to multiple computers and backing up:
-If you’re setting up multiple computers, you can do these prep steps on one of them and just boot the others into target disk mode and use something like [Carbon Copy Cloner](http://www.bombich.com/) to mirror the first one on the next so everything is as consistent as possible. I've noticed a few things don't always transfer like sleep and screensaver settings, so make sure to double check those are sticking.
-
-For Windows and Linux, I highly recommend the use of [Clonezilla](https://clonezilla.org) - on its surface it looks junky, but it is actually incredibly well made and robust if you can deal with the command line interface. I have used it on multiple WIndows and Linux projects and it's often worked like a charm. I first had to use it to clone a single disk image from one Windows 10 laptop to 150 identical laptops for an installation. I was able to set up an assembly line process with Clonezilla where I cloned one 15gb image to 150 computers in about 2 days with a thumbdrive. Clonezilla also offers the ability to work over a network connection if you are able to hardwire all of your computers and push an image out that way.
-
-Clonezilla and Carbon Copy Cloner are also a great tools for creating a backup image of a computer. Once you have the image, you can have it stored in the cloud or a company server in the event the installation computer fails and you don't want to start this setup from scratch.
 
 #### Memory leak murderer
 In 2019 I don't recommend this as a best practice, but its more of a thought experiment about how to catch an app with a memory leak and reboot it if you didn't catch it during development.
