@@ -105,13 +105,13 @@ In System Preferences, you'll need to make some changes to each of these:
 
 - ##### Screensaver
 
-      Disable your screensaver. Set it’s time to **Never** 
+	Disable your screensaver. Set it’s time to **Never** 
       
 - ##### Desktop
 
-      I also suggest changing your desktop background to either black, a screenshot of your app, or your client's logo. Having the MacOS default backgrounds show up is a dead giveaway that something is wrong, and having the background be less loud can help fly under the radar. Another reason to do this is because of this simple fact: _it's not really broken until someone notices :)_
-      
-      If you're running multiple screens or computers, I've also found it helpful to make desktop backgrounds that have numbers, names or colors in them so you more easily tell them apart if you're mapping them together or something like that.
+	I also suggest changing your desktop background to either black, a screenshot of your app, or your client's logo. Having the MacOS default backgrounds show up is a dead giveaway that something is wrong, and having the background be less loud can help fly under the radar. Another reason to do this is because of this simple fact: _it's not really broken until someone notices :)_
+
+	If you're running multiple screens or computers, I've also found it helpful to make desktop backgrounds that have numbers, names or colors in them so you more easily tell them apart if you're mapping them together or something like that.
 
 - ##### Energy Saver
     - Turn Display Sleep and Computer Sleep to **Never**. 
