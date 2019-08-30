@@ -70,20 +70,23 @@ Changelog:
 		- [ ] Disable Notification Center/Set Do Not Disturb to be 24hrs (Notification Center)
 	
 - Booting into your software
-	- [ ] placeholder
+	- [ ] Use Login Items in _Users and Groups_ or use a Launch Agent
 - Keeping the software running at all times\
-	- [ ] placeholder
+	- [ ] Use a Launch Agent to start your app and have the OS keep it running
 - Rebooting automatically
-	- [ ] placeholder
+	- [ ] Use the "Schedule" button in _Energy Saver_ to schedule regular reboots
 - Remote access and logging
-	- [ ] placeholder
+	- [ ] Set up something to log in to the computer remotely (Logmein, Teamviewer, etc)
+	- [ ] Log various details about the computer and app
 - Testing
-	- [ ] placeholder
+	- [ ] Do several test boots and scenarios and monitor for the first week to make sure everything is functioning predictably
+- Other things
+	- [ ] Backup the drive you prepared and save it somewhere
 
 ## 2019 preface: 
 This article was put together in 2012 as a personal guide for how to set up installation computers for professional creative technology installations, particularly for Mac computers. I needed something that put various tips in one space so that I could refer back to it when a new project came along. 
 
-There was nothing like it at the time and it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy and had some tips that end up being more distacting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly. There are also some tips that I've found I use every time, and some that are seldom or never used these days - I have deleted some and relegated the rest to the appendix.
+There was nothing like it at the time, and it seems like it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy, confusing at points, and had some tips that end up being more distacting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly. There are also some tips that I've found I use every time, and some that are seldom or never used these days - I have deleted some and relegated the rest to the appendix.
 
 ## Intro:
 
@@ -222,64 +225,98 @@ To re-enable the desktop run the same command but set the bool to 'true'
 ## Boot into your software
 -------------------------------
 
-Things get unplugged, power goes out, not everyone has budget or space for a battery backup etc etc. Above, I covered how to have everything reboot automatically after power failures or freezes, but you’ll also need your app to be ready to go from boot and not leave the desktop open to prying eyes. There are many ways to have your application load automatically - the simplest is using OSX's built in tools: In the System Preferences “Accounts” panel, select “Login Items” and drag your application into there to have it open automatically on launch.
+Sometimes things get unplugged, the power goes out, or you might just need to restart to fix some OS issue. Above, I covered how to have the computer reboot automatically after power failures or freezes, but you’ll also need your app to be ready to go after booting up, and not just sit on the desktop or login screen. 
+
+There are many ways to have your application load automatically after restarting, and I'm going cover the simplest one here but a more complex but "safer" approach in the next section
+
+The simplest method is to use MacOS's built in tools. In the System Preferences “Users and Groups” panel, select “Login Items” and drag your application into there to have it open automatically on launch.
 
 ![Login Items](images/Login_items.png)
 
-Sometimes you may need to have several processes start in order for your installation to run properly. My favorite tool when it comes to starting up complicated installations is Apples built in [Automator](https://developer.apple.com/library/content/documentation/AppleApplications/Conceptual/AutomatorConcepts/Articles/AutomatorOverview.html#//apple_ref/doc/uid/TP40001508-BCIJAFHH).
+If you need to have multiple things happen on reboot, Apple's Automator is worth looking into, but I've found it problematic for certain cases and I recommend investing in the shell script and LaunchDaemon approach covered in the next section. However, for short runs or really simple needs, its a great tool. [Automator](https://developer.apple.com/library/content/documentation/AppleApplications/Conceptual/AutomatorConcepts/Articles/AutomatorOverview.html#//apple_ref/doc/uid/TP40001508-BCIJAFHH).
 
-Using Automator you can easily create complicated startup sequences that include delays and shell scripts as needed.
+Using Automator, you can easily create complicated startup sequences that include delays and shell scripts as needed.
 
 ![Automator Application](images/automator_example3.png)
 
-After you've created and tested your automator script you can save it as an application and add it to your startup items list.
+After you've created and tested your automator script you can save it as an application, and add it to your Login Items list like a regular app.
 
-## Keep it running forever
+Using the Login Items approach to loading your app on reboot is a great simple solution. However, your app will only open it once on reboot. If the app crashes, it will just display the "Unexpectedly Quit" modal until someone comes along to fix it manually. In the next section, we'll cover how to have MacOS continually check and relaunch your app.
+
+
+## Keep it running Forever
 ---------------------------
 
-#### Prepare your software first!
 
-Plan which things will need to be adjusted and accessed by you or a caretaker throughout your project's lifespan. Debug menus, hidden sliders, key commands and config files are great when you can't compile the app anymore. The time you spend now to make things simple will save you hours of remote debugging when something breaks.
+There are a couple ways to make sure your application starts up and stays up, and some methods offer some more customizability than the Login Items approach covered above. My personal preference is to use Launch Agents because it's the simplest method, has some good options, and its really the intended use case for them. Also - these methods should not be combined, otherwise you run the risk of having the OS open two versions of your app and slowing everything down.
+
+Coming up we'll discuss making a Launch Agents plist file yourself, or you can use a third party helper application to make them for you. An alternative to Launch Agents is to use a cronjob (a system job that runs on a schedule) and pair that with a shell script - we'll discuss that as well.
+
+Please note, some of the methods are really only for apps and not for project files that are opened by apps. For example, if you have an Ableton Live project file that you want to boot into, do not try to use that project file with a Launch Agent. The reason for this is, Launch Agents are intended to start a process, and a project file isn't the parent of the process, so things don't always work as intended. If you need to boot into a project file AND make sure the app doesn't crash, you may need to come up with a custom approach mentioned later.
 
 
-There are several ways to make sure your application goes up and stays up -
+#### Launch Agents
 
-#### Launchd
+Launch Agents are a standard feature of MacOS and are used to automatically launch many of the core system services and other third party services. They are run at login and exist as plist files that live in:
 
-Using Launch Daemons is an alternate way to get apps to load on boot and to continuously re-open them if they go down. Launchd plists are very useful alternatives to cron jobs and can be used to run things on a periodic basis or on calendar days. You could achieve similar results with a combination of automator and iCal, but it depends on what you’re comfortable with.
+ - `/Library/LaunchAgent` if you are running the app for all users
+ - `~/Library/LaunchAgent` if you are running for just the logged in user
 
-Here is an [Apple Doc](http://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) on using Launch Agents and Launch Daemons in various ways.
+The [difference between a Launch Daemon and a Launch Agent](http://www.grivet-tools.com/blog/2014/launchdaemons-vs-launchagents/) Basically, they are different flavors of the same thing. Use a LaunchAgent if you want it to run on Login, and a LaunchDaemon if you want it to run on reboot (and be running if the computer is waiting to log in). In general, if you're reading this guide, you are probably working with a fullscreen visual app and not a background hidden service and you'll just want to use a Launch Agent.
 
-The [difference between a Launch Daemon and a Launch Agent](http://techjournal.318.com/general-technology/launchdaemons-vs-launchagents/) (Basically whether you need it to run when a user is logged in or not…for most simple options like launching a regular app, you’ll just want a Launch Agent)
+If you want a deeper explanation on both, here is an [Apple Doc](http://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) on using Launch Agents and Launch Daemons in various ways.
 
-Also note (!) that you may need to point your launch daemon to a file within your .app package, not just the app itself - you have to point it to the file in the MacOS folder inside the .app package (right-click your app and select "Show package Contents") Otherwise you might be wondering why the launchdaemon isn't launching your app.
+Personally, I find it easier to use third party apps for ease and more assurance that ive got it right, but I'll briefly cover the manual method. You may also want to manually adjust some things that are missing from the options in the third-party softwares.
 
-A launchd example from [admsyn](https://gist.github.com/4140204)
+#### Making Launch Agents Manually
+If you want to make a LaunchAgent yourself, you'll also be making use of the terminal command `launchctl` to load, unload and test your process as you make it - or you can just reboot.  I would follow one of the guides above, take a look at `man launchd.plist`, take a look at some of [admsyn's](https://gist.github.com/admsyn/4140204) notes, take a look [here](https://www.launchd.info) or use this as a template (I generated this from Lingon). 
 
-Of course you could make the launchd plist yourself for free from a template like above. You can read all about them with the command "man launchd.plist" typed into terminal to get an idea of what each toggle controls. One quick method to setting up Launchd is to use [LaunchControl](http://www.soma-zone.com/LaunchControl/). LaunchControl is available for $10 however its developers do not enforce copyright protection. If you do use their software please be nice and purchase a license. For non-profit and educational institutios soma-zone allows free use. Another alternative is Lingon ($4.99 in the App Store) or [Lingon X](http://www.peterborgapps.com/lingon/)
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<true/>
+	</dict>
+	<key>Label</key>
+	<string>TweetBot4Evr</string>
+	<key>ProcessType</key>
+	<string>Interactive</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Applications/Tweetbot.app/Contents/MacOS/Tweetbot</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>
+```
+Noteable things in the above example:
 
-#### Lingon
-<br>
-In Lingon, hit the + to create a new launchd plist. Just make it a standard launch agent. Now Set up your plist like so:
+ - `KeepAlive` - This tells the OS that if this app isn't running, try and start it up again
+ - `SuccessfulExit` - Related to `KeepAlive` - if this key is included, the app will not automatically relaunch if it has a clean exit - i.e. if you manually quit it versus it crashing. If this isn't set, you may get frustrated with the app opening itself over and over when you try to quit it during testing.
+ - `ProcessType` - This controls the resources allowed by the app - for example, if this were a background app it would be throttled by other apps. You should set it to Interactive for full use of resources. From the man page: "If left unspecified, the system will apply light resource limits to the job, throttling its CPU usage and I/O bandwidth." This is not an available option in Lingon.
+ - `Program Arguments` This is for the filepath to the executable. **Note!** this should be the path to the app within the .app package, not the path to the app. The path is typically `YourProgram.app/Contents/MacOS/YourProgram` - which can be found by right-clicking on the app and selecting "Show Package Contents" and navigating to it
+ - `RunAtLoad` - This just specifies to run this process when logging in
+ - `Label` just the name of the Launch Agent to the system
 
-![LingonSetup](images/LingonSetup.png)
+ There are many other potentially useful keys that are listed in the `man` page for launchd.plist - you may, for example, want to run something every 5 minutes or every hour or once a week, and there is a scheduler for that.
 
-One additional/optional thing you can add to this is to put an additional key in the plist for a “Successful Exit”. By adding this, your app won’t re-open when it has detected that it closed normally (ie You just hit escape intentionally, it didn’t crash). Can be useful if you’re trying to check something and OS X won’t stop re-opening the app on you. To easily add this to the key, click the advanced tab and click the checkbox for "Successful exit" - or just add it manually as it in the above screenshot.
+#### Third Party Apps for creating Launch Agents
 
-#### LaunchControl
-<br>
-In LaunchControl press Command + N to create a new User Agent. You can rename the new agent to whatever you like. the default name is "local.job". You can then setup your agent using the GUI items on the right side of the application by dragging and dropping them in place. There are several powerful options for scheduling and setting up conditional tasks. Checkout soma-zones [FAQ](http://www.soma-zone.com/LaunchControl/a/FAQ.html) if you run into any problems. You can also checkout this primer on Launch Daemons at http://www.launchd.info
+Neither of these apps are free, so make sure to have your credit card ready. [LaunchControl](http://www.soma-zone.com/LaunchControl/) is a solid option that has more options than Lingon, but can be a bit more confusing. Lingon is a cleaner interface and is overall easer to use, but some options are more hidden or unavailable (Like processtype).
 
-![LaunchControl](images/launchcontrol_example.png)
 
-#### Shell script+Cron Job method
 
-(I got the following super helpful tip from [Kyle McDonald](http://kylemcdonald.net/))
-)
+#### Unusual Cases
 
-This method is sort of deprecated in relation to the launchd method - you can run shell scripts with Lingon and launchd in the same manner as what we've got here. Shell scripting is your best friend. With the help of the script below and an application called CronniX (or use Lingon) , you will be able to use a cronjob to check the system’s list of currently running processes. If your app does not appear on the list, then the script will open it again, otherwise it won’t do anything. Either download the script or type the following into a text editor, replacing Twitter.app with your app’s name and filepath. Don’t forget the “.app” extension in the if statement!:
 
-	\#!/bin/sh
+This method is sort of deprecated in relation to the launchd method - you can run shell scripts with Lingon and launchd in the same manner as what we've got here. Shell scripting is your best friend. With the help of the script below and an application called CronniX (or use Lingon) , you will be able to use a cronjob to check the system’s list of currently running processes. If your app does not appear on the list, then the script will open it again, otherwise it won’t do anything. Either download the script or type the following into a text editor, replacing Twitter.app with your app’s name and filepath. Don’t forget the “.app” extension in the if statement:
+
+	!/bin/sh
 		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ]
 		then
 		echo "Twitter not running. opening..."
@@ -324,6 +361,10 @@ Just type this into a plaintext document and save it as something like ”KeepMy
 Make sure to check the Console.app for any errors that may have come through when no one caught them, whenever you check the installation in person or remotely. This is not a fix-all for buggy programming, just a helper to keep things running smooth. The more things you can do to leave yourself notes about why the crash happened, the faster you can address the core issue.
 
 Applescript is also a very solid choice for doing some more OS specific work in terms of having odd menus clicked or keypresses sent in some order.
+
+#### Prepare your software
+
+While developing, I've found it really useful to consider which things will need to be adjusted and accessed by you or a caretaker throughout your project's lifespan. Debug menus, hidden sliders, key commands and external config files are great when you can't compile the app anymore or just need to make a quick change. The time you spend now to make things simple and easy to change will save you hours of remote debugging when something breaks. 
 
 ## Reboot periodically
 ---------------------------
@@ -470,6 +511,38 @@ Second step is to combine this new found ability to send emails from the Termina
     fi
 
 Now you just need to follow the instructions from Step 3 above to set this shell script up to run with launchd – you can check it every 5 minutes and have it email you if it crashed. You could also adapt the If statement to email you if the resolution isn’t right or some other process condition.
+
+#### Cronjob process keepalive
+This method is sort of deprecated in relation to the launchd method - you can run shell scripts with Lingon and launchd in the same manner as what we've got here. Shell scripting is your best friend. With the help of the script below and an application called CronniX (or use Lingon) , you will be able to use a cronjob to check the system’s list of currently running processes. If your app does not appear on the list, then the script will open it again, otherwise it won’t do anything. Either download the script or type the following into a text editor, replacing Twitter.app with your app’s name and filepath. Don’t forget the “.app” extension in the if statement:
+
+	!/bin/sh
+		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ]
+		then
+		echo "Twitter not running. opening..."
+		open /Applications/Twitter.app
+		else
+		echo "Twitter running" 
+		fi
+
+Save that file as something like “KeepOpen.sh” and keep it next to your application or somewhere convenient.
+
+After creating that file, you’ll need to make it executable. To do this, open the Terminal and in a new window type “chmod +x ” and then enter the path to the shell script you just created (you can either drag the shell script into the terminal window or manually type it). It would look something like this:
+
+
+    4Evr-MacBook-Pro:~ Forever4Evr$ chmod +x /Users/Forever4Evr/Desktop/KeepOpen.sh
+
+After you have made it executable, you’re now ready to set it up as a cronjob. Tip: to test the script, you can change the extension at the end to KeepOpen.command as an alternative to opening it with Terminal, but the same thing gets done.
+
+Cronjobs are just low level system tasks that are set to run on a timer. The syntax for cronjobs is outside of the scope of this walkthrough, but there are many sites available for that. Instead, the application CronniX can do a lot of the heavy lifting for you.
+
+After downloading CronniX, open it up and create a new cronjob. In the window that opens,  in the command window, point it to your KeepOpen.sh file and  check all of the boxes in the simple tab for minute, hour, month, etc. This tells the job to run every minute, every hour, every day, every month. If you want it to run less frequently or at a different frequency, play around with the sliders.
+
+![Cronnix_link](images/Cronnix-settings.png)
+
+Now just hit “New” and then make sure to hit “Save” to save it into the system’s crontab. Now if you just wait a minute then it should open your app every minute on the minute. Maybe save this one for the very end if you have more to do :)
+
+This is a great tool if there is an unintended crash because the app will never be down longer than a minute.
+
 
 
 #### Memory leak murderer
