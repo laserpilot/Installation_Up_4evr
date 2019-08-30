@@ -262,7 +262,7 @@ Launch Agents are a standard feature of MacOS and are used to automatically laun
  - `/Library/LaunchAgent` if you are running the app for all users
  - `~/Library/LaunchAgent` if you are running for just the logged in user
 
-The [difference between a Launch Daemon and a Launch Agent](http://www.grivet-tools.com/blog/2014/launchdaemons-vs-launchagents/) Basically, they are different flavors of the same thing. Use a LaunchAgent if you want it to run on Login, and a LaunchDaemon if you want it to run on reboot (and be running if the computer is waiting to log in). In general, if you're reading this guide, you are probably working with a fullscreen visual app and not a background hidden service and you'll just want to use a Launch Agent.
+The [difference between a Launch Daemon and a Launch Agent.](http://www.grivet-tools.com/blog/2014/launchdaemons-vs-launchagents/) Basically, they are different flavors of the same thing. Use a LaunchAgent if you want it to run on Login, and a LaunchDaemon if you want it to run on reboot (and be running if the computer is waiting to log in). In general, if you're reading this guide, you are probably working with a fullscreen visual app and not a background hidden service, and you'll just want to use a Launch Agent.
 
 If you want a deeper explanation on both, here is an [Apple Doc](http://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) on using Launch Agents and Launch Daemons in various ways.
 
@@ -307,32 +307,33 @@ Noteable things in the above example:
 
 #### Third Party Apps for creating Launch Agents
 
-Neither of these apps are free, so make sure to have your credit card ready. [LaunchControl](http://www.soma-zone.com/LaunchControl/) is a solid option that has more options than Lingon, but can be a bit more confusing. Lingon is a cleaner interface and is overall easer to use, but some options are more hidden or unavailable (Like processtype).
-
+Neither of these apps are free, so make sure to have your credit card ready. [LaunchControl](http://www.soma-zone.com/LaunchControl/) is a solid option that has more options than Lingon, but can be a bit more confusing. [Lingon](https://www.peterborgapps.com/lingon/) is a cleaner interface and is overall easier to use, but some options are more hidden or unavailable (Like `ProcessType`).
 
 
 #### Unusual Cases
 
+The above methods are great for simple standalone apps, but sometimes you have other processes or scripts you want to run at the same time, or maybe you need to have something else happen if your app crashes. In any case, you may be able to adapt some of the examples here to suit your uses case. If you're looking for other shell script examples to learn from, [here are some variations](https://github.com/ruanyf/simple-bash-scripts).
 
-This method is sort of deprecated in relation to the launchd method - you can run shell scripts with Lingon and launchd in the same manner as what we've got here. Shell scripting is your best friend. With the help of the script below and an application called CronniX (or use Lingon) , you will be able to use a cronjob to check the system’s list of currently running processes. If your app does not appear on the list, then the script will open it again, otherwise it won’t do anything. Either download the script or type the following into a text editor, replacing Twitter.app with your app’s name and filepath. Don’t forget the “.app” extension in the if statement:
+You would use the script below if you wanted to have the system check if your process is running, and if it can't find the process, it tries to re-open the specified app. If it detects the app is running, it does nothing. 
 
-	!/bin/sh
-		if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ]
-		then
-		echo "Twitter not running. opening..."
-		open /Applications/Twitter.app
-		else
-		echo "Twitter running" 
-		fi
+```bash
+if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ]
+then
+echo "Twitter not running. Re-opening..."
+open /Applications/Twitter.app
+else
+echo "Twitter running" 
+fi```
 
-Save that file as something like “KeepOpen.sh” and keep it next to your application or somewhere convenient.
+You would take the above and replace Twitter.app and the path to the .app with your own custom values. Please note that shell scripts can open the .app files and don't need to be pointed to the `Contents/MacOS` file that that launchd.plist's do.
 
-After creating that file, you’ll need to make it executable. To do this, open the Terminal and in a new window type “chmod +x ” and then enter the path to the shell script you just created (you can either drag the shell script into the terminal window or manually type it). It would look something like this:
+Save that file as something like “KeepTwitterOpen.sh” and keep it next to your application or somewhere convenient.
 
+After creating that file, you’ll need to make it executable. To do this, open the Terminal and in a new window type `chmod +x` and then enter the path to the shell script you just created (you can either drag the shell script into the terminal window or manually type it to fill in the path). It would look something like this:
 
-    4Evr-MacBook-Pro:~ Forever4Evr$ chmod +x /Users/Forever4Evr/Desktop/KeepOpen.sh
+`4Evr-MacBook-Pro:~ Forever4Evr$ chmod +x /Users/Forever4Evr/Desktop/KeepOpen.sh`
 
-After you have made it executable, you’re now ready to set it up as a cronjob. Tip: to test the script, you can change the extension at the end to KeepOpen.command as an alternative to opening it with Terminal, but the same thing gets done.
+After you have made it executable, you’re now ready to set it up to run on a schedule. Tip: to test the script, you can change the extension at the end to `.command`  (ie `Keepopen.command` as an alternative to doing that whole `chmod +x` business - this allows you to double click it to run it.
 
 Cronjobs are just low level system tasks that are set to run on a timer. The syntax for cronjobs is outside of the scope of this walkthrough, but there are many sites available for that. Instead, the application CronniX can do a lot of the heavy lifting for you.
 
