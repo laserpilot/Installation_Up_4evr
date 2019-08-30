@@ -5,8 +5,8 @@ echo "====================SystemStats\n" >> $FILE_PATH
 date >> $FILE_PATH
 echo "\n" >> $FILE_PATH
 ps aux | grep '%CPU' >> $FILE_PATH
-ps aux | grep 'twitterTimeline' >> $FILE_PATH
-ps aux | grep 'Curator' >> $FILE_PATH
+ps aux | grep 'Tweetbot' >> $FILE_PATH
+ps aux | grep 'Slack' >> $FILE_PATH
 
 
 #use the following if you have serial devices
