@@ -317,13 +317,15 @@ The above methods are great for simple standalone apps, but sometimes you have o
 You would use the script below if you wanted to have the system check if your process is running, and if it can't find the process, it tries to re-open the specified app. If it detects the app is running, it does nothing. 
 
 ```bash
+#!/bin/bash
 if [ $(ps ax | grep -v grep | grep "Twitter.app" | wc -l) -eq 0 ]
 then
 echo "Twitter not running. Re-opening..."
 open /Applications/Twitter.app
 else
 echo "Twitter running" 
-fi```
+fi
+```
 
 You would take the above and replace Twitter.app and the path to the .app with your own custom values. Please note that shell scripts can open the .app files and don't need to be pointed to the `Contents/MacOS` file that that launchd.plist's do.
 
