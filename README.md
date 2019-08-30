@@ -22,7 +22,8 @@ Changelog:
 
 
 1. [TL;DR Quick Checklist](#TL;DR-Quick-Checklist)
-2. [Step 1: Prep your software and the computer](#prep-your-software-and-the-computer)
+2. [Step 1: Prepare your software](#prepare-your-software)
+2. [Step 2: Prepare the computer](#prepare-the-computer)
     1. [Screensaver](#screensaver)
     2. [Desktop](#desktop)
     1. [Energy Saver](#energy-saver)
@@ -35,16 +36,16 @@ Changelog:
     1. [Notification Center](#notification-center-and-popups)
     2. [System Integrity Protection](#system-integrity-protection)
     3. [Other Notes](#other-notes)
-1. [Step 2: Boot into your software](#boot-into-your-software)
-1. [Step 3: Keep it running forever](#keep-it-running-forever)
+1. [Step 3: Boot into your software](#boot-into-your-software)
+1. [Step 4: Keep it running forever](#keep-it-running-forever)
     1. [Launchd](#launchd)
     1. [Lingon](#lingon)
     1. [LaunchControl](#launchcontrol)
     1. [Shell Script+Cron Job Method](#shell-script)
     1. [Non-Cronjob - Shell Script Method](#non)
-1. [Step 4: Reboot periodically](#reboot-periodically)
-1. [Step 5: Check in on it from afar](#check-in-on-it-from-afar)
-1. [Step 6: Test, test, test](#test-test-test)
+1. [Step 5: Reboot periodically](#reboot-periodically)
+1. [Step 6: Check in on it from afar](#check-in-on-it-from-afar)
+1. [Step 7: Test, test, test](#test-test-test)
 1. [Additional Tips: Logging](#additional-tips)
 1. [Memory lead murderer](#memory-leak-murderer)
 1. [Alternate Resources](#alternate-resources)
@@ -96,8 +97,15 @@ This is a guide with tips on how to keep your MacOS-based installation running f
 
 _As a security disclaimer. Many of these tips, like enabling automatic login, do weaken the intended security of Mac OS. Make sure to take extra precautions that your computer is not physically accessible by the public and that it is not easily accessed over the network by malicious actors._
 
+## Prepare your software
+-------------------------------
 
-## Prep System Preferences
+While developing, I've found it really useful to consider which things will need to be adjusted and accessed by you or a caretaker throughout your project's lifespan. 
+
+Debug menus, hidden sliders, key commands and external config files are great when you can't compile the app anymore or just need to make a quick change. The time you spend now to make things simple and easy to change will save you hours of remote debugging when something breaks. Also related, the more breadcrumbs, error reporting, and log files you can build in, the faster you'll be able to get the bottom of what's causing crashes with a new installation.
+
+
+## Prepare the Computer
 -----------------------------------------------
 
 This section covers the various MacOS settings you'll need to check and enable to keep them from interfering with your application running 24/7. You’ll need to go through and turn off or disable several different automatic settings to keep things from popping up over top of your application. Some of these screens have subtle changes depending on the OS version and whether you're on a desktop or laptop. Some settings have disappeared or been obscured since writing this in 2012 and may require a quick search to find if they are still accessible.
@@ -204,13 +212,13 @@ From the  menu, select Restart.
 
 - ##### Other Tips
 
-Another useful tool for modifying certain OSX .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover.
+Another useful tool for modifying certain MacOS .plists for disable or enabling certain things is [Tinkertool](http://www.bresink.com/osx/TinkerTool.html) You can use this to disable or enable certain things that System Preferences doesn't cover.
 
 For other odd things, I would also look at this filepath and you can rename files in here to temporarily disable certain system services them on the computer you're using: `/System/Library/CoreServices` (requires disabling SIP)
 
 You can rename "Notification Center" to "Notification Center_DEACTIVATE" or something (or you can move it) - and then you won't get any obnoxiously "helpful" Notification Center popups. (requires disabling SIP)
 
-After OSX 10.9 - Apple enabled this strange feature called App Nap that detects when an App isn't doing much and makes it use even less resources - could be problematic - [check this page out for how to disable for now](http://www.tekrevue.com/tip/disable-app-nap-os-x-mavericks/)
+After MacOS 10.9 - Apple enabled this strange feature called App Nap that detects when an App isn't doing much and makes it use even less resources - could be problematic - [check this page out for how to disable for now](http://www.tekrevue.com/tip/disable-app-nap-os-x-mavericks/)
 
 If necessary, You can also hide all of the desktop icons with this terminal command:
 
@@ -219,7 +227,6 @@ defaults write com.apple.finder CreateDesktop -bool false;
 killall Finder
 ```
 To re-enable the desktop run the same command but set the bool to 'true'
-
 
 
 ## Boot into your software
@@ -271,7 +278,7 @@ Personally, I find it easier to use third party apps for ease and more assurance
 #### Making Launch Agents Manually
 If you want to make a LaunchAgent yourself, you'll also be making use of the terminal command `launchctl` to load, unload and test your process as you make it - or you can just reboot.  I would follow one of the guides above, take a look at `man launchd.plist`, take a look at some of [admsyn's](https://gist.github.com/admsyn/4140204) notes, take a look [here](https://www.launchd.info) or use this as a template (I generated this from Lingon). 
 
-```
+```XML
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -314,7 +321,8 @@ Neither of these apps are free, so make sure to have your credit card ready. [La
 
 The above methods are great for simple standalone apps, but sometimes you have other processes or scripts you want to run at the same time, or maybe you need to have something else happen if your app crashes. In any case, you may be able to adapt some of the examples here to suit your uses case. If you're looking for other shell script examples to learn from, [here are some variations](https://github.com/ruanyf/simple-bash-scripts).
 
-You would use the script below if you wanted to have the system check if your process is running, and if it can't find the process, it tries to re-open the specified app. If it detects the app is running, it does nothing. 
+#####Keep app alive without the Launch Agent KeepAlive
+You would use the script below if you wanted to have the system check if your process is running, and if it can't find the process, it tries to re-open the specified app. If it detects the app is running, it does nothing. It's not as fast and responsive as the Launch Agent KeepAlive method, but it may still be useful.
 
 ```bash
 #!/bin/bash
@@ -327,60 +335,50 @@ echo "Twitter running"
 fi
 ```
 
-You would take the above and replace Twitter.app and the path to the .app with your own custom values. Please note that shell scripts can open the .app files and don't need to be pointed to the `Contents/MacOS` file that that launchd.plist's do.
+You would take the above, paste it into a text file, and replace Twitter.app and the path to the .app with your own custom values. Please note that shell scripts can open the .app files and don't need to be pointed to the `Contents/MacOS` file that that launchd.plist's do.
 
-Save that file as something like “KeepTwitterOpen.sh” and keep it next to your application or somewhere convenient.
+Save that file as something like “KeepTwitterOpen.sh” and keep it next to your application or somewhere convenient. You can test it by opening terminal and typing `sh` and pasting the path to the file.
 
-After creating that file, you’ll need to make it executable. To do this, open the Terminal and in a new window type `chmod +x` and then enter the path to the shell script you just created (you can either drag the shell script into the terminal window or manually type it to fill in the path). It would look something like this:
+After creating that file, you’ll need to make it executable to have the system run it on a schedule. To do this, open the Terminal, and in a new window type `chmod +x` and then enter the path to the shell script you just created (you can either drag the shell script into the terminal window or manually type it to fill in the path). It would look something like this:
 
-`4Evr-MacBook-Pro:~ Forever4Evr$ chmod +x /Users/Forever4Evr/Desktop/KeepOpen.sh`
+```bash
+4Evr-MacBook-Pro:~ Forever4Evr$ chmod +x /Users/Forever4Evr/Desktop/KeepOpen.sh
+```
 
 After you have made it executable, you’re now ready to set it up to run on a schedule. Tip: to test the script, you can change the extension at the end to `.command`  (ie `Keepopen.command` as an alternative to doing that whole `chmod +x` business - this allows you to double click it to run it.
 
-Cronjobs are just low level system tasks that are set to run on a timer. The syntax for cronjobs is outside of the scope of this walkthrough, but there are many sites available for that. Instead, the application CronniX can do a lot of the heavy lifting for you.
+To run the script on a schedule (ie every minute), I recommend using a Launch Agent and scheduling it to run every minute. You would set your launchd.plist file's `ProgramArguments` path to the "KeepOpen.sh" file instead of an app. In a future section on logging, you could also add things to this script that log the app's status to a text file.
 
-After downloading CronniX, open it up and create a new cronjob. In the window that opens,  in the command window, point it to your KeepOpen.sh file and  check all of the boxes in the simple tab for minute, hour, month, etc. This tells the job to run every minute, every hour, every day, every month. If you want it to run less frequently or at a different frequency, play around with the sliders.
+If you don't want to use the Launch Daemon scheduler - this one is a bit more dangerous, but should work. Once loaded, this script will just continuously try and open your app every 100ms, but if it is already open, the OS won't (usually) try to open it multiple times
 
-![Cronnix_link](images/Cronnix-settings.png)
 
-Now just hit “New” and then make sure to hit “Save” to save it into the system’s crontab. Now if you just wait a minute then it should open your app every minute on the minute. Maybe save this one for the very end if you have more to do :)
+```bash
+#!/bin/bash
+while true
+do
+#using open to get focus
+echo "Trying to open empty example"
+open -a emptyExample <---replace with filepath to your app
+sleep 100
+done
+```
 
-This is a great tool if there is an unintended crash because the app will never be down longer than a minute.
 
-#### Non-Cronjob - Shell Script Method
-
-    \#!/bin/bash
-
-    while true
-    do
-    #using open to get focus
-    echo "Trying to open empty example"
-    open -a emptyExample
-    sleep 10
-    done
-
-Just type this into a plaintext document and save it as something like ”KeepMyAppAlivePlz.command” and then use chmod as above to make the file executable  and then drop this in your login items as  above. This one will just continuously try and open your app every 10ms, but if it is already open, the OS knows to not try opening it a second, third, fourth time.
-
-Make sure to check the Console.app for any errors that may have come through when no one caught them, whenever you check the installation in person or remotely. This is not a fix-all for buggy programming, just a helper to keep things running smooth. The more things you can do to leave yourself notes about why the crash happened, the faster you can address the core issue.
-
-Applescript is also a very solid choice for doing some more OS specific work in terms of having odd menus clicked or keypresses sent in some order.
 
 #### Prepare your software
 
-While developing, I've found it really useful to consider which things will need to be adjusted and accessed by you or a caretaker throughout your project's lifespan. Debug menus, hidden sliders, key commands and external config files are great when you can't compile the app anymore or just need to make a quick change. The time you spend now to make things simple and easy to change will save you hours of remote debugging when something breaks. 
+While developing, I've found it really useful to consider which things will need to be adjusted and accessed by you or a caretaker throughout your project's lifespan. Debug menus, hidden sliders, key commands and external config files are great when you can't compile the app anymore or just need to make a quick change. The time you spend now to make things simple and easy to change will save you hours of remote debugging when something breaks. Related, the more breadcrumbs and loggign you can do, the faster you'll be able to get the bottom of what's causing crashes with a new installation.
+
+
 
 ## Reboot periodically
 ---------------------------
 
-This one is a little more preventative, or maybe superstitious so hopefully someone can point out a concrete reason why this is a good idea. Depending on your app and the amount of stuff it reaches into, there could be some memory leaks or other OS bugs that you haven’t accounted for. Rebooting every day or week is a good idea to keep everything tidy, system wise.
+Rebooting nightly or weekly is a little more preventative (or maybe superstitious). Depending on your app and the amount of stuff it reaches into, there could be some memory leaks or other OS bugs that you haven’t accounted for. Rebooting every day or week seems to be a good idea to keep things running smoothly.
 
-The simplest option by far would be to go to System Preferences->Energy Saver and then click “Schedule…” and enter in some values if you need to turn the computer off to rest for a longer period of time to save it some stress when it might not be used at night time or something. Heat can do funny things sometimes, so if you have a chance to get your computer to rest and the time to test it, definitely give this a shot…saves some energy too which is nice.
+The simplest option by far would be to go to System Preferences->Energy Saver and then click “Schedule…” on the bottom right. You can set the computer to totally shut down and then start itself back up in the morning if you want to save energy or wear and tear. Just know that this can do funny things sometimes.
 
 ![Auto-reboot](images/Auto_reboot.png)
-
-You could also set up another shell script with a crontab as above with CronniX or setup a User Agent with LaunchControl that closes applications and reboots the system as often as you specify.
-
-
 
 ## Check in on it from afar
 ---------------------------------
@@ -400,28 +398,29 @@ You’ve already tested and perfected your software for the installation, so mak
 You can’t account for everything, so don’t beat yourself up if something does eventually happen, but this list will hopefully alleviate a little bit of frustration. Good luck!
 
 
-## Additional Tips + Logging
+## Logging
 ------------------------
 
-If you have an installation that runs for weeks or months, you might want a way to keep tabs on it that doesn’t involve remotely logging in and checking on it. A good thing to have would be to have something on the system that writes certain info to a text file (kept on a linked Dropbox), or better write that file to a web server that you can then check.
+If you have an installation that runs for weeks or months, you might want a way to keep tabs on it that doesn’t involve remotely logging in and checking on it. A good thing to have would be to have something on the system that writes certain info to a local text file, or even better write log files to a local web server so you can check on it.
 
-There are a couple things you can do depending on what you want to know about the state of your installation.
+There are a couple things you can do to build up data depending on what you want to know about the state of your installation. Let's take a look at PS
 
-There is a terminal command you can use to get a list of all of the currently running processes on your computer:
+There is a terminal command you can use to get a list of all of the currently running processes on your computer: `ps aux`
 
-    ps aux (or ps ax)
+More info above ps commands [here](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ps.1.html)))
 
-(more info above ps commands [here](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ps.1.html))) – Further more you can filter this list to only return applications you’re interested in learning about:
+Furthermore you can filter this very long list to only return applications you want to track by using the | (pipe) and then `grep` (`grep -v grep` just removes the grep command itself from the process list):
 
-    ps aux | grep "TweetDeck"
+`ps aux | grep "TweetDeck" | grep -v grep`
 
 This will return a line like this:
 
+```
     USER             PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND
-    laser          71564   0.4  1.7  4010724 140544   ??  S    Sun03PM  14:23.76 /Applications/TweetDeck.app/Contents/MacOS/TweetDeck -psn_0_100544477
-    laser          95882   0.0  0.0  2432768    600 s000  S+   12:11PM   0:00.00 grep TweetDeck
+    BlairNeal       71564   0.4  1.7  4010724 140544   ??  S    Sun03PM  14:23.76 /Applications/TweetDeck.app/Contents/MacOS/TweetDeck -psn_0_100544477
+```
 
-Now you have the following useful info: CPU usage, Memory usage (as percentage of total memory), Status, Time Started, Time Up
+Now you have the following useful info: CPU usage, Memory usage (as percentage of total memory), Status, Time Started, Time Up, and the name of the process
 
 All that is left is to write this output to a text file, which you can do with a line like this:
 
@@ -478,6 +477,24 @@ If you’d like to just close your programs and re-open them, do something like 
 
 ![AutomatorPause](images/Automator_example.png)
 
+#### Constantly try to re-open your app:
+
+I don't know that I ever used this, but I'm leaving it here. 
+
+If you don't want to use the Launch Daemon scheduler - this one is a bit more dangerous, but should work. Once loaded, this script will just continuously try and open your app every 100ms, but if it is already open, the OS won't (usually) try to open it multiple times
+
+
+```bash
+#!/bin/bash
+while true
+do
+#using open to get focus
+echo "Trying to open your app"
+open -a filepath/to/your/.app
+sleep 100
+done
+```
+
 #### Email logs
 [I have made this an out-of-date tip because I've never actually used this in production, and I think some of it no longer works - it would be much better to set up a web service that recieves log files and images...or even a Slackbot, those are super easy to set up with curl commands from a bash script]
 
@@ -500,7 +517,7 @@ Second step is to combine this new found ability to send emails from the Termina
     #!/bin/sh
     if [ $(ps ax | grep -v grep | grep "YourApp.app" | wc -l) -eq 0 ] ; #Replace YourApp.app with your own app's name     
     then
-            SUBJECT="Shit broke"
+            SUBJECT="Damn, it broke"
             EMAIL="InstallationSupport" #this is the receiver
          EMAILMESSAGE="This could be for adding an attachment/logfile"
          echo "The program isn't open - trying to re-open">$SUBJECT
