@@ -579,6 +579,10 @@ See [this article](http://blairneal.com/blog/memory-leak-murderer/) about combin
 The original outdated version of the article from 2012 is [here](http://blairneal.com/blog/installation-up-4evr/) 
 
 ### MAC OS X
+
+Other useful shell commands for MacOS [here](https://github.com/herrbischoff/awesome-macos-command-line)
+
+
 This is an amazing addon for openFrameworks apps that keeps your application open even after a large range of failures: [ofxWatchdog](https://github.com/toolbits/ofxWatchdog
 )
 [http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations](http://vormplus.be/blog/article/configuring-mac-os-x-for-interactive-installations

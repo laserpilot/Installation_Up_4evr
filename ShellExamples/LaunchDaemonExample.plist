@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>KeepAlive</key>
+<dict>
+<key>SuccessfulExit</key>
+<true/>
+</dict>
+<key>Label</key>
+<string>TweetBot4Evr</string>
+<key>ProcessType</key>
+<string>Interactive</string>
+<key>ProgramArguments</key>
+<array>
+<string>/Applications/Tweetbot.app/Contents/MacOS/Tweetbot</string>
+</array>
+<key>RunAtLoad</key>
+<true/>
+</dict>
+</plist>
