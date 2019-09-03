@@ -87,7 +87,7 @@ Changelog:
 ## 2019 preface: 
 This article was put together in 2012 as a personal guide for how to set up installation computers for professional creative technology installations, particularly for Mac computers. I needed something that put various tips in one space so that I could refer back to it when a new project came along. 
 
-There was nothing like it at the time, and it seems like it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy, confusing at points, and had some tips that end up being more distacting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly. There are also some tips that I've found I use every time, and some that are seldom or never used these days - I have deleted some and relegated the rest to the appendix.
+There was nothing like it at the time, and it seems like it has become a cult reference guide for best practices for professionals and artists working with creative technology installations. The original version was very wordy, confusing at points, and had some tips that end up being more distracting than useful, so I have gone through and stripped out sections and try to get to the point a bit more quickly. There are also some tips that I've found I use every time, and some that are seldom or never used these days - I have deleted some and relegated the rest to the appendix.
 
 ## Intro:
 
@@ -152,7 +152,7 @@ In System Preferences, you'll need to make some changes to each of these:
     ![Login_items](images/Auto_login.png)
 
 - ##### Software Update
-    Disable automatic updates. Again, this could be a security risk down the line, but its helpful if future versions of MacOS break something in your app.
+    Disable automatic updates. Again, this could be a security risk down the line, but it's helpful if future versions of MacOS break something in your app.
       
 
  ![Update_disable](images/Auto_update_disable1.png)
@@ -167,10 +167,10 @@ In System Preferences, you'll need to make some changes to each of these:
  - ##### Network
     Your computer should almost always be hardwired to the network with ethernet - do not trust wifi :)
     
-     However, If you dont need remote access or don’t need internet access for the installation, it’s not a bad idea to disable the Wifi completely. If Wifi is turned off, the “Please select a Wireless Network” window won't pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
+     However, If you don't need remote access or don’t need internet access for the installation, it’s not a bad idea to disable the Wifi completely. If Wifi is turned off, the “Please select a Wireless Network” window won't pop up when you least expect it. You can also turn off the option to ask you to join a new network if the proper one isn't found.
 
  - ##### Bluetooth
-    If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for it’s location after clicking Advanced on the Bluetooth setting.
+    If running without a mouse or keyboard plugged in, sometimes you can get the annoying  ”Bluetooth keyboard/mouse setup” pop up over your application. You can temporality disable these by going to the advanced settings within the Bluetooth Preferences. See below for its location after clicking Advanced on the Bluetooth setting.
 
  ![BluetoothSettings](images/Bluetooth_settings.png)
 
@@ -255,7 +255,7 @@ Using the Login Items approach to loading your app on reboot is a great simple s
 ---------------------------
 
 
-There are a couple ways to make sure your application starts up and stays up, and some methods offer some more customizability than the Login Items approach covered above. My personal preference is to use Launch Agents because it's the simplest method, has some good options, and its really the intended use case for them. Also - these methods should not be combined, otherwise you run the risk of having the OS open two versions of your app and slowing everything down.
+There are a couple ways to make sure your application starts up and stays up, and some methods offer some more customizability than the Login Items approach covered above. My personal preference is to use Launch Agents because it's the simplest method, has some good options, and it's really the intended use case for them. Also - these methods should not be combined, otherwise you run the risk of having the OS open two versions of your app and slowing everything down.
 
 Coming up we'll discuss making a Launch Agents plist file yourself, or you can use a third party helper application to make them for you. An alternative to Launch Agents is to use a cronjob (a system job that runs on a schedule) and pair that with a shell script - we'll discuss that as well.
 
@@ -273,7 +273,7 @@ The [difference between a Launch Daemon and a Launch Agent.](http://www.grivet-t
 
 If you want a deeper explanation on both, here is an [Apple Doc](http://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) on using Launch Agents and Launch Daemons in various ways.
 
-Personally, I find it easier to use third party apps for ease and more assurance that ive got it right, but I'll briefly cover the manual method. You may also want to manually adjust some things that are missing from the options in the third-party softwares.
+Personally, I find it easier to use third party apps for ease and more assurance that I've got it right, but I'll briefly cover the manual method. You may also want to manually adjust some things that are missing from the options in the third-party softwares.
 
 #### Making Launch Agents Manually
 If you want to make a LaunchAgent yourself, you'll also be making use of the terminal command `launchctl` to load, unload and test your process as you make it - or you can just reboot.  I would follow one of the guides above, take a look at `man launchd.plist`, take a look at some of [admsyn's](https://gist.github.com/admsyn/4140204) notes, take a look [here](https://www.launchd.info) or use this as a template (I generated this from Lingon). 
@@ -289,19 +289,19 @@ If you want to make a LaunchAgent yourself, you'll also be making use of the ter
 		<true/>
 	</dict>
 	<key>Label</key>
-	<string>TweetBot4Evr</string>
+	<string>TextEdit4Evr</string>
 	<key>ProcessType</key>
 	<string>Interactive</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Applications/Tweetbot.app/Contents/MacOS/Tweetbot</string>
+		<string>/Applications/TextEdit.app/Contents/MacOS/TextEdit</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
 </dict>
 </plist>
 ```
-Noteable things in the above example:
+Notable things in the above example:
 
  - `KeepAlive` - This tells the OS that if this app isn't running, try and start it up again
  - `SuccessfulExit` - Related to `KeepAlive` - if this key is included, the app will not automatically relaunch if it has a clean exit - i.e. if you manually quit it versus it crashing. If this isn't set, you may get frustrated with the app opening itself over and over when you try to quit it during testing.
@@ -335,6 +335,8 @@ echo "Twitter running"
 fi
 ```
 
+[Here](ScriptExamples/KeepOpen.sh) is an example file with the above.
+
 You would take the above, paste it into a text file, and replace Twitter.app and the path to the .app with your own custom values. Please note that shell scripts can open the .app files and don't need to be pointed to the `Contents/MacOS` file that that launchd.plist's do.
 
 Save that file as something like “KeepTwitterOpen.sh” and keep it next to your application or somewhere convenient. You can test it by opening terminal and typing `sh` and pasting the path to the file.
@@ -349,27 +351,14 @@ After you have made it executable, you’re now ready to set it up to run on a s
 
 To run the script on a schedule (ie every minute), I recommend using a Launch Agent and scheduling it to run every minute. You would set your launchd.plist file's `ProgramArguments` path to the "KeepOpen.sh" file instead of an app. In a future section on logging, you could also add things to this script that log the app's status to a text file.
 
-If you don't want to use the Launch Daemon scheduler - this one is a bit more dangerous, but should work. Once loaded, this script will just continuously try and open your app every 100ms, but if it is already open, the OS won't (usually) try to open it multiple times
+An alternative to launchd scheduling is to use a cronjob, but I suggest using either one OR the other. Using both might get confusing and they won't know about each other. In any case, you can read more about cronjobs [here](https://ole.michelsen.dk/blog/schedule-jobs-with-crontab-on-mac-osx.html).
 
-
-```bash
-#!/bin/bash
-while true
-do
-#using open to get focus
-echo "Trying to open empty example"
-open -a emptyExample <---replace with filepath to your app
-sleep 100
-done
-```
+##### Force your app to quit
+Alternatively, sometimes you just need to force your app to quit to make sure it doesnt get stuck on shutdown or something. You can use some variation on the following. 
 
 
 
-#### Prepare your software
-
-While developing, I've found it really useful to consider which things will need to be adjusted and accessed by you or a caretaker throughout your project's lifespan. Debug menus, hidden sliders, key commands and external config files are great when you can't compile the app anymore or just need to make a quick change. The time you spend now to make things simple and easy to change will save you hours of remote debugging when something breaks. Related, the more breadcrumbs and loggign you can do, the faster you'll be able to get the bottom of what's causing crashes with a new installation.
-
-
+Using `killall` is not a "Safe" shutdown method and may result in loss of data and other things, so use with caution. [Here](ScriptExamples/QuitAppScript.sh) is an example of how you kill an app, and how to kill a background process that may run differently.
 
 ## Reboot periodically
 ---------------------------
@@ -383,35 +372,47 @@ The simplest option by far would be to go to System Preferences->Energy Saver an
 ## Check in on it from afar
 ---------------------------------
 
-There are a bunch of options here from various paid web services (like [Logmein](http://www.logmein.com/) or [Teamviewer](http://teamviewer.com/)), to VNC (many options for this: [RealVNC](http://realvnc.com/) and Chicken of the VNC tend to come up a bunch) to [SSHing](http://www.mactricksandtips.com/2009/06/ssh-into-your-mac.html). The choice here depends on your comfort level and how much you need to do to perform maintenance from far away. Also - see below for tips on logging the status of your app as an alternative way
+There are a bunch of options here from various paid web services like:
 
-Leaving a Dropbox connected to the computer and your own is super useful for file swaps between the two computers. Although most remote screensharing services have file sharing built in, Dropbox is just a nice, fairly transparent option.
+ - [Logmein](http://www.logmein.com/)
+ - [Teamviewer](http://teamviewer.com/)
+ - [Jump Desktop](https://jumpdesktop.com)
 
-Determining the IP of the machine on a dynamically allocated network can be a pain, especially in screenless/headless installations. To make this a little easier, Robb Godshaw wrote a little Automator Script that says the IP aloud using Text-to-Speech 30 seconds after the computer boots. [Download link on Instructables.](http://www.instructables.com/id/Configuring-a-Mac-for-an-always-on-operation/steps/9)
 
-## Test test test
+There is also VNC (many options for this: [RealVNC](http://realvnc.com/) and Chicken of the VNC tend to come up a bunch) to [SSHing](http://www.mactricksandtips.com/2009/06/ssh-into-your-mac.html). The choice here depends on your comfort level and how much you need to do to perform maintenance from far away. Also - see later sections for tips on logging the status of your app as an alternative way and notifying yourself if something goes down.
+
+Leaving a Dropbox connected to the computer and your own is super useful for file swaps between the two computers. Although most remote screensharing services have file sharing built in, Dropbox is just a nice, fairly transparent option if you just need to pass files.
+
+
+## Test Test Test
 -------------------------
 
+Some of the above methods work flawlessly every time. 
 
-You’ve already tested and perfected your software for the installation, so make sure to test all of the above methods and automatic scripts in as realistic manner as you can before you leave it alone for the first day at school.
+Sometimes they don't. 
+
+I'ts really important to test everything in this list and make sure it all works. I have had great results with just testing overnight reboots in the week or two running up to the installation. There is also almost always something that gets changed in the final setup on site, so make sure you run a few tests in the final environment prior to leaving it.
 
 You can’t account for everything, so don’t beat yourself up if something does eventually happen, but this list will hopefully alleviate a little bit of frustration. Good luck!
 
 
-## Logging
+## Logging and Notifications
 ------------------------
 
-If you have an installation that runs for weeks or months, you might want a way to keep tabs on it that doesn’t involve remotely logging in and checking on it. A good thing to have would be to have something on the system that writes certain info to a local text file, or even better write log files to a local web server so you can check on it.
+If you have an installation that runs for weeks or months, you might want a way to keep tabs on it that doesn’t involve remotely logging in and checking on it. A good thing to have would be to have something on the system that writes certain info to a local text file, or ,even better, write log files to a local web server so you can monitor and get notifications.
 
-There are a couple things you can do to build up data depending on what you want to know about the state of your installation. Let's take a look at PS
+I have turned all of these into examples that can be found in this repository [here in ScriptExamples](ScriptExamples). You will need to adapt the filepaths and other elements to suit your needs and probably combine scripts.
+
+####Basic Uptime logging
+There are a couple things you can do to log data depending on what you want to know about the state of your installation. Let's take a look at PS
 
 There is a terminal command you can use to get a list of all of the currently running processes on your computer: `ps aux`
 
 More info above ps commands [here](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/ps.1.html)))
 
-Furthermore you can filter this very long list to only return applications you want to track by using the | (pipe) and then `grep` (`grep -v grep` just removes the grep command itself from the process list):
+Furthermore you can filter this very long list to only return applications you want to track by using the | (pipe) and then `grep` (note that grep is case sensitive and `grep -v grep` just removes the grep command itself from the process list):
 
-`ps aux | grep "TweetDeck" | grep -v grep`
+`ps aux | grep "TextEdit" | grep -v grep`
 
 This will return a line like this:
 
@@ -424,19 +425,23 @@ Now you have the following useful info: CPU usage, Memory usage (as percentage o
 
 All that is left is to write this output to a text file, which you can do with a line like this:
 
-    ps aux | grep 'TweetDeck' >> /Users/laser/Dropbox/InstallationLogs/BigImportantInstall/Number6ProcessLog.txt
+    ps aux | grep "TextEdit" >> /Users/Forever4Evr/Dropbox/InstallationLogs/BigImportantInstall/Number6ProcessLog.txt
 
-This line basically says - tell me the open processes (px aux) - only give me the lines that have "Tweetdeck" in them (grep Tweetdeck) - and then append them to a text file located at this location ( >> path_to_text_file)
+This line basically says - tell me the open processes (px aux), and then only give me the lines that have "TextEdit" in them (grep TextEdit) - and then append them to a text file located at this location ( >> path_to_text_file). I also suggest adding in another line like `date >> path/to/your/log/file` just to confirm when the error happened.
 
-Now we just need to make this an executable shell script and set it up as a launch daemon or cron job – see above at Step 3 to learn how to run the shell script at a regular interval using Lingon and launchd. If the app isn’t running, it will only return the “grep YourAppName” process which is a good thing to log because if your app isn’t open you won’t know how long it’s been out (nothing will be logged), but having the grep process logged will at least tell you it was checking for it. Grep will also more accurately tell you what time it checked – the other app will only give you a start time and up time.
+Now we just need to make this an executable shell script and set it up as a launch daemon or cron job depending on your preference – see above at Step 3 to learn how to run the shell script at a regular interval using Lingon and launchd. 
 
-Let’s also take this one step further and say, hypothetically, that the Triplehead2Go display adapter you have is fairly wonky and you don’t always get the displays or projectors to connect after reboot – or maybe a projector is shutting itself off and disrupting things. Well we can log the currently available resolutions too! Try entering the line below in your own terminal:
+If the app isn’t running, it will only return the “grep YourAppName” process which is a good thing to log because if your app isn’t open you won’t know how long it’s been out (nothing will be logged), but having the grep process logged will at least tell you it was checking for it. Grep will also more accurately tell you what time it checked – the other app will only give you a start time and up time.
+
+#### Logging other data
+
+Let’s also take this one step further and say that a display or projector is having trouble staying on consistently and it's messing up your app's ability to go full screen. Well, we can log the currently available resolutions too! Try entering the line below in your own terminal:
 
     system_profiler SPDisplaysDataType
 
 This will return a list of connected displays and some metadata about them including resolution and names.
 
-Let’s say you want to make sure you’re running a resolution of 3840×720 at all times…or you want a log of resolution changes. You would do something like:
+Let’s say you want to make sure you’re running a resolution of 3840×720 at all times, or you want a log of resolution changes. You would do something like:
 
     system_profiler SPDisplaysDataType | grep Resolution
 
@@ -446,13 +451,37 @@ This will return “Resolution: 3840×720″ which you can combine with the abov
     ps aux | grep 'YourAppName' >> /Users/you/filepath/Install6ProcessLog.txt
     system_profiler SPDisplaysDataType | grep Resolution >> /Users/you/Dropbox/Install6ProcessLog.txt
 
-And now you’re feeling excited, maybe you want to grab a fullscreen screenshot at a regular interval too, just to make sure there is no funkiness happening that you can’t see…well you could add this line to the above as well:
+Finally, maybe you want to grab a fullscreen screenshot at a regular interval too, just to make sure there is no funkiness happening that you can’t see…well you could add this line to the above as well:
 
     screencapture ~/Desktop/$(date +%Y%m%d-%H%M%S).png
 
-This will save a screenshot to the desktop (specify your own file path) with a formatted date and time. You may want to do this every hour instead of every 5 minutes since it’s a big chunk of data and it may cause some issue with your screens. As usual – test before deploying!
+This will save a screenshot to the desktop (you should probably specify your own file path) with a formatted date and time. You may want to do this every hour instead of every 5 minutes since it’s a big chunk of data and it may cause some issue with your screens. As usual – test before deploying! You can combine it with [this](http://pdaddy.wordpress.com/2007/03/02/shell-script-to-delete-all-but-the-n-newest-files-in-a-directory/) to just keep the 10 most recent screenshots. You may also want to screenshot when an app crashes.
 
 Bonus points would be to create an auto-generated table and webpage that takes all of this info and puts it into a nice view that you can use to check all of your installations at a glance.
+
+#### Error notification
+
+Logging isn't always enough. You may get a call from a client several months in where they claim the installation hasn't been running for a week. If you had a notification system in place, you would have caught something like that immediately. You can also pop up more system alerts for the user as well.
+
+There are probably much more sophisticated ways to do this, but you can pop up system alerts using Apple's built-in Applescript and use this line in a shell script:
+
+`osascript -e 'tell app "Finder" to display dialog "From LogStatus - Display Not Connected! Please contact support at 867-5309"'`
+
+Or you can get fancier and use notification center alerts like this:
+
+`osascript -e 'display notification "From LogStatus - Display Not Connected! Please contact support at 867-5309" with title "Log Alert"'`
+
+For the above, I have prepared example script files that you could maybe adapt or combine to your own purposes. You can view them [here](ScriptExamples/PopupAlertWhenNoDisplay.sh).
+
+The one of the fanciest solutions is to actually send yourself or your team a Slack message when something crashes. I'm looking forward to seeing how dated this seems in another 5 years. Also, I don't know about the security ramifications of opening up a webhook to post to slack and leaving it in a script file - there are probably much better ways to do this in general. 
+
+For Slack messaging, first I recommend starting with [this guide](https://api.slack.com/tutorials/slack-apps-hello-world) to set up a webhook. Coming out of that, you'll have a URL you can place into a CURL command which you can run from a shell script. It will look something like this:
+
+`curl -X POST -H 'Content-type: application/json' --data '{"text": "Your app isn't running", "color": "#9C1A22"}' YOUR_WEBHOOK_URL`
+`
+You can see a more complete example of the slack implementation [here](ScriptExamples/KeepOpenAlertSlack.sh).
+
+
 
 
 ### Uncategorized and Out of Date Tips
@@ -463,6 +492,9 @@ If you’re setting up multiple computers, you can do these prep steps on one of
 For Windows and Linux, I highly recommend the use of [Clonezilla](https://clonezilla.org) - on its surface it looks junky, but it is actually incredibly well made and robust if you can deal with the command line interface. I have used it on multiple WIndows and Linux projects and it's often worked like a charm. I first had to use it to clone a single disk image from one Windows 10 laptop to 150 identical laptops for an installation. I was able to set up an assembly line process with Clonezilla where I cloned one 15gb image to 150 computers in about 2 days with a thumbdrive. Clonezilla also offers the ability to work over a network connection if you are able to hardwire all of your computers and push an image out that way.
 
 Clonezilla and Carbon Copy Cloner are also a great tools for creating a backup image of a computer. Once you have the image, you can have it stored in the cloud or a company server in the event the installation computer fails and you don't want to start this setup from scratch.
+
+#### Getting an IP address out loud
+Determining the IP of the machine on a dynamically allocated network can be a pain, especially in screenless/headless installations. To make this a little easier, Robb Godshaw wrote a little Automator Script that says the IP aloud using Text-to-Speech 30 seconds after the computer boots. [Download link on Instructables.](http://www.instructables.com/id/Configuring-a-Mac-for-an-always-on-operation/steps/9)
 
 #### Automator Calendar actions
 _[I don't recommend this in 2019 - the calendar app and automator are problematic. Learning to do this with Launchd is a much safer and more reliable option - but I'll leave it here anyway]_
@@ -496,7 +528,7 @@ done
 ```
 
 #### Email logs
-[I have made this an out-of-date tip because I've never actually used this in production, and I think some of it no longer works - it would be much better to set up a web service that recieves log files and images...or even a Slackbot, those are super easy to set up with curl commands from a bash script]
+[I have made this an out-of-date tip because I've never actually used this in production, and I think some of it no longer works - it would be much better to set up a web service that receives log files and images...or even a Slackbot, those are super easy to set up with curl commands from a bash script]
 
 If the process logger isn’t enough, we can use what we learned in that process to actually set up a system to email you if something is amiss so you don’t have to manually check it. We can do this all with the command line and internal tools, it’s just a more involved setup. This is going to be fairly general and will need some tuning in your specific case.
 
@@ -564,7 +596,6 @@ Now just hit “New” and then make sure to hit “Save” to save it into the 
 This is a great tool if there is an unintended crash because the app will never be down longer than a minute.
 
 
-
 #### Memory leak murderer
 In 2019 I don't recommend this as a best practice, but its more of a thought experiment about how to catch an app with a memory leak and reboot it if you didn't catch it during development.
 
@@ -607,3 +638,7 @@ Nick Hardeman's [ofxMacUtils from 2015](https://github.com/NickHardeman/ofxMacUt
 If you’re looking for help with this task with Windows, check out this awesome script [StayUp](http://www.bantherewind.com/stayup) from Stephen Schieberl. Also for Windows: http://www.softpedia.com/get/System/File-Management/Restart-on-Crash.shtml and this tool for scripting OS operations on windows http://www.nirsoft.net/utils/nircmd.html
 
 Check out this great step by step from EVSC: http://www.evsc.net/home/prep-windows-machine-for-fulltime-exhibition-setup
+
+### VR 
+
+[Here](https://github.com/wjrro/vr-up-forever) is a style of guide intended for permanent VR setups
