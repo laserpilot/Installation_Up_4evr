@@ -38,20 +38,17 @@ Changelog:
     3. [Other Notes](#other-notes)
 1. [Step 3: Boot into your software](#boot-into-your-software)
 1. [Step 4: Keep it running forever](#keep-it-running-forever)
-    1. [Launchd](#launchd)
-    1. [Lingon](#lingon)
-    1. [LaunchControl](#launchcontrol)
-    1. [Shell Script+Cron Job Method](#shell-script)
-    1. [Non-Cronjob - Shell Script Method](#non)
+    1. [Launchd](#launch-agents)
+    1. [Third party Launch Agent Creation](#Third-Party-Apps-for-creating-Launch-Agents)
+    1. [Unusual Cases](#unusual-cases)
 1. [Step 5: Reboot periodically](#reboot-periodically)
 1. [Step 6: Check in on it from afar](#check-in-on-it-from-afar)
 1. [Step 7: Test, test, test](#test-test-test)
+2. [Optional: Logging abnd notifications](#logging-and-notifications)
 1. [Additional Tips: Logging](#additional-tips)
-1. [Memory lead murderer](#memory-leak-murderer)
 1. [Alternate Resources](#alternate-resources)
     1. [MAC OS X](#mac-os-x)
     1. [Linux](#linux)
-    1. [Raspberry Pi](#raspberry-pi)
     1. [Windows](#windows)
 
 
@@ -78,7 +75,7 @@ Changelog:
 	- [ ] Use the "Schedule" button in _Energy Saver_ to schedule regular reboots
 - Remote access and logging
 	- [ ] Set up something to log in to the computer remotely (Logmein, Teamviewer, etc)
-	- [ ] Log various details about the computer and app
+	- [ ] Log various details about the computer and app to textfiles or to slack
 - Testing
 	- [ ] Do several test boots and scenarios and monitor for the first week to make sure everything is functioning predictably
 - Other things
