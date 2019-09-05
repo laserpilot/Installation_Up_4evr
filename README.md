@@ -101,6 +101,8 @@ While developing, I've found it really useful to consider which things will need
 
 Debug menus, hidden sliders, key commands and external config files are great when you can't compile the app anymore or just need to make a quick change. The time you spend now to make things simple and easy to change will save you hours of remote debugging when something breaks. Also related, the more breadcrumbs, error reporting, and log files you can build in, the faster you'll be able to get the bottom of what's causing crashes with a new installation.
 
+Finally, really make sure you're taking the time to have your work be at the forefront. I cannot stress enough - **hide that mouse cursor** and hide the menubars, URL bars, and anything else that can pop overtop. All of those things are distracting and ultimately make it seem like a junkier and less polished experience to the user or your client.
+
 
 ## Prepare the Computer
 -----------------------------------------------
