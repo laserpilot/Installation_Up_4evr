@@ -47,7 +47,7 @@ Changelog:
 2. [Optional: Logging and notifications](#logging-and-notifications)
 1. [Additional Tips](#Uncategorized-and-Out-of-Date-Tips)
 1. [Alternate Resources](#alternate-resources)
-    1. [MAC OS X](#mac-os-x)
+    1. [macOS](#macos)
     1. [Linux](#linux)
     1. [Windows](#windows)
 
@@ -320,7 +320,7 @@ Neither of these apps are free, so make sure to have your credit card ready. [La
 
 The above methods are great for simple standalone apps, but sometimes you have other processes or scripts you want to run at the same time, or maybe you need to have something else happen if your app crashes. In any case, you may be able to adapt some of the examples here to suit your uses case. If you're looking for other shell script examples to learn from, [here are some variations](https://github.com/ruanyf/simple-bash-scripts).
 
-#####Keep app alive without the Launch Agent KeepAlive
+##### Keep app alive without the Launch Agent KeepAlive
 You would use the script below if you wanted to have the system check if your process is running, and if it can't find the process, it tries to re-open the specified app. If it detects the app is running, it does nothing. It's not as fast and responsive as the Launch Agent KeepAlive method, but it may still be useful.
 
 ```bash
@@ -402,7 +402,7 @@ If you have an installation that runs for weeks or months, you might want a way 
 
 I have turned all of these into examples that can be found in this repository [here in ScriptExamples](ScriptExamples). You will need to adapt the filepaths and other elements to suit your needs and probably combine scripts.
 
-####Basic Uptime logging
+#### Basic Uptime logging
 There are a couple things you can do to log data depending on what you want to know about the state of your installation. Let's take a look at PS
 
 There is a terminal command you can use to get a list of all of the currently running processes on your computer: `ps aux`
@@ -446,7 +446,7 @@ Let’s say you want to make sure you’re running a resolution of 3840×720 at 
 
 This will return “Resolution: 3840×720″ which you can combine with the above lines to write it all to a text file. So here would be your shell script file if you wanted to record the currently running processes and the current resolutions:
 
-        #!/bin/bash
+    #!/bin/bash
     ps aux | grep 'YourAppName' >> /Users/you/filepath/Install6ProcessLog.txt
     system_profiler SPDisplaysDataType | grep Resolution >> /Users/you/Dropbox/Install6ProcessLog.txt
 
@@ -485,7 +485,8 @@ You can see a more complete example of the slack implementation [here](ScriptExa
 
 ### Uncategorized and Out of Date Tips
 -------
-####Deploying an image to multiple computers and backing up:
+
+#### Deploying an image to multiple computers and backing up:
 If you’re setting up multiple computers, you can do these prep steps on one of them and just boot the others into target disk mode and use something like [Carbon Copy Cloner](http://www.bombich.com/) to mirror the first one on the next so everything is as consistent as possible. I've noticed a few things don't always transfer like sleep and screensaver settings, so make sure to double check those are sticking.
 
 For Windows and Linux, I highly recommend the use of [Clonezilla](https://clonezilla.org) - on its surface it looks junky, but it is actually incredibly well made and robust if you can deal with the command line interface. I have used it on multiple WIndows and Linux projects and it's often worked like a charm. I first had to use it to clone a single disk image from one Windows 10 laptop to 150 identical laptops for an installation. I was able to set up an assembly line process with Clonezilla where I cloned one 15gb image to 150 computers in about 2 days with a thumbdrive. Clonezilla also offers the ability to work over a network connection if you are able to hardwire all of your computers and push an image out that way.
@@ -600,7 +601,7 @@ In 2019 I don't recommend this as a best practice, but its more of a thought exp
 
 See [this article](http://blairneal.com/blog/memory-leak-murderer/) about combining process with something that kills and restarts an app if it crosses a memory usage threshold
 
-####Madmapper Applescript
+#### Madmapper Applescript
 
 [Note: Unsure if this still works in 2019.] If using MadMapper – see [this link](http://blairneal.com/blog/applescript-to-automatically-fullscreen-madmapper-for-installations/) for an AppleScript that will open MadMapper and have it enter fullscreen – and enter “OK” on a pesky dialog box.
 
@@ -608,9 +609,9 @@ See [this article](http://blairneal.com/blog/memory-leak-murderer/) about combin
 --------------------
 The original outdated version of the article from 2012 is [here](http://blairneal.com/blog/installation-up-4evr/) 
 
-### MAC OS X
+### macOS
 
-Other useful shell commands for MacOS [here](https://github.com/herrbischoff/awesome-macos-command-line)
+Other useful shell commands for macOS [here](https://github.com/herrbischoff/awesome-macos-command-line)
 
 
 This is an amazing addon for openFrameworks apps that keeps your application open even after a large range of failures: [ofxWatchdog](https://github.com/toolbits/ofxWatchdog
@@ -624,13 +625,13 @@ This is an amazing addon for openFrameworks apps that keeps your application ope
 
 Nick Hardeman's [ofxMacUtils from 2015](https://github.com/NickHardeman/ofxMacUtils) used for helping create a one stop shop for setting common system settings for installations
 
-### LINUX
+### Linux
 
 [Ubuntu Guide from Branger Briz](https://github.com/brangerbriz/up-4evr-ubuntu)
 
 [ofBook guide](https://github.com/openframeworks/ofBook/blob/master/chapters/installation_up_4evr_linux/chapter.md)
 
-### WINDOWS
+### Windows
 
 [Windows Version from Branger Briz](https://github.com/brangerbriz/up-4evr-windows-10)
 
