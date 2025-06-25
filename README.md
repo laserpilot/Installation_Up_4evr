@@ -634,6 +634,14 @@ See [this article](http://blairneal.com/blog/memory-leak-murderer/) about combin
 
 [Note: Unsure if this still works in 2019.] If using MadMapper – see [this link](http://blairneal.com/blog/applescript-to-automatically-fullscreen-madmapper-for-installations/) for an AppleScript that will open MadMapper and have it enter fullscreen – and enter “OK” on a pesky dialog box.
 
+#### Fix for menu bar appearing when auto-launching apps
+
+When launching fullscreen applications on Mac via a launch agent, as a login item or other automation, the menu bar might still appear even if your app is set to fullscreen.
+
+You can often fix this by:
+* Editing your application's `Info.plist` file and changing the `LSUIPresentationMode` to `3` or `4` (`4` hides elements but still allows them to appear by moving the mouse to the screen edges, `3` hides them completely unless you CMD+TAB out of the app).
+* Using a utility like [jAppleMenuBar](https://github.com/kritzikratzi/jAppleMenuBar) ([source](https://forum.processing.org/one/topic/osx-menu-bar-still-visible-in-present-mode.html))
+
 ## Alternate resources:
 --------------------
 The original outdated version of the article from 2012 is [here](http://blairneal.com/blog/installation-up-4evr/) 
