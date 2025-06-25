@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation Up 4evr - Mac Automation Tool</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-desktop"></i> Installation Up 4evr</h1>
+                <p>Automate Mac setup for creative technology installations</p>
+            </div>
+            <div class="status-indicators">
+                <div class="status-indicator" id="server-status">
+                    <i class="fas fa-circle"></i> Server
+                </div>
+                <div class="status-indicator" id="sip-status">
+                    <i class="fas fa-shield-alt"></i> SIP
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- System Preferences Section -->
+            <section class="card">
+                <h2><i class="fas fa-cog"></i> System Preferences</h2>
+                <p>Configure macOS settings for 24/7 installation use</p>
+                
+                <div class="preferences-container">
+                    <!-- Required Settings -->
+                    <div class="preference-group">
+                        <h3><i class="fas fa-exclamation-circle text-red"></i> Required Settings</h3>
+                        <div id="required-settings" class="settings-grid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Optional Settings -->
+                    <div class="preference-group">
+                        <h3><i class="fas fa-plus-circle text-yellow"></i> Optional Settings</h3>
+                        <div id="optional-settings" class="settings-grid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="verify-settings" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> Verify Current Settings
+                    </button>
+                    <button id="apply-required" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Apply Required Settings
+                    </button>
+                    <button id="apply-selected" class="btn btn-success">
+                        <i class="fas fa-play"></i> Apply Selected Settings
+                    </button>
+                </div>
+            </section>
+
+            <!-- Launch Agents Section -->
+            <section class="card">
+                <h2><i class="fas fa-rocket"></i> Launch Agents</h2>
+                <p>Create launch agents to keep your apps running forever</p>
+                
+                <!-- Drag and Drop Zone -->
+                <div class="drop-zone" id="app-drop-zone">
+                    <div class="drop-zone-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Drag & Drop Your App Here</h3>
+                        <p>Or click to browse for .app files</p>
+                        <input type="file" id="app-file-input" accept=".app" style="display: none;">
+                    </div>
+                </div>
+
+                <!-- App Info Display -->
+                <div id="app-info" class="app-info" style="display: none;">
+                    <div class="app-display">
+                        <div class="app-icon">
+                            <i class="fas fa-cube"></i>
+                        </div>
+                        <div class="app-details">
+                            <h3 id="app-name">App Name</h3>
+                            <p id="app-path">App Path</p>
+                            <div class="app-meta">
+                                <span id="app-version">Version</span>
+                                <span id="app-bundle-id">Bundle ID</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Launch Agent Options -->
+                    <div class="launch-options">
+                        <h4><i class="fas fa-wrench"></i> Launch Agent Options</h4>
+                        <div class="options-grid">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="keep-alive" checked>
+                                <span class="checkbox-custom"></span>
+                                Keep Alive (restart if crashes)
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="successful-exit" checked>
+                                <span class="checkbox-custom"></span>
+                                Allow manual quit
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="run-at-load" checked>
+                                <span class="checkbox-custom"></span>
+                                Run at login
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="custom-label">Custom Label (optional):</label>
+                            <input type="text" id="custom-label" placeholder="com.yourcompany.app.up4evr">
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="create-launch-agent" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create Launch Agent
+                        </button>
+                        <button id="install-launch-agent" class="btn btn-success">
+                            <i class="fas fa-rocket"></i> Install & Start
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Existing Launch Agents -->
+                <div class="existing-agents">
+                    <h4><i class="fas fa-list"></i> Existing Launch Agents</h4>
+                    <div id="launch-agents-list" class="agents-list">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="card results-section" id="results-section" style="display: none;">
+                <h2><i class="fas fa-terminal"></i> Results</h2>
+                <div id="results-content" class="results-content">
+                    <!-- Results populated by JavaScript -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
