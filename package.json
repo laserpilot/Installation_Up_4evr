@@ -1,0 +1,99 @@
+{
+  "name": "installation-up-4evr",
+  "version": "1.0.0",
+  "description": "Mac automation tool for creative technology installations",
+  "main": "electron/main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"cd backend && npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "dist": "npm run build",
+    "pack": "electron-builder --dir",
+    "postinstall": "cd backend && npm install"
+  },
+  "keywords": [
+    "macos",
+    "installation",
+    "automation",
+    "creative-technology",
+    "electron",
+    "launch-agents",
+    "system-preferences"
+  ],
+  "author": "Installation Up 4evr",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "sudo-prompt": "^9.2.1"
+  },
+  "build": {
+    "appId": "com.up4evr.installation-automation",
+    "productName": "Installation Up 4evr",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "backend/**/*",
+      "frontend/**/*",
+      "!backend/node_modules/.cache",
+      "!backend/test-*.js"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "electron/assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64", 
+            "arm64"
+          ]
+        }
+      ],
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "Installation Up 4evr",
+      "icon": "electron/assets/icon.icns",
+      "background": "electron/assets/dmg-background.png",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/laserpilot/Installation_Up_4evr"
+  }
+}
