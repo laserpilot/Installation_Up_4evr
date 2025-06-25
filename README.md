@@ -1,4 +1,6 @@
----------
+
+
+# Installation Up 4evr
 
 Posted to Git for other people's modifications - please contribute if you'd like!
 
@@ -13,13 +15,34 @@ Todo:
  
 Changelog:
 
+ - June 2025 - made notes that I need to update the following things that weren't a thing in 2019
+    - Mac Specific:
+        - System Integrity Protection (SIP) has evolved a lot
+        - Apple Silicon Macs have different boot processes and security requirements
+        - Signing requirements for apps are much stricter
+        - Screen Time and Focus modes can interfere with installations
+        - Stage Manager needs to be disabled on newer versions
+        - UI Changes for the System Settings (System preferences) app
+    - Evolutions in monitoring and management:
+        - Docker containers and container based deployment
+        - Modern monitoring solutions like Grafana, Prometheus, and Datadog
+        - Remote management via Apple Business manager/MDM
+        - Backup solutions beyond carbon copy cloner
+    - Hardware considerations:
+        - Apple Silicon compatibility issues
+        - USB-C/Thunderbolt hub reliability
+        - 4k/8K display considerations
+        - Power Management for always-on installations
+    - Security updates:
+        - VPN options for remote access
+        - Certificate management
+        - Network segmentation best practices
+
  - August 2019 - modified article to remove old tips that are less helpful. Added a quick checklist
 
----------
+
 
 ## Table of Contents
-
-
 
 1. [TL;DR Quick Checklist](#TL;DR-Quick-Checklist)
 2. [Step 1: Prepare your software](#prepare-your-software)
