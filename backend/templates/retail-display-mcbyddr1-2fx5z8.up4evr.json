@@ -1,0 +1,69 @@
+{
+  "id": "retail-display-mcbyddr1-2fx5z8",
+  "name": "Retail Display",
+  "description": "Commercial retail environment with customer interaction",
+  "category": "retail",
+  "author": "Installation Up 4evr",
+  "version": "1.0.0",
+  "created": "2025-06-25T12:50:57.373Z",
+  "updated": "2025-06-25T12:50:57.373Z",
+  "tags": [
+    "retail",
+    "commercial",
+    "customer-facing"
+  ],
+  "systemSettings": [
+    {
+      "id": "screensaver",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "displaySleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "computerSleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "autoRestart",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "desktopBackground",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "softwareUpdate",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "bluetoothSetup",
+      "enabled": true,
+      "priority": "normal"
+    }
+  ],
+  "launchAgents": [],
+  "additionalScripts": [],
+  "compatibility": {
+    "minMacOS": "10.14",
+    "maxMacOS": null,
+    "architecture": [
+      "x64",
+      "arm64"
+    ],
+    "sipRequired": false
+  },
+  "installation": {
+    "preInstall": [],
+    "postInstall": [],
+    "testing": [],
+    "troubleshooting": []
+  }
+}

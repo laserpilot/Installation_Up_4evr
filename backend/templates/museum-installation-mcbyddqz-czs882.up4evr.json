@@ -1,0 +1,75 @@
+{
+  "id": "museum-installation-mcbyddqz-czs882",
+  "name": "Museum Installation",
+  "description": "Standard setup for museum and gallery interactive installations",
+  "category": "museum",
+  "author": "Installation Up 4evr",
+  "version": "1.0.0",
+  "created": "2025-06-25T12:50:57.371Z",
+  "updated": "2025-06-25T12:50:57.372Z",
+  "tags": [
+    "museum",
+    "gallery",
+    "interactive",
+    "public"
+  ],
+  "systemSettings": [
+    {
+      "id": "screensaver",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "displaySleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "computerSleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "autoRestart",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "restartFreeze",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "desktopBackground",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "softwareUpdate",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "hideMenuBar",
+      "enabled": true,
+      "priority": "normal"
+    }
+  ],
+  "launchAgents": [],
+  "additionalScripts": [],
+  "compatibility": {
+    "minMacOS": "10.14",
+    "maxMacOS": null,
+    "architecture": [
+      "x64",
+      "arm64"
+    ],
+    "sipRequired": false
+  },
+  "installation": {
+    "preInstall": [],
+    "postInstall": [],
+    "testing": [],
+    "troubleshooting": []
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": "trade-show-demo-mcbwdvbj-23i7as",
+  "name": "Trade Show Demo",
+  "description": "Temporary installation for trade shows and events",
+  "category": "event",
+  "author": "Installation Up 4evr",
+  "version": "1.0.0",
+  "created": "2025-06-25T11:55:20.911Z",
+  "updated": "2025-06-25T11:55:20.911Z",
+  "tags": [
+    "trade-show",
+    "event",
+    "temporary",
+    "demo"
+  ],
+  "systemSettings": [
+    {
+      "id": "screensaver",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "displaySleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "computerSleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "desktopBackground",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "hideMenuBar",
+      "enabled": true,
+      "priority": "normal"
+    }
+  ],
+  "launchAgents": [],
+  "additionalScripts": [],
+  "compatibility": {
+    "minMacOS": "10.14",
+    "maxMacOS": null,
+    "architecture": [
+      "x64",
+      "arm64"
+    ],
+    "sipRequired": false
+  },
+  "installation": {
+    "preInstall": [],
+    "postInstall": [],
+    "testing": [],
+    "troubleshooting": []
+  }
+}
