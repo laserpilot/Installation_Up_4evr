@@ -32,6 +32,8 @@ const RemoteControlSystem = require('./modules/remote-control');
 console.log('SERVER: remote-control loaded');
 const NotificationSystem = require('./modules/notifications');
 console.log('SERVER: notifications loaded');
+const ServiceControlManager = require('./modules/service-control');
+console.log('SERVER: service-control loaded');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -52,6 +54,7 @@ const profiles = new ProfilesManager();
 const monitoring = new MonitoringSystem();
 const remoteControl = new RemoteControlSystem(monitoring);
 const notifications = new NotificationSystem(monitoring);
+const serviceControl = new ServiceControlManager();
 console.log('SERVER: Managers initialized.');
 
 // Root route - serve frontend
@@ -622,6 +625,88 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         version: '1.0.0'
     });
+});
+
+// Service Control API Routes
+app.get('/api/service/status', async (req, res) => {
+    try {
+        const status = await serviceControl.getServiceStatus();
+        res.json(status);
+    } catch (error) {
+        console.error('Error getting service status:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/service/restart', async (req, res) => {
+    try {
+        const result = await serviceControl.restartService();
+        res.json(result);
+    } catch (error) {
+        console.error('Error restarting service:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/service/stop', async (req, res) => {
+    try {
+        const result = await serviceControl.stopService();
+        res.json(result);
+    } catch (error) {
+        console.error('Error stopping service:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/service/start', async (req, res) => {
+    try {
+        const result = await serviceControl.startService();
+        res.json(result);
+    } catch (error) {
+        console.error('Error starting service:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/service/install', async (req, res) => {
+    try {
+        const result = await serviceControl.installSystemService();
+        res.json(result);
+    } catch (error) {
+        console.error('Error installing service:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/service/logs', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        const logs = await serviceControl.getServiceLogs(limit);
+        res.json(logs);
+    } catch (error) {
+        console.error('Error getting service logs:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/service/logs', async (req, res) => {
+    try {
+        const result = await serviceControl.clearServiceLogs();
+        res.json(result);
+    } catch (error) {
+        console.error('Error clearing service logs:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/service/system-service', async (req, res) => {
+    try {
+        const status = await serviceControl.checkSystemService();
+        res.json(status);
+    } catch (error) {
+        console.error('Error checking system service:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Error handler

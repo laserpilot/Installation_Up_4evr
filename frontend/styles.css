@@ -997,3 +997,180 @@ body {
     font-family: monospace;
     font-size: 0.9rem;
 }
+
+/* Service Control Styles */
+.service-status-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.service-status-card {
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+}
+
+.service-status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.service-status-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.service-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.service-status-icon {
+    font-size: 1.2rem;
+}
+
+.service-status-text {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.service-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.service-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: var(--background-color);
+    border-radius: 4px;
+}
+
+.service-detail label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.service-detail span {
+    font-family: monospace;
+    color: var(--text-primary);
+}
+
+.service-controls-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.service-controls-section h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+
+.service-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.service-help {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+}
+
+.service-help p {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-secondary);
+}
+
+.service-help ul {
+    margin: 0;
+    padding-left: var(--spacing-lg);
+}
+
+.service-help li {
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.service-logs-section h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+
+.logs-controls {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.logs-container {
+    background: #1a1a1a;
+    color: #e6e6e6;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.log-entry {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: 2px;
+    word-break: break-word;
+}
+
+.log-timestamp {
+    color: #888;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.log-level {
+    font-weight: 600;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    text-align: center;
+    min-width: 50px;
+    flex-shrink: 0;
+}
+
+.log-level.INFO {
+    background: #2563eb;
+    color: white;
+}
+
+.log-level.WARN {
+    background: #d97706;
+    color: white;
+}
+
+.log-level.ERROR {
+    background: #dc2626;
+    color: white;
+}
+
+.log-level.DEBUG {
+    background: #6b7280;
+    color: white;
+}
+
+.log-message {
+    flex: 1;
+    color: #e6e6e6;
+}

@@ -97,6 +97,14 @@ class InstallationUp4evr {
         // Launch Agent Actions
         document.getElementById('create-launch-agent').addEventListener('click', () => this.createLaunchAgent());
         document.getElementById('install-launch-agent').addEventListener('click', () => this.installLaunchAgent());
+
+        // Service Control Actions
+        document.getElementById('restart-backend').addEventListener('click', () => this.restartBackend());
+        document.getElementById('stop-backend').addEventListener('click', () => this.stopBackend());
+        document.getElementById('start-backend').addEventListener('click', () => this.startBackend());
+        document.getElementById('install-service').addEventListener('click', () => this.installService());
+        document.getElementById('refresh-logs').addEventListener('click', () => this.refreshServiceLogs());
+        document.getElementById('clear-logs').addEventListener('click', () => this.clearServiceLogs());
     }
 
     // API Communication
@@ -622,6 +630,13 @@ class InstallationUp4evr {
                     this.loadMonitoringData();
                     this.startMonitoringUpdates();
                 }
+                
+                // Load service status if service control tab is selected
+                if (targetTab === 'service-control') {
+                    this.loadServiceStatus();
+                    this.refreshServiceLogs();
+                    this.startServiceStatusUpdates();
+                }
             });
         });
     }
@@ -802,6 +817,227 @@ class InstallationUp4evr {
                 this.monitoringInterval = null;
             }
         }, 5000);
+    }
+    
+    // Service Control Management
+    async loadServiceStatus() {
+        try {
+            const status = await this.apiCall('/api/service/status');
+            this.updateServiceStatus(status);
+        } catch (error) {
+            console.error('Failed to load service status:', error);
+            this.updateServiceStatus({
+                status: 'offline',
+                error: error.message
+            });
+        }
+    }
+    
+    updateServiceStatus(status) {
+        const statusIcon = document.getElementById('service-status-icon');
+        const statusText = document.getElementById('service-status-text');
+        const pidElement = document.getElementById('service-pid');
+        const uptimeElement = document.getElementById('service-uptime');
+        const modeElement = document.getElementById('service-mode');
+        
+        if (status.status === 'online') {
+            statusIcon.textContent = '🟢';
+            statusText.textContent = 'Running';
+            statusText.style.color = 'rgb(34, 197, 94)';
+            
+            pidElement.textContent = status.pid || '--';
+            uptimeElement.textContent = status.uptime ? this.formatUptime(status.uptime) : '--';
+            modeElement.textContent = status.mode || 'Electron-managed';
+            
+            // Show stop/restart buttons, hide start button
+            document.getElementById('stop-backend').style.display = 'inline-block';
+            document.getElementById('restart-backend').style.display = 'inline-block';
+            document.getElementById('start-backend').style.display = 'none';
+        } else {
+            statusIcon.textContent = '🔴';
+            statusText.textContent = status.error ? `Error: ${status.error}` : 'Offline';
+            statusText.style.color = 'rgb(239, 68, 68)';
+            
+            pidElement.textContent = '--';
+            uptimeElement.textContent = '--';
+            modeElement.textContent = 'Stopped';
+            
+            // Show start button, hide stop/restart buttons
+            document.getElementById('stop-backend').style.display = 'none';
+            document.getElementById('restart-backend').style.display = 'none';
+            document.getElementById('start-backend').style.display = 'inline-block';
+        }
+    }
+    
+    async restartBackend() {
+        if (!confirm('This will restart the backend server. Continue?')) {
+            return;
+        }
+        
+        this.showLoading();
+        try {
+            const result = await this.apiCall('/api/service/restart', {
+                method: 'POST'
+            });
+            
+            this.showToast('Backend restart initiated...', 'info');
+            
+            // Wait for server to restart and reload status
+            setTimeout(() => {
+                this.loadServiceStatus();
+                this.hideLoading();
+            }, 3000);
+            
+        } catch (error) {
+            this.showToast(`Failed to restart backend: ${error.message}`, 'error');
+            this.hideLoading();
+        }
+    }
+    
+    async stopBackend() {
+        if (!confirm('This will stop the backend server. You may need to restart the application to reconnect. Continue?')) {
+            return;
+        }
+        
+        this.showLoading();
+        try {
+            await this.apiCall('/api/service/stop', {
+                method: 'POST'
+            });
+            
+            this.showToast('Backend stopped', 'info');
+            
+            // Update status immediately
+            setTimeout(() => {
+                this.loadServiceStatus();
+                this.hideLoading();
+            }, 1000);
+            
+        } catch (error) {
+            // Expected if backend actually stops
+            this.showToast('Backend stop command sent', 'info');
+            setTimeout(() => {
+                this.loadServiceStatus();
+                this.hideLoading();
+            }, 1000);
+        }
+    }
+    
+    async startBackend() {
+        this.showLoading();
+        try {
+            const result = await this.apiCall('/api/service/start', {
+                method: 'POST'
+            });
+            
+            this.showToast('Backend start initiated...', 'info');
+            
+            // Wait for server to start and reload status
+            setTimeout(() => {
+                this.loadServiceStatus();
+                this.hideLoading();
+            }, 3000);
+            
+        } catch (error) {
+            this.showToast(`Failed to start backend: ${error.message}`, 'error');
+            this.hideLoading();
+        }
+    }
+    
+    async installService() {
+        if (!confirm('This will install the backend as a system service that starts automatically on boot. Continue?')) {
+            return;
+        }
+        
+        this.showLoading();
+        try {
+            const result = await this.apiCall('/api/service/install', {
+                method: 'POST'
+            });
+            
+            this.displayResults('Service Installation', [result]);
+            this.showToast('Service installation completed!', 'success');
+            
+            // Reload status to show new service mode
+            setTimeout(() => {
+                this.loadServiceStatus();
+            }, 2000);
+            
+        } catch (error) {
+            this.showToast(`Failed to install service: ${error.message}`, 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
+    async refreshServiceLogs() {
+        try {
+            const logs = await this.apiCall('/api/service/logs');
+            this.updateServiceLogs(logs.logs || []);
+        } catch (error) {
+            console.error('Failed to load service logs:', error);
+            this.updateServiceLogs([{
+                timestamp: new Date().toISOString(),
+                level: 'ERROR',
+                message: `Failed to load logs: ${error.message}`
+            }]);
+        }
+    }
+    
+    updateServiceLogs(logs) {
+        const container = document.getElementById('service-logs');
+        
+        if (logs.length === 0) {
+            container.innerHTML = '<div class="log-entry"><span class="log-message">No logs available</span></div>';
+            return;
+        }
+        
+        // Show latest 50 logs
+        const recentLogs = logs.slice(-50);
+        
+        container.innerHTML = recentLogs.map(log => {
+            const timestamp = new Date(log.timestamp).toLocaleTimeString();
+            return `
+                <div class="log-entry">
+                    <span class="log-timestamp">[${timestamp}]</span>
+                    <span class="log-level ${log.level}">${log.level}</span>
+                    <span class="log-message">${log.message}</span>
+                </div>
+            `;
+        }).join('');
+        
+        // Auto-scroll to bottom
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    clearServiceLogs() {
+        const container = document.getElementById('service-logs');
+        container.innerHTML = '<div class="log-entry"><span class="log-message">Logs cleared</span></div>';
+    }
+    
+    startServiceStatusUpdates() {
+        // Clear existing interval
+        if (this.serviceInterval) {
+            clearInterval(this.serviceInterval);
+        }
+        
+        // Update every 10 seconds when service control tab is active
+        this.serviceInterval = setInterval(() => {
+            const activeTab = document.querySelector('.tab-pane.active');
+            if (activeTab && activeTab.id === 'service-control-tab') {
+                this.loadServiceStatus();
+                
+                // Auto-refresh logs if enabled
+                const autoRefresh = document.getElementById('auto-refresh-logs');
+                if (autoRefresh && autoRefresh.checked) {
+                    this.refreshServiceLogs();
+                }
+            } else {
+                // Stop updates if not on service control tab
+                clearInterval(this.serviceInterval);
+                this.serviceInterval = null;
+            }
+        }, 10000);
     }
     
     // Loading State Management

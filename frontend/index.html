@@ -39,6 +39,9 @@
                     <button class="tab-button" data-tab="monitoring">
                         <i class="fas fa-chart-line"></i> Monitoring Dashboard
                     </button>
+                    <button class="tab-button" data-tab="service-control">
+                        <i class="fas fa-server"></i> Service Control
+                    </button>
                 </div>
 
                 <!-- Tab Content -->
@@ -229,6 +232,99 @@
                                 <div class="detail-card">
                                     <h4><i class="fas fa-cogs"></i> Monitored Apps</h4>
                                     <div id="apps-status" class="detail-content">Loading...</div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Service Control Tab -->
+                    <div id="service-control-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-server"></i> Backend Service Control</h2>
+                            <p>Manage the Installation Up 4evr backend service</p>
+                            
+                            <!-- Service Status -->
+                            <div class="service-status-section">
+                                <div class="service-status-card">
+                                    <div class="service-status-header">
+                                        <h3><i class="fas fa-info-circle"></i> Service Status</h3>
+                                        <div class="service-status-indicator" id="service-status-indicator">
+                                            <span class="service-status-icon" id="service-status-icon">🟡</span>
+                                            <span class="service-status-text" id="service-status-text">Checking...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="service-details">
+                                        <div class="service-detail">
+                                            <label>Process ID:</label>
+                                            <span id="service-pid">--</span>
+                                        </div>
+                                        <div class="service-detail">
+                                            <label>Uptime:</label>
+                                            <span id="service-uptime">--</span>
+                                        </div>
+                                        <div class="service-detail">
+                                            <label>Port:</label>
+                                            <span id="service-port">3001</span>
+                                        </div>
+                                        <div class="service-detail">
+                                            <label>Mode:</label>
+                                            <span id="service-mode">Electron-managed</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Service Controls -->
+                            <div class="service-controls-section">
+                                <h3><i class="fas fa-gamepad"></i> Service Controls</h3>
+                                <div class="service-buttons">
+                                    <button id="restart-backend" class="btn btn-warning">
+                                        <i class="fas fa-redo"></i> Restart Backend
+                                    </button>
+                                    <button id="stop-backend" class="btn btn-danger">
+                                        <i class="fas fa-stop"></i> Stop Backend
+                                    </button>
+                                    <button id="start-backend" class="btn btn-success" style="display: none;">
+                                        <i class="fas fa-play"></i> Start Backend
+                                    </button>
+                                    <button id="install-service" class="btn btn-primary">
+                                        <i class="fas fa-download"></i> Install as System Service
+                                    </button>
+                                </div>
+                                
+                                <div class="service-help">
+                                    <p><i class="fas fa-info-circle"></i> <strong>Service Management:</strong></p>
+                                    <ul>
+                                        <li><strong>Restart Backend:</strong> Restart the current backend process</li>
+                                        <li><strong>Stop/Start Backend:</strong> Control the backend service manually</li>
+                                        <li><strong>Install as System Service:</strong> Set up backend to auto-start on boot</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Service Logs -->
+                            <div class="service-logs-section">
+                                <h3><i class="fas fa-file-alt"></i> Service Logs</h3>
+                                <div class="logs-controls">
+                                    <button id="refresh-logs" class="btn btn-secondary">
+                                        <i class="fas fa-sync"></i> Refresh
+                                    </button>
+                                    <button id="clear-logs" class="btn btn-secondary">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="auto-refresh-logs" checked>
+                                        <span class="checkbox-custom"></span>
+                                        Auto-refresh logs
+                                    </label>
+                                </div>
+                                <div class="logs-container" id="service-logs">
+                                    <div class="log-entry">
+                                        <span class="log-timestamp">[Loading...]</span>
+                                        <span class="log-level">INFO</span>
+                                        <span class="log-message">Fetching service logs...</span>
+                                    </div>
                                 </div>
                             </div>
                         </section>
