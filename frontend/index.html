@@ -27,8 +27,25 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- System Preferences Section -->
-            <section class="card">
+            <!-- Tab Navigation -->
+            <div class="tab-container">
+                <div class="tab-nav">
+                    <button class="tab-button active" data-tab="system-prefs">
+                        <i class="fas fa-cog"></i> System Preferences
+                    </button>
+                    <button class="tab-button" data-tab="launch-agents">
+                        <i class="fas fa-rocket"></i> Launch Agents
+                    </button>
+                    <button class="tab-button" data-tab="monitoring">
+                        <i class="fas fa-chart-line"></i> Monitoring Dashboard
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- System Preferences Tab -->
+                    <div id="system-prefs-tab" class="tab-pane active">
+                        <section class="card">
                 <h2><i class="fas fa-cog"></i> System Preferences</h2>
                 <p>Configure macOS settings for 24/7 installation use</p>
                 
@@ -61,10 +78,12 @@
                         <i class="fas fa-play"></i> Apply Selected Settings
                     </button>
                 </div>
-            </section>
+                        </section>
+                    </div>
 
-            <!-- Launch Agents Section -->
-            <section class="card">
+                    <!-- Launch Agents Tab -->
+                    <div id="launch-agents-tab" class="tab-pane">
+                        <section class="card">
                 <h2><i class="fas fa-rocket"></i> Launch Agents</h2>
                 <p>Create launch agents to keep your apps running forever</p>
                 
@@ -138,7 +157,84 @@
                         <!-- Populated by JavaScript -->
                     </div>
                 </div>
-            </section>
+                        </section>
+                    </div>
+
+                    <!-- Monitoring Dashboard Tab -->
+                    <div id="monitoring-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-chart-line"></i> Monitoring Dashboard</h2>
+                            <p>Real-time system monitoring and installation health</p>
+                            
+                            <!-- System Overview -->
+                            <div class="monitoring-grid">
+                                <div class="metric-card">
+                                    <h3><i class="fas fa-microchip"></i> CPU Usage</h3>
+                                    <div class="metric-value" id="cpu-usage">--</div>
+                                    <div class="metric-bar">
+                                        <div class="metric-fill" id="cpu-bar"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card">
+                                    <h3><i class="fas fa-memory"></i> Memory Usage</h3>
+                                    <div class="metric-value" id="memory-usage">--</div>
+                                    <div class="metric-bar">
+                                        <div class="metric-fill" id="memory-bar"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card">
+                                    <h3><i class="fas fa-hdd"></i> Disk Usage</h3>
+                                    <div class="metric-value" id="disk-usage">--</div>
+                                    <div class="metric-bar">
+                                        <div class="metric-fill" id="disk-bar"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="metric-card">
+                                    <h3><i class="fas fa-heartbeat"></i> System Health</h3>
+                                    <div class="health-status" id="health-status">
+                                        <span class="health-indicator" id="health-indicator">🟡</span>
+                                        <span id="health-text">Checking...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Alerts and Notifications -->
+                            <div class="alerts-section">
+                                <h3><i class="fas fa-bell"></i> Active Alerts</h3>
+                                <div id="alerts-container" class="alerts-container">
+                                    <!-- Alerts populated by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <!-- System Details -->
+                            <div class="details-grid">
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-desktop"></i> Display Status</h4>
+                                    <div id="display-status" class="detail-content">Loading...</div>
+                                </div>
+                                
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-network-wired"></i> Network Status</h4>
+                                    <div id="network-status" class="detail-content">Loading...</div>
+                                </div>
+                                
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-clock"></i> Installation Uptime</h4>
+                                    <div id="uptime-status" class="detail-content">Loading...</div>
+                                </div>
+                                
+                                <div class="detail-card">
+                                    <h4><i class="fas fa-cogs"></i> Monitored Apps</h4>
+                                    <div id="apps-status" class="detail-content">Loading...</div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
 
             <!-- Results Section -->
             <section class="card results-section" id="results-section" style="display: none;">
