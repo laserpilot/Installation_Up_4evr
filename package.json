@@ -6,12 +6,14 @@
   "homepage": "./",
   "scripts": {
     "start": "electron .",
-    "dev": "concurrently \"cd backend && npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
+    "dev": "concurrently --kill-others --success first \"cd backend && npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
+    "dev:safe": "pkill -f 'Installation Up 4evr' || true && npm run dev",
     "build": "electron-builder",
     "build:mac": "electron-builder --mac",
     "dist": "npm run build",
     "pack": "electron-builder --dir",
-    "postinstall": "cd backend && npm install"
+    "postinstall": "cd backend && npm install",
+    "kill-processes": "pkill -f 'Installation Up 4evr' || pkill -f 'electron.*main.js' || true"
   },
   "keywords": [
     "macos",
@@ -41,10 +43,15 @@
     },
     "files": [
       "electron/**/*",
-      "backend/**/*",
       "frontend/**/*",
       "!backend/node_modules/.cache",
       "!backend/test-*.js"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend"
+      }
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
@@ -72,8 +79,6 @@
     },
     "dmg": {
       "title": "Installation Up 4evr",
-      "icon": "electron/assets/icon.icns",
-      "background": "electron/assets/dmg-background.png",
       "contents": [
         {
           "x": 130,
