@@ -16,28 +16,42 @@ class InstallationUp4evr {
     async init() {
         this.setupEventListeners();
         
+        // Show initial loading states
+        this.showInitialLoadingStates();
+        
         // If running in Electron, wait for server to be ready
         if (this.isElectron) {
+            this.updateLoadingMessage('Starting backend server...');
             await this.waitForServer();
         }
         
+        this.updateLoadingMessage('Checking server status...');
         const serverOnline = await this.checkServerStatus();
         
         if (serverOnline) {
+            this.updateLoadingMessage('Loading system preferences...');
             await this.loadSystemPreferences();
+            
+            this.updateLoadingMessage('Loading launch agents...');
             await this.loadLaunchAgents();
+            
+            this.updateLoadingMessage('Checking security status...');
             await this.checkSIPStatus();
+            
+            this.hideLoadingStates();
         } else {
-            this.showToast('Server not available - some features may be limited', 'warning');
+            this.showServerOfflineState();
         }
     }
 
     async waitForServer(maxAttempts = 10, delay = 2000) {
         for (let i = 0; i < maxAttempts; i++) {
             try {
+                this.updateLoadingMessage(`Connecting to server... (${i + 1}/${maxAttempts})`);
                 const response = await fetch(`${this.baseUrl}/api/health`);
                 if (response.ok) {
                     console.log('Server is ready');
+                    this.updateLoadingMessage('Server connected successfully!');
                     return true;
                 }
             } catch (error) {
@@ -50,6 +64,7 @@ class InstallationUp4evr {
         }
         
         console.warn('Server did not become ready within timeout');
+        this.updateLoadingMessage('Server connection timeout - will attempt to continue...');
         return false;
     }
 
@@ -787,6 +802,78 @@ class InstallationUp4evr {
                 this.monitoringInterval = null;
             }
         }, 5000);
+    }
+    
+    // Loading State Management
+    showInitialLoadingStates() {
+        // Add loading indicators to empty sections
+        document.getElementById('required-settings').innerHTML = this.createLoadingIndicator('Loading required settings...');
+        document.getElementById('optional-settings').innerHTML = this.createLoadingIndicator('Loading optional settings...');
+        document.getElementById('launch-agents-list').innerHTML = this.createLoadingIndicator('Loading launch agents...');
+    }
+    
+    updateLoadingMessage(message) {
+        // Update any existing loading indicators with new message
+        const loadingElements = document.querySelectorAll('.loading-indicator .loading-text');
+        loadingElements.forEach(element => {
+            element.textContent = message;
+        });
+        
+        // Also show in toast for Electron users
+        if (this.isElectron) {
+            console.log(`Loading: ${message}`);
+        }
+    }
+    
+    hideLoadingStates() {
+        // Remove loading indicators (they'll be replaced by actual content)
+        document.querySelectorAll('.loading-indicator').forEach(element => {
+            element.remove();
+        });
+    }
+    
+    showServerOfflineState() {
+        this.showToast('Backend server is not available - some features may be limited', 'error');
+        
+        // Show offline state in sections
+        const offlineHtml = this.createOfflineIndicator();
+        document.getElementById('required-settings').innerHTML = offlineHtml;
+        document.getElementById('optional-settings').innerHTML = offlineHtml;
+        document.getElementById('launch-agents-list').innerHTML = offlineHtml;
+        
+        // Update status indicator
+        this.updateStatus('server-status', 'offline', 'Server Offline');
+    }
+    
+    createLoadingIndicator(message = 'Loading...') {
+        return `
+            <div class="loading-indicator">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="loading-text">${message}</div>
+            </div>
+        `;
+    }
+    
+    createOfflineIndicator() {
+        return `
+            <div class="offline-indicator">
+                <div class="offline-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="offline-content">
+                    <h4>Backend Server Offline</h4>
+                    <p>The backend server is not responding. Please check:</p>
+                    <ul>
+                        <li>Server is running on port 3001</li>
+                        <li>No firewall blocking connections</li>
+                        <li>Check console/logs for errors</li>
+                    </ul>
+                    ${this.isElectron ? '<p><strong>Electron users:</strong> Try restarting the application.</p>' : '<p><strong>Web users:</strong> Start the backend with <code>cd backend && npm start</code></p>'}
+                </div>
+            </div>
+        `;
     }
 }
 

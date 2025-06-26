@@ -166,7 +166,7 @@ class InstallationUp4evrApp {
                     // Continue to next path
                 }
             }
-            debugLog('Using Electron bundled node executable: ' + nodePath);
+            debugLog('Using system Node.js executable: ' + nodePath);
             
             debugLog('Spawning server with: ' + nodePath + ' ' + JSON.stringify([serverPath]));
             debugLog('Working directory: ' + path.dirname(serverPath));
