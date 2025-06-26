@@ -13,7 +13,15 @@
     "dist": "npm run build",
     "pack": "electron-builder --dir",
     "postinstall": "cd backend && npm install",
-    "kill-processes": "pkill -f 'Installation Up 4evr' || pkill -f 'electron.*main.js' || true"
+    "kill-processes": "pkill -f 'Installation Up 4evr' || pkill -f 'electron.*main.js' || true",
+    "service:start": "cd backend && node backend-service.js",
+    "service:start:bg": "cd backend && nohup node backend-service.js > /dev/null 2>&1 &",
+    "service:stop": "pkill -f 'backend-service.js' || true",
+    "service:restart": "npm run service:stop && sleep 2 && npm run service:start:bg",
+    "service:status": "pgrep -f 'backend-service.js' && echo 'Service is running' || echo 'Service is not running'",
+    "service:logs": "tail -f ~/installation-up-4evr-service.log",
+    "service:install": "cd backend && node -e \"const s = require('./modules/service-control'); new s().installSystemService().then(r => console.log(JSON.stringify(r, null, 2))).catch(e => console.error(e.message))\"",
+    "service:test": "cd backend && LOG_LEVEL=DEBUG ENABLE_WEB_INTERFACE=true node backend-service.js"
   },
   "keywords": [
     "macos",
