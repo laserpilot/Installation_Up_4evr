@@ -1,0 +1,25 @@
+{
+  "name": "heartbeat-app",
+  "version": "1.0.0",
+  "description": "Simple heartbeat test application for Installation Up 4evr",
+  "main": "heartbeat.js",
+  "bin": {
+    "heartbeat-app": "./heartbeat.js"
+  },
+  "scripts": {
+    "start": "node heartbeat.js",
+    "test": "node heartbeat.js"
+  },
+  "keywords": [
+    "test",
+    "heartbeat", 
+    "installation",
+    "up4evr",
+    "launch-agent"
+  ],
+  "author": "Installation Up 4evr",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

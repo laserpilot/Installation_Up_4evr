@@ -1,0 +1,34 @@
+{
+  "name": "crash-simulator",
+  "version": "1.0.0",
+  "description": "Crash simulation test application for Installation Up 4evr keep-alive testing",
+  "main": "crash-simulator.js",
+  "bin": {
+    "crash-simulator": "./crash-simulator.js"
+  },
+  "scripts": {
+    "start": "node crash-simulator.js",
+    "test": "node crash-simulator.js",
+    "test:exception": "CRASH_TYPES=exception node crash-simulator.js",
+    "test:exit": "CRASH_TYPES=exit node crash-simulator.js", 
+    "test:timeout": "CRASH_TYPES=timeout node crash-simulator.js",
+    "test:memory": "CRASH_TYPES=memory node crash-simulator.js",
+    "test:fast": "CRASH_MIN_SECONDS=5 CRASH_MAX_SECONDS=15 node crash-simulator.js",
+    "test:slow": "CRASH_MIN_SECONDS=30 CRASH_MAX_SECONDS=120 node crash-simulator.js"
+  },
+  "keywords": [
+    "test",
+    "crash",
+    "simulation", 
+    "installation",
+    "up4evr",
+    "launch-agent",
+    "keep-alive",
+    "restart"
+  ],
+  "author": "Installation Up 4evr",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

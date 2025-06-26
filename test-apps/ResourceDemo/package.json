@@ -1,0 +1,37 @@
+{
+  "name": "resource-demo",
+  "version": "1.0.0",
+  "description": "Resource consumption test application for Installation Up 4evr monitoring testing",
+  "main": "resource-demo.js",
+  "bin": {
+    "resource-demo": "./resource-demo.js"
+  },
+  "scripts": {
+    "start": "node resource-demo.js",
+    "test": "node resource-demo.js",
+    "test:gradual": "RESOURCE_PATTERN=gradual node resource-demo.js",
+    "test:spike": "RESOURCE_PATTERN=spike node resource-demo.js",
+    "test:wave": "RESOURCE_PATTERN=wave node resource-demo.js",
+    "test:plateau": "RESOURCE_PATTERN=plateau node resource-demo.js",
+    "test:light": "MAX_CPU_PERCENT=30 MAX_MEMORY_MB=100 node resource-demo.js",
+    "test:heavy": "MAX_CPU_PERCENT=90 MAX_MEMORY_MB=1000 node resource-demo.js",
+    "test:fast": "CPU_RAMP_INTERVAL=5 MEMORY_RAMP_INTERVAL=5 LOG_INTERVAL=3 node resource-demo.js",
+    "test:slow": "CPU_RAMP_INTERVAL=60 MEMORY_RAMP_INTERVAL=90 LOG_INTERVAL=30 node resource-demo.js"
+  },
+  "keywords": [
+    "test",
+    "monitoring",
+    "resources",
+    "cpu",
+    "memory",
+    "installation",
+    "up4evr",
+    "performance",
+    "metrics"
+  ],
+  "author": "Installation Up 4evr",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

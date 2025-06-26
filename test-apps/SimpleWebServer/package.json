@@ -1,0 +1,39 @@
+{
+  "name": "simple-web-server",
+  "version": "1.0.0",
+  "description": "Simple web server test application for Installation Up 4evr network and display testing",
+  "main": "web-server.js",
+  "bin": {
+    "simple-web-server": "./web-server.js"
+  },
+  "scripts": {
+    "start": "node web-server.js",
+    "test": "node web-server.js",
+    "start:kiosk": "CONTENT_TYPE=kiosk THEME=colorful node web-server.js",
+    "start:display": "CONTENT_TYPE=installation THEME=dark node web-server.js",
+    "start:demo": "CONTENT_TYPE=demo THEME=light node web-server.js",
+    "start:port8081": "WEB_PORT=8081 node web-server.js",
+    "start:port3000": "WEB_PORT=3000 node web-server.js",
+    "start:local": "WEB_HOST=127.0.0.1 WEB_PORT=8080 node web-server.js",
+    "start:network": "WEB_HOST=0.0.0.0 WEB_PORT=8080 node web-server.js",
+    "start:quiet": "LOG_REQUESTS=false node web-server.js",
+    "start:fast-refresh": "AUTO_REFRESH=10 node web-server.js"
+  },
+  "keywords": [
+    "test",
+    "web-server",
+    "network",
+    "display",
+    "kiosk",
+    "installation",
+    "up4evr",
+    "monitoring",
+    "connectivity",
+    "http"
+  ],
+  "author": "Installation Up 4evr",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
