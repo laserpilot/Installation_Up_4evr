@@ -15,6 +15,7 @@ class SystemPreferencesManager {
                 name: "Screensaver",
                 description: "Set screensaver to Never",
                 command: 'defaults -currentHost write com.apple.screensaver idleTime 0',
+                revert: 'defaults -currentHost write com.apple.screensaver idleTime 600',
                 verify: 'defaults -currentHost read com.apple.screensaver idleTime',
                 required: true
             },
@@ -22,6 +23,7 @@ class SystemPreferencesManager {
                 name: "Display Sleep",
                 description: "Set display sleep to Never", 
                 command: 'sudo pmset -c displaysleep 0',
+                revert: 'sudo pmset -c displaysleep 10',
                 verify: 'pmset -g | grep displaysleep',
                 required: true
             },
@@ -29,6 +31,7 @@ class SystemPreferencesManager {
                 name: "Computer Sleep",
                 description: "Set computer sleep to Never",
                 command: 'sudo pmset -c sleep 0',
+                revert: 'sudo pmset -c sleep 30',
                 verify: 'pmset -g | grep sleep',
                 required: true
             },
@@ -180,9 +183,9 @@ class SystemPreferencesManager {
     }
 
     /**
-     * Verify a single setting
+     * Check current status of a setting (read-only)
      */
-    async verifySetting(settingId) {
+    async checkSettingStatus(settingId) {
         if (!this.settings[settingId]) {
             throw new Error(`Setting ${settingId} not found`);
         }
@@ -190,39 +193,81 @@ class SystemPreferencesManager {
         const setting = this.settings[settingId];
         
         try {
-            // Replace sudo commands with non-sudo alternatives for verification
             let verifyCommand = setting.verify;
             
             // Special handling for sudo commands that can't run without TTY
             if (verifyCommand.includes('sudo') && !verifyCommand.includes('2>/dev/null')) {
-                // Skip verification for sudo commands that require password
                 return {
                     setting: settingId,
                     name: setting.name,
-                    verified: true,
-                    output: "Verification skipped (requires sudo)",
+                    status: 'unknown',
+                    statusIcon: '🟡',
+                    statusText: 'Requires admin privileges to check',
+                    output: "Check skipped (requires sudo)",
                     error: null
                 };
             }
             
             const { stdout, stderr } = await execAsync(verifyCommand);
+            const output = stdout.trim();
+            
+            // Determine if setting is properly applied based on expected values
+            const isApplied = this.isSettingApplied(settingId, output);
             
             return {
                 setting: settingId,
                 name: setting.name,
-                verified: true,
-                output: stdout.trim() || "No output (command successful)",
+                status: isApplied ? 'applied' : 'not_applied',
+                statusIcon: isApplied ? '🟢' : '🟡',
+                statusText: isApplied ? 'Applied' : 'Needs to be applied',
+                output: output || "No output (command successful)",
                 error: stderr || null
             };
         } catch (error) {
-            // Don't treat verification failures as errors - just note them
             return {
                 setting: settingId,
                 name: setting.name,
-                verified: false,
-                output: "No details available",
+                status: 'error',
+                statusIcon: '🔴',
+                statusText: 'Check failed',
+                output: "Unable to check status",
                 error: `Error: ${error.message}`
             };
+        }
+    }
+
+    /**
+     * Determine if a setting is properly applied based on its output
+     */
+    isSettingApplied(settingId, output) {
+        const setting = this.settings[settingId];
+        
+        switch (settingId) {
+            case 'screensaver':
+                return output === '0'; // idleTime should be 0
+            case 'displaySleep':
+                return output.includes('displaysleep 0') || output.includes('displaysleep         0');
+            case 'computerSleep':
+                return output.includes('sleep 0') || output.includes('sleep         0');
+            case 'autoRestart':
+                return output.includes('autorestart 1') || output.includes('autorestart         1');
+            case 'hideMenuBar':
+                return output === '1'; // _HIHideMenuBar should be 1
+            case 'disableSpotlight':
+                return output.includes('Indexing disabled') || output.includes('disabled');
+            case 'disableGatekeeper':
+                return output.includes('assessments disabled');
+            case 'allowAppsAnywhere':
+                return output.includes('assessments disabled');
+            case 'bluetoothSetup':
+                return output === '1' || output.includes('preference set');
+            case 'disableAppNap':
+                return output === '1' || output === 'YES' || output.includes('preference set');
+            case 'softwareUpdate':
+                return output === '0' || output.includes('false') || output.includes('preference set');
+            default:
+                // For other settings, if we got output without error, consider it applied
+                return output.length > 0 && !output.includes('does not exist');
         }
     }
 
@@ -234,6 +279,63 @@ class SystemPreferencesManager {
         
         for (const settingId of settingIds) {
             const result = await this.applySetting(settingId);
+            results.push(result);
+        }
+        
+        return results;
+    }
+
+    /**
+     * Revert a single setting to its default/original value
+     */
+    async revertSetting(settingId) {
+        if (!this.settings[settingId]) {
+            throw new Error(`Setting ${settingId} not found`);
+        }
+
+        const setting = this.settings[settingId];
+        
+        if (!setting.revert) {
+            return {
+                success: false,
+                setting: settingId,
+                message: `No revert command available for ${setting.name}`,
+                error: 'Revert not supported'
+            };
+        }
+        
+        try {
+            console.log(`Reverting ${setting.name}: ${setting.description}`);
+            const { stdout, stderr } = await execAsync(setting.revert);
+            
+            if (stderr) {
+                console.warn(`Warning for ${setting.name}:`, stderr);
+            }
+            
+            return {
+                success: true,
+                setting: settingId,
+                message: `Successfully reverted ${setting.name}`,
+                output: stdout
+            };
+        } catch (error) {
+            return {
+                success: false,
+                setting: settingId,
+                message: `Failed to revert ${setting.name}: ${error.message}`,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Revert multiple settings
+     */
+    async revertSettings(settingIds) {
+        const results = [];
+        
+        for (const settingId of settingIds) {
+            const result = await this.revertSetting(settingId);
             results.push(result);
         }
         
@@ -257,13 +359,13 @@ class SystemPreferencesManager {
     }
 
     /**
-     * Verify multiple settings
+     * Check status of multiple settings
      */
-    async verifySettings(settingIds) {
+    async checkSettingsStatus(settingIds) {
         const results = [];
         
         for (const settingId of settingIds) {
-            const result = await this.verifySetting(settingId);
+            const result = await this.checkSettingStatus(settingId);
             results.push(result);
         }
         
@@ -271,11 +373,32 @@ class SystemPreferencesManager {
     }
 
     /**
-     * Verify all settings
+     * Check status of all settings
+     */
+    async checkAllSettingsStatus() {
+        const allSettings = this.getSettings().map(s => s.id);
+        return await this.checkSettingsStatus(allSettings);
+    }
+
+    /**
+     * Legacy verify method (deprecated - use checkSettingStatus instead)
+     */
+    async verifySetting(settingId) {
+        return await this.checkSettingStatus(settingId);
+    }
+
+    /**
+     * Legacy verify method (deprecated - use checkSettingsStatus instead)
+     */
+    async verifySettings(settingIds) {
+        return await this.checkSettingsStatus(settingIds);
+    }
+
+    /**
+     * Legacy verify method (deprecated - use checkAllSettingsStatus instead)
      */
     async verifyAllSettings() {
-        const allSettings = this.getSettings().map(s => s.id);
-        return await this.verifySettings(allSettings);
+        return await this.checkAllSettingsStatus();
     }
 
     /**
