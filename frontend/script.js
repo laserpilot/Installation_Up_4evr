@@ -54,6 +54,9 @@ class InstallationUp4evr {
     }
 
     setupEventListeners() {
+        // Tab navigation
+        this.setupTabNavigation();
+        
         // System Preferences
         document.getElementById('verify-settings').addEventListener('click', () => this.verifySettings());
         document.getElementById('apply-required').addEventListener('click', () => this.applyRequiredSettings());
@@ -152,32 +155,47 @@ class InstallationUp4evr {
     // System Preferences
     async loadSystemPreferences() {
         try {
-            const [required, optional] = await Promise.all([
+            const [required, optional, statusData] = await Promise.all([
                 this.apiCall('/api/system-prefs/required'),
-                this.apiCall('/api/system-prefs/optional')
+                this.apiCall('/api/system-prefs/optional'),
+                this.apiCall('/api/system-prefs/status')
             ]);
 
-            this.renderSettings('required-settings', required);
-            this.renderSettings('optional-settings', optional);
+            // Create status lookup for quick access
+            const statusLookup = {};
+            statusData.forEach(status => {
+                statusLookup[status.setting] = status;
+            });
+
+            this.renderSettings('required-settings', required, statusLookup);
+            this.renderSettings('optional-settings', optional, statusLookup);
         } catch (error) {
             this.showToast('Failed to load system preferences', 'error');
         }
     }
 
-    renderSettings(containerId, settings) {
+    renderSettings(containerId, settings, statusLookup = {}) {
         const container = document.getElementById(containerId);
-        container.innerHTML = settings.map(setting => `
-            <div class="setting-item" data-setting-id="${setting.id}">
-                <label class="checkbox-label">
-                    <input type="checkbox" data-setting="${setting.id}">
-                    <span class="checkbox-custom"></span>
-                    <div>
-                        <h4>${setting.name}</h4>
-                        <p>${setting.description}</p>
-                    </div>
-                </label>
-            </div>
-        `).join('');
+        container.innerHTML = settings.map(setting => {
+            const status = statusLookup[setting.id] || { statusIcon: '⚪', statusText: 'Unknown' };
+            const statusClass = this.getStatusClass(status.status);
+            
+            return `
+                <div class="setting-item ${statusClass}" data-setting-id="${setting.id}">
+                    <label class="checkbox-label">
+                        <input type="checkbox" data-setting="${setting.id}">
+                        <span class="checkbox-custom"></span>
+                        <div class="setting-content">
+                            <div class="setting-header">
+                                <h4>${setting.name} <span class="status-emoji">${status.statusIcon}</span></h4>
+                                <span class="status-text">${status.statusText}</span>
+                            </div>
+                            <p>${setting.description}</p>
+                        </div>
+                    </label>
+                </div>
+            `;
+        }).join('');
 
         // Add change listeners
         container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
@@ -194,6 +212,16 @@ class InstallationUp4evr {
                 }
             });
         });
+    }
+
+    getStatusClass(status) {
+        switch (status) {
+            case 'applied': return 'status-applied';
+            case 'not_applied': return 'status-needs-applying';
+            case 'error': return 'status-error';
+            case 'unknown': return 'status-unknown';
+            default: return 'status-unknown';
+        }
     }
 
     async verifySettings() {
@@ -555,6 +583,210 @@ class InstallationUp4evr {
             info: 'fa-info-circle'
         };
         return icons[type] || icons.info;
+    }
+
+    // Tab Navigation
+    setupTabNavigation() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+                
+                // Remove active class from all buttons and panes
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding pane
+                button.classList.add('active');
+                document.getElementById(`${targetTab}-tab`).classList.add('active');
+                
+                // Load monitoring data if monitoring tab is selected
+                if (targetTab === 'monitoring') {
+                    this.loadMonitoringData();
+                    this.startMonitoringUpdates();
+                }
+            });
+        });
+    }
+
+    // Monitoring Dashboard
+    async loadMonitoringData() {
+        try {
+            const monitoringData = await this.apiCall('/api/monitoring/status');
+            this.updateMonitoringDisplay(monitoringData);
+        } catch (error) {
+            console.error('Failed to load monitoring data:', error);
+            this.showToast('Failed to load monitoring data', 'error');
+        }
+    }
+
+    updateMonitoringDisplay(data) {
+        // Update system metrics
+        if (data.system) {
+            this.updateMetric('cpu', data.system.cpuUsage, '%');
+            this.updateMetric('memory', data.system.memoryUsage, '%');
+            
+            // Calculate disk usage from storage data
+            if (data.storage) {
+                const totalDisk = Object.values(data.storage).reduce((acc, disk) => {
+                    if (disk.usagePercent && disk.usagePercent < 100) {
+                        return Math.max(acc, disk.usagePercent);
+                    }
+                    return acc;
+                }, 0);
+                this.updateMetric('disk', totalDisk, '%');
+            }
+        }
+
+        // Update health status
+        this.updateHealthStatus(data.status, data.issues || []);
+
+        // Update alerts
+        this.updateAlerts(data.notifications || []);
+
+        // Update details
+        this.updateSystemDetails(data);
+    }
+
+    updateMetric(metricId, value, unit) {
+        const valueElement = document.getElementById(`${metricId}-usage`);
+        const barElement = document.getElementById(`${metricId}-bar`);
+        
+        if (valueElement && barElement) {
+            valueElement.textContent = value !== undefined ? `${Math.round(value)}${unit}` : '--';
+            barElement.style.width = value !== undefined ? `${Math.min(value, 100)}%` : '0%';
+            
+            // Color coding for the bars
+            if (value > 90) {
+                barElement.style.background = 'rgb(239, 68, 68)'; // Red
+            } else if (value > 70) {
+                barElement.style.background = 'rgb(245, 158, 11)'; // Yellow  
+            } else {
+                barElement.style.background = 'rgb(34, 197, 94)'; // Green
+            }
+        }
+    }
+
+    updateHealthStatus(status, issues) {
+        const indicator = document.getElementById('health-indicator');
+        const text = document.getElementById('health-text');
+        
+        const statusConfig = {
+            'healthy': { icon: '🟢', text: 'Healthy', color: 'rgb(34, 197, 94)' },
+            'warning': { icon: '🟡', text: 'Warning', color: 'rgb(245, 158, 11)' },
+            'critical': { icon: '🔴', text: 'Critical', color: 'rgb(239, 68, 68)' },
+            'unknown': { icon: '⚪', text: 'Unknown', color: 'rgb(107, 114, 128)' }
+        };
+        
+        const config = statusConfig[status] || statusConfig.unknown;
+        
+        if (indicator && text) {
+            indicator.textContent = config.icon;
+            text.textContent = issues.length > 0 ? `${config.text} (${issues.length} issues)` : config.text;
+            text.style.color = config.color;
+        }
+    }
+
+    updateAlerts(notifications) {
+        const container = document.getElementById('alerts-container');
+        if (!container) return;
+
+        if (notifications.length === 0) {
+            container.innerHTML = '<div class="alert-item info"><span>No active alerts</span></div>';
+            return;
+        }
+
+        // Show recent 10 alerts
+        const recentAlerts = notifications.slice(-10).reverse();
+        
+        container.innerHTML = recentAlerts.map(alert => {
+            const severity = this.getSeverityClass(alert.severity);
+            const time = new Date(alert.timestamp).toLocaleTimeString();
+            
+            return `
+                <div class="alert-item ${severity}">
+                    <span>${alert.message}</span>
+                    <span class="alert-time">${time}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    getSeverityClass(severity) {
+        const mapping = {
+            'critical': 'critical',
+            'warning': 'warning',
+            'info': 'info'
+        };
+        return mapping[severity] || 'info';
+    }
+
+    updateSystemDetails(data) {
+        // Display status
+        const displayElement = document.getElementById('display-status');
+        if (displayElement && data.displays) {
+            const displays = Object.values(data.displays);
+            const onlineDisplays = displays.filter(d => d.online).length;
+            displayElement.textContent = `${onlineDisplays}/${displays.length} displays online`;
+        }
+
+        // Network status
+        const networkElement = document.getElementById('network-status');
+        if (networkElement && data.network) {
+            const connected = data.network.internetConnected ? 'Connected' : 'Disconnected';
+            const interfaces = Object.keys(data.network).filter(k => k !== 'internetConnected').length;
+            networkElement.textContent = `${connected} (${interfaces} interfaces)`;
+        }
+
+        // Uptime
+        const uptimeElement = document.getElementById('uptime-status');
+        if (uptimeElement && data.system) {
+            const uptime = this.formatUptime(data.system.uptime);
+            uptimeElement.textContent = uptime;
+        }
+
+        // Monitored apps
+        const appsElement = document.getElementById('apps-status');
+        if (appsElement && data.watchedApps) {
+            appsElement.textContent = `${data.watchedApps.length} applications monitored`;
+        }
+    }
+
+    formatUptime(seconds) {
+        if (!seconds) return 'Unknown';
+        
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        
+        if (days > 0) {
+            return `${days}d ${hours}h ${minutes}m`;
+        } else if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        } else {
+            return `${minutes}m`;
+        }
+    }
+
+    startMonitoringUpdates() {
+        // Clear existing interval
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+        }
+        
+        // Update every 5 seconds when monitoring tab is active
+        this.monitoringInterval = setInterval(() => {
+            const activeTab = document.querySelector('.tab-pane.active');
+            if (activeTab && activeTab.id === 'monitoring-tab') {
+                this.loadMonitoringData();
+            } else {
+                // Stop updates if not on monitoring tab
+                clearInterval(this.monitoringInterval);
+                this.monitoringInterval = null;
+            }
+        }, 5000);
     }
 }
 
