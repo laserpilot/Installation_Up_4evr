@@ -416,6 +416,98 @@ class ProfilesManager {
                 }
             },
             {
+                name: 'Test Applications Suite',
+                description: 'Complete test applications for validating Installation Up 4evr functionality',
+                category: 'testing',
+                author: 'Installation Up 4evr',
+                systemSettings: [
+                    'screensaver', 'displaySleep', 'computerSleep', 'autoRestart', 'desktopBackground'
+                ],
+                launchAgents: [
+                    {
+                        name: 'HeartbeatApp',
+                        appPath: './test-apps/HeartbeatApp',
+                        displayName: 'Heartbeat Logger',
+                        description: 'Simple continuous logger for basic functionality testing',
+                        keepAlive: true,
+                        runAtLoad: true,
+                        successfulExit: true,
+                        purpose: 'Tests basic launch agent functionality and continuous logging'
+                    },
+                    {
+                        name: 'CrashSimulator',
+                        appPath: './test-apps/CrashSimulator',
+                        displayName: 'Crash Recovery Tester',
+                        description: 'Controlled crash testing for keep-alive validation',
+                        keepAlive: true,
+                        runAtLoad: true,
+                        successfulExit: true,
+                        purpose: 'Tests launch agent restart capabilities with different failure modes'
+                    },
+                    {
+                        name: 'ResourceDemo',
+                        appPath: './test-apps/ResourceDemo',
+                        displayName: 'Resource Monitoring Tester',
+                        description: 'Resource consumption testing for monitoring validation',
+                        keepAlive: true,
+                        runAtLoad: false,
+                        successfulExit: true,
+                        purpose: 'Tests monitoring system accuracy and alert thresholds'
+                    },
+                    {
+                        name: 'SimpleWebServer',
+                        appPath: './test-apps/SimpleWebServer',
+                        displayName: 'Network & Display Tester',
+                        description: 'Network and display content testing server',
+                        keepAlive: true,
+                        runAtLoad: true,
+                        successfulExit: true,
+                        purpose: 'Tests network monitoring, connectivity, and display content serving'
+                    }
+                ],
+                tags: ['testing', 'validation', 'demo', 'development', 'monitoring', 'crash-recovery', 'network'],
+                installation: {
+                    preInstall: [
+                        'Ensure Node.js >=14.0.0 is installed',
+                        'Verify test-apps directory exists in Installation Up 4evr folder',
+                        'Run npm install in each test app directory if needed',
+                        'Check that ports 8080-8083 are available for web server'
+                    ],
+                    postInstall: [
+                        'Monitor heartbeat logs at ~/heartbeat-app.log',
+                        'Check crash simulator session cycles at ~/crash-simulator.log', 
+                        'Verify resource demo metrics appear in monitoring dashboard',
+                        'Test web server at http://localhost:8080',
+                        'Configure alert thresholds for resource monitoring',
+                        'Test notification channels with resource alerts'
+                    ],
+                    testing: [
+                        'HeartbeatApp: Verify continuous logging every 5 seconds',
+                        'CrashSimulator: Watch automatic restart cycles after crashes',
+                        'ResourceDemo: Confirm resource usage increases trigger alerts',
+                        'SimpleWebServer: Test all endpoints and display modes',
+                        'Launch Agents: Verify all 4 apps appear as running services',
+                        'Monitoring: Check all apps visible in monitoring dashboard',
+                        'Keep-Alive: Stop processes manually and verify automatic restart'
+                    ],
+                    configuration: [
+                        'HeartbeatApp: No configuration needed - runs with defaults',
+                        'CrashSimulator: Set CRASH_TYPES env var to test specific failure modes',
+                        'ResourceDemo: Use MAX_CPU_PERCENT and MAX_MEMORY_MB to limit resource usage',
+                        'SimpleWebServer: Configure WEB_PORT and CONTENT_TYPE for display needs'
+                    ]
+                },
+                notes: [
+                    'This profile installs all four test applications that demonstrate Installation Up 4evr functionality',
+                    'Ideal for new users learning the system or validating installation setups',
+                    'All apps include comprehensive logging and are designed to be safe for testing',
+                    'ResourceDemo will gradually increase CPU/memory usage - monitor system impact',
+                    'CrashSimulator will intentionally crash and restart - this is expected behavior',
+                    'SimpleWebServer provides multiple endpoints for testing network monitoring',
+                    'Each app can be individually configured via environment variables'
+                ]
+            },
+            {
                 name: 'Minimal Development',
                 description: 'Basic setup for development and testing',
                 category: 'development',
