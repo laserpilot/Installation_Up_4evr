@@ -115,6 +115,42 @@ app.get('/api/system-prefs/verify', async (req, res) => {
     }
 });
 
+// New status checking endpoint (read-only)
+app.get('/api/system-prefs/status', async (req, res) => {
+    try {
+        const results = await systemPrefs.checkAllSettingsStatus();
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Revert settings endpoint
+app.post('/api/system-prefs/revert', async (req, res) => {
+    try {
+        const { settings } = req.body;
+        if (!settings || !Array.isArray(settings)) {
+            return res.status(400).json({ error: 'Settings array is required' });
+        }
+        
+        const results = await systemPrefs.revertSettings(settings);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Individual setting revert
+app.post('/api/system-prefs/revert/:settingId', async (req, res) => {
+    try {
+        const { settingId } = req.params;
+        const result = await systemPrefs.revertSetting(settingId);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/api/system-prefs/sip-status', async (req, res) => {
     try {
         const status = await systemPrefs.checkSIPStatus();

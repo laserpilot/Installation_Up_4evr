@@ -42,13 +42,12 @@ async function testSystemPrefs() {
         });
         console.log('');
 
-        // Verify current settings without applying them
-        console.log('🔍 Verifying Current Settings (read-only):');
-        const verificationResults = await manager.verifyAllSettings();
+        // Check current settings status without applying them
+        console.log('🔍 Checking Current Settings Status (read-only):');
+        const statusResults = await manager.checkAllSettingsStatus();
         
-        verificationResults.forEach(result => {
-            const status = result.verified ? '✅' : '❌';
-            console.log(`${status} ${result.name}`);
+        statusResults.forEach(result => {
+            console.log(`${result.statusIcon} ${result.name} - ${result.statusText}`);
             if (result.output) {
                 console.log(`   Current value: ${result.output}`);
             }
