@@ -3,15 +3,35 @@
  * Express server providing API endpoints for system automation
  */
 
+console.log('SERVER: Starting server.js execution...');
+
+// Catch unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('SERVER ERROR: Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// Catch uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('SERVER ERROR: Uncaught Exception:', error);
+});
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+console.log('SERVER: Loading modules...');
 const SystemPreferencesManager = require('./modules/system-prefs');
+console.log('SERVER: system-prefs loaded');
 const LaunchAgentManager = require('./modules/launch-agents');
+console.log('SERVER: launch-agents loaded');
 const ProfilesManager = require('./modules/profiles');
+console.log('SERVER: profiles loaded');
 const MonitoringSystem = require('./modules/monitoring');
+console.log('SERVER: monitoring loaded');
 const RemoteControlSystem = require('./modules/remote-control');
+console.log('SERVER: remote-control loaded');
 const NotificationSystem = require('./modules/notifications');
+console.log('SERVER: notifications loaded');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,12 +45,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Initialize managers
+console.log('SERVER: Initializing managers...');
 const systemPrefs = new SystemPreferencesManager();
 const launchAgents = new LaunchAgentManager();
 const profiles = new ProfilesManager();
 const monitoring = new MonitoringSystem();
 const remoteControl = new RemoteControlSystem(monitoring);
 const notifications = new NotificationSystem(monitoring);
+console.log('SERVER: Managers initialized.');
 
 // Root route - serve frontend
 app.get('/', (req, res) => {
@@ -568,7 +590,7 @@ app.get('/api/health', (req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
+    console.error('SERVER ERROR: Express error handler caught:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
 
@@ -588,13 +610,37 @@ monitoring.startMonitoring(30000); // 30 second intervals
 // });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`🚀 Installation Up 4evr server running on http://localhost:${PORT}`);
     console.log(`Frontend available at: http://localhost:${PORT}`);
     console.log(`API endpoints available at: http://localhost:${PORT}/api/*`);
     console.log(`📊 Monitoring system started with 30s intervals`);
     console.log(`🔧 Remote control system ready`);
     console.log(`📢 Notification system initialized`);
+    console.log('SERVER: Express app listening successfully.');
+    console.log(`__BACKEND_READY__`); // Specific signal for Electron startup detection
+});
+
+// Add a handler for process exit
+process.on('exit', (code) => {
+    console.log(`SERVER: Process is about to exit with code: ${code}`);
+});
+
+// Add handlers for common termination signals
+process.on('SIGTERM', () => {
+    console.log('SERVER: Received SIGTERM signal. Closing server...');
+    server.close(() => {
+        console.log('SERVER: HTTP server closed.');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('SERVER: Received SIGINT signal. Closing server...');
+    server.close(() => {
+        console.log('SERVER: HTTP server closed.');
+        process.exit(0);
+    });
 });
 
 module.exports = app;

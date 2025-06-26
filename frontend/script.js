@@ -5,19 +5,52 @@
 
 class InstallationUp4evr {
     constructor() {
-        this.baseUrl = window.location.origin;
+        // Fix base URL for Electron vs web browser
+        this.isElectron = window.electronAPI?.isElectron || false;
+        this.baseUrl = this.isElectron ? 'http://localhost:3001' : window.location.origin;
         this.selectedSettings = new Set();
         this.currentAppPath = null;
-        this.isElectron = window.electronAPI?.isElectron || false;
         this.init();
     }
 
     async init() {
         this.setupEventListeners();
-        await this.checkServerStatus();
-        await this.loadSystemPreferences();
-        await this.loadLaunchAgents();
-        await this.checkSIPStatus();
+        
+        // If running in Electron, wait for server to be ready
+        if (this.isElectron) {
+            await this.waitForServer();
+        }
+        
+        const serverOnline = await this.checkServerStatus();
+        
+        if (serverOnline) {
+            await this.loadSystemPreferences();
+            await this.loadLaunchAgents();
+            await this.checkSIPStatus();
+        } else {
+            this.showToast('Server not available - some features may be limited', 'warning');
+        }
+    }
+
+    async waitForServer(maxAttempts = 10, delay = 2000) {
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                const response = await fetch(`${this.baseUrl}/api/health`);
+                if (response.ok) {
+                    console.log('Server is ready');
+                    return true;
+                }
+            } catch (error) {
+                console.log(`Waiting for server... attempt ${i + 1}/${maxAttempts}`);
+            }
+            
+            if (i < maxAttempts - 1) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+        
+        console.warn('Server did not become ready within timeout');
+        return false;
     }
 
     setupEventListeners() {
@@ -67,7 +100,15 @@ class InstallationUp4evr {
             return await response.json();
         } catch (error) {
             console.error('API call failed:', error);
-            this.showToast(`API Error: ${error.message}`, 'error');
+            
+            // Only show toast for non-health check calls
+            if (!endpoint.includes('/health')) {
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    this.showToast('Cannot connect to server - is it running?', 'error');
+                } else {
+                    this.showToast(`API Error: ${error.message}`, 'error');
+                }
+            }
             throw error;
         }
     }
@@ -77,8 +118,13 @@ class InstallationUp4evr {
         try {
             await this.apiCall('/api/health');
             this.updateStatus('server-status', 'online', 'Server Online');
+            return true;
         } catch (error) {
             this.updateStatus('server-status', 'offline', 'Server Offline');
+            if (this.isElectron) {
+                this.showToast('Backend server is starting up...', 'info');
+            }
+            return false;
         }
     }
 
