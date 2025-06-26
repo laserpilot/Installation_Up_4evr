@@ -95,8 +95,7 @@ Changelog:
 - Keeping the software running at all times\
 	- [ ] Use a Launch Agent to start your app and have the OS keep it running
 - Rebooting automatically
-	- [ ] Use the "Schedule" button in _Energy Saver_ to schedule regular reboots
-- Remote access and logging
+	- [ ] Use an app like [Onyx](https://www.titanium-software.fr/en/onyx.html) (free) to schedule daily reboots (Apple's native GUI for this has been removed from the System Settings)
 	- [ ] Set up something to log in to the computer remotely (Logmein, Teamviewer, etc)
 	- [ ] Log various details about the computer and app to textfiles or to slack
 - Testing
@@ -203,6 +202,9 @@ You can either [disable Notification Center completely](http://www.tekrevue.com/
 
 ![Notification_Center](images/Notification_Center_disable.png)
 
+> [!NOTE]
+> As if June 2025, this approach does not work wihtout disabling [System Integry Protection.](#system-integrity-protection)
+
 You can also disable the "This Application Unexpectedly Quit" modal popup and the subsequent bug report that comes with it by running this command in terminal OR renaming the Problem Reporter app. Just use with caution since you won't see certain important crash messages otherwise.
 
 _(Requires disabling SIP...see below)_
@@ -288,8 +290,8 @@ Please note, some of the methods are really only for apps and not for project fi
 
 Launch Agents are a standard feature of MacOS and are used to automatically launch many of the core system services and other third party services. They are run at login and exist as plist files that live in:
 
- - `/Library/LaunchAgent` if you are running the app for all users
- - `~/Library/LaunchAgent` if you are running for just the logged in user
+ - `/Library/LaunchAgents` if you are running the app for all users
+ - `~/Library/LaunchAgents` if you are running for just the logged in user
 
 The [difference between a Launch Daemon and a Launch Agent.](http://www.grivet-tools.com/blog/2014/launchdaemons-vs-launchagents/) Basically, they are different flavors of the same thing. Use a LaunchAgent if you want it to run on Login, and a LaunchDaemon if you want it to run on reboot (and be running if the computer is waiting to log in). In general, if you're reading this guide, you are probably working with a fullscreen visual app and not a background hidden service, and you'll just want to use a Launch Agent.
 
@@ -386,6 +388,10 @@ Using `killall` is not a "Safe" shutdown method and may result in loss of data a
 ---------------------------
 
 Rebooting nightly or weekly is a little more preventative (or maybe superstitious). Depending on your app and the amount of stuff it reaches into, there could be some memory leaks or other OS bugs that you haven’t accounted for. Rebooting every day or week seems to be a good idea to keep things running smoothly.
+
+> [!WARNING]
+> As of June 2025, Apple's native GUI for this has been removed from the System Settings.
+> Use an app like [Onyx](https://www.titanium-software.fr/en/onyx.html) (free) to schedule daily reboots.
 
 The simplest option by far would be to go to System Preferences->Energy Saver and then click “Schedule…” on the bottom right. You can set the computer to totally shut down and then start itself back up in the morning if you want to save energy or wear and tear. Just know that this can do funny things sometimes.
 
