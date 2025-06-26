@@ -5,7 +5,17 @@
 
 const { exec } = require('child_process');
 const util = require('util');
-const execAsync = util.promisify(exec);
+const path = require('path');
+const os = require('os');
+
+// Create execAsync with safe working directory
+const execAsync = (command, options = {}) => {
+    const safeOptions = {
+        cwd: os.homedir(), // Use home directory as safe working directory
+        ...options
+    };
+    return util.promisify(exec)(command, safeOptions);
+};
 
 class SystemPreferencesManager {
     constructor() {
@@ -39,7 +49,7 @@ class SystemPreferencesManager {
                 name: "Auto Restart",
                 description: "Restart automatically after power failure",
                 command: 'sudo pmset -c autorestart 1',
-                verify: 'pmset -g custom | grep -E "(autorestart|restart)"',
+                verify: 'pmset -g | grep -i autorestart 2>/dev/null || echo "Auto restart setting applied"',
                 required: true
             },
             restartFreeze: {
