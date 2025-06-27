@@ -34,6 +34,8 @@ const NotificationSystem = require('./modules/notifications');
 console.log('SERVER: notifications loaded');
 const ServiceControlManager = require('./modules/service-control');
 console.log('SERVER: service-control loaded');
+const InstallationSettingsManager = require('./modules/installation-settings');
+console.log('SERVER: installation-settings loaded');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -55,6 +57,7 @@ const monitoring = new MonitoringSystem();
 const remoteControl = new RemoteControlSystem(monitoring);
 const notifications = new NotificationSystem(monitoring);
 const serviceControl = new ServiceControlManager();
+const installationSettings = new InstallationSettingsManager();
 console.log('SERVER: Managers initialized.');
 
 // Root route - serve frontend
@@ -705,6 +708,85 @@ app.get('/api/service/system-service', async (req, res) => {
         res.json(status);
     } catch (error) {
         console.error('Error checking system service:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Installation Settings API Routes
+app.get('/api/installation/settings', async (req, res) => {
+    try {
+        const result = await installationSettings.getSettings();
+        res.json(result);
+    } catch (error) {
+        console.error('Error getting installation settings:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/settings', async (req, res) => {
+    try {
+        const settings = req.body;
+        const result = await installationSettings.updateSettings(settings);
+        res.json(result);
+    } catch (error) {
+        console.error('Error updating installation settings:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/test', async (req, res) => {
+    try {
+        const settings = req.body;
+        const result = await installationSettings.testSettings(settings);
+        res.json(result);
+    } catch (error) {
+        console.error('Error testing installation settings:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/installation/profiles', async (req, res) => {
+    try {
+        const result = await installationSettings.listProfiles();
+        res.json(result);
+    } catch (error) {
+        console.error('Error listing installation profiles:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/profiles', async (req, res) => {
+    try {
+        const { name, settings } = req.body;
+        if (!name || !settings) {
+            return res.status(400).json({ error: 'Profile name and settings are required' });
+        }
+        const result = await installationSettings.saveProfile(name, settings);
+        res.json(result);
+    } catch (error) {
+        console.error('Error saving installation profile:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/installation/profiles/:name', async (req, res) => {
+    try {
+        const { name } = req.params;
+        const result = await installationSettings.loadProfile(name);
+        res.json(result);
+    } catch (error) {
+        console.error('Error loading installation profile:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/installation/profiles/:name', async (req, res) => {
+    try {
+        const { name } = req.params;
+        const result = await installationSettings.deleteProfile(name);
+        res.json(result);
+    } catch (error) {
+        console.error('Error deleting installation profile:', error);
         res.status(500).json({ error: error.message });
     }
 });

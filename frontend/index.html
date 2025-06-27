@@ -27,25 +27,69 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Tab Navigation -->
-            <div class="tab-container">
-                <div class="tab-nav">
-                    <button class="tab-button active" data-tab="system-prefs">
-                        <i class="fas fa-cog"></i> System Preferences
-                    </button>
-                    <button class="tab-button" data-tab="launch-agents">
-                        <i class="fas fa-rocket"></i> Launch Agents
-                    </button>
-                    <button class="tab-button" data-tab="monitoring">
-                        <i class="fas fa-chart-line"></i> Monitoring Dashboard
-                    </button>
-                    <button class="tab-button" data-tab="service-control">
-                        <i class="fas fa-server"></i> Service Control
-                    </button>
-                </div>
+            <div class="app-layout">
+                <!-- Sidebar Navigation -->
+                <nav class="sidebar">
+                    <div class="sidebar-header">
+                        <h3><i class="fas fa-tools"></i> Tools</h3>
+                    </div>
+                    
+                    <!-- Core System Section -->
+                    <div class="sidebar-section">
+                        <h4 class="sidebar-section-title">
+                            <i class="fas fa-cog"></i> System Setup
+                        </h4>
+                        <button class="sidebar-button active" data-tab="system-prefs">
+                            <i class="fas fa-cog"></i> System Preferences
+                        </button>
+                        <button class="sidebar-button" data-tab="launch-agents">
+                            <i class="fas fa-rocket"></i> Launch Agents
+                        </button>
+                    </div>
+                    
+                    <!-- Monitoring Section -->
+                    <div class="sidebar-section">
+                        <h4 class="sidebar-section-title">
+                            <i class="fas fa-chart-line"></i> Monitoring
+                        </h4>
+                        <button class="sidebar-button" data-tab="monitoring">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </button>
+                        <button class="sidebar-button" data-tab="monitoring-config">
+                            <i class="fas fa-chart-bar"></i> Alerts & Thresholds
+                        </button>
+                    </div>
+                    
+                    <!-- Control Section -->
+                    <div class="sidebar-section">
+                        <h4 class="sidebar-section-title">
+                            <i class="fas fa-server"></i> Control
+                        </h4>
+                        <button class="sidebar-button" data-tab="service-control">
+                            <i class="fas fa-server"></i> Service Control
+                        </button>
+                        <button class="sidebar-button" data-tab="configuration">
+                            <i class="fas fa-sliders-h"></i> Configuration
+                        </button>
+                        <button class="sidebar-button" data-tab="installation-settings">
+                            <i class="fas fa-microchip"></i> Installation Settings
+                        </button>
+                    </div>
+                    
+                    <!-- Communication Section -->
+                    <div class="sidebar-section">
+                        <h4 class="sidebar-section-title">
+                            <i class="fas fa-bell"></i> Communication
+                        </h4>
+                        <button class="sidebar-button" data-tab="notifications">
+                            <i class="fas fa-bell"></i> Notifications
+                        </button>
+                    </div>
+                    
+                </nav>
 
-                <!-- Tab Content -->
-                <div class="tab-content">
+                <!-- Main Content Area -->
+                <div class="content-area">
                     <!-- System Preferences Tab -->
                     <div id="system-prefs-tab" class="tab-pane active">
                         <section class="card">
@@ -71,13 +115,13 @@
                 </div>
 
                 <div class="action-buttons">
-                    <button id="verify-settings" class="btn btn-secondary">
+                    <button id="verify-settings" class="btn btn-secondary" title="Check if your current macOS settings match the recommended configuration for 24/7 installations">
                         <i class="fas fa-search"></i> Verify Current Settings
                     </button>
-                    <button id="apply-required" class="btn btn-primary">
+                    <button id="apply-required" class="btn btn-primary" title="Automatically apply all required system settings for installation computers">
                         <i class="fas fa-check-circle"></i> Apply Required Settings
                     </button>
-                    <button id="apply-selected" class="btn btn-success">
+                    <button id="apply-selected" class="btn btn-success" title="Apply only the settings you have selected above">
                         <i class="fas fa-play"></i> Apply Selected Settings
                     </button>
                 </div>
@@ -144,10 +188,10 @@
                     </div>
 
                     <div class="action-buttons">
-                        <button id="create-launch-agent" class="btn btn-primary">
+                        <button id="create-launch-agent" class="btn btn-primary" title="Generate a launch agent configuration file for the selected application">
                             <i class="fas fa-plus"></i> Create Launch Agent
                         </button>
-                        <button id="install-launch-agent" class="btn btn-success">
+                        <button id="install-launch-agent" class="btn btn-success" title="Create and install the launch agent to automatically start your app on boot">
                             <i class="fas fa-rocket"></i> Install & Start
                         </button>
                     </div>
@@ -329,16 +373,968 @@
                             </div>
                         </section>
                     </div>
+
+                    <!-- Configuration Management Tab -->
+                    <div id="configuration-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-sliders-h"></i> Configuration Management</h2>
+                            <p>Centralized configuration for all automation settings</p>
+                            
+                            <!-- Global Settings -->
+                            <div class="config-section">
+                                <h3><i class="fas fa-globe"></i> Global Settings</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="installation-name">Installation Name</label>
+                                        <input type="text" id="installation-name" placeholder="My Installation" value="">
+                                        <small>Unique identifier for this installation</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="installation-location">Location</label>
+                                        <input type="text" id="installation-location" placeholder="Gallery, Museum, etc." value="">
+                                        <small>Physical location of this installation</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="contact-info">Contact Information</label>
+                                        <input type="text" id="contact-info" placeholder="admin@example.com" value="">
+                                        <small>Emergency contact for this installation</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="timezone">Timezone</label>
+                                        <select id="timezone">
+                                            <option value="America/New_York">Eastern Time</option>
+                                            <option value="America/Chicago">Central Time</option>
+                                            <option value="America/Denver">Mountain Time</option>
+                                            <option value="America/Los_Angeles">Pacific Time</option>
+                                            <option value="UTC">UTC</option>
+                                        </select>
+                                        <small>Timezone for scheduling and logs</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Monitoring Configuration -->
+                            <div class="config-section">
+                                <h3><i class="fas fa-chart-line"></i> Monitoring Configuration</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="monitoring-interval">Monitoring Interval (seconds)</label>
+                                        <input type="number" id="monitoring-interval" min="10" max="300" value="30">
+                                        <small>How often to check system status (10-300 seconds)</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="heartbeat-interval">Heartbeat Interval (seconds)</label>
+                                        <input type="number" id="heartbeat-interval" min="30" max="3600" value="300">
+                                        <small>How often to send heartbeat signals (30-3600 seconds)</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="log-retention">Log Retention (days)</label>
+                                        <input type="number" id="log-retention" min="1" max="365" value="30">
+                                        <small>How long to keep log files (1-365 days)</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="debug-mode">Debug Mode</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="debug-mode">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Enable detailed debug logging</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alert Thresholds -->
+                            <div class="config-section">
+                                <h3><i class="fas fa-exclamation-triangle"></i> Alert Thresholds</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="cpu-threshold">CPU Usage Alert (%)</label>
+                                        <input type="number" id="cpu-threshold" min="50" max="100" value="80">
+                                        <small>Alert when CPU usage exceeds this percentage</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="memory-threshold">Memory Usage Alert (%)</label>
+                                        <input type="number" id="memory-threshold" min="50" max="100" value="85">
+                                        <small>Alert when memory usage exceeds this percentage</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="disk-threshold">Disk Usage Alert (%)</label>
+                                        <input type="number" id="disk-threshold" min="50" max="100" value="90">
+                                        <small>Alert when disk usage exceeds this percentage</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="temperature-threshold">Temperature Alert (°C)</label>
+                                        <input type="number" id="temperature-threshold" min="60" max="100" value="75">
+                                        <small>Alert when system temperature exceeds this value</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Auto-Recovery Settings -->
+                            <div class="config-section">
+                                <h3><i class="fas fa-magic"></i> Auto-Recovery Settings</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="auto-restart-apps">Auto-restart Crashed Apps</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="auto-restart-apps" checked>
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically restart applications that crash</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="restart-delay">Restart Delay (seconds)</label>
+                                        <input type="number" id="restart-delay" min="1" max="300" value="5">
+                                        <small>Wait time before restarting crashed apps</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="max-restart-attempts">Max Restart Attempts</label>
+                                        <input type="number" id="max-restart-attempts" min="1" max="10" value="3">
+                                        <small>Maximum restart attempts before giving up</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="auto-reboot">Auto-reboot on Critical Errors</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="auto-reboot">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically reboot system for critical failures</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Settings -->
+                            <div class="config-section">
+                                <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="remote-access">Enable Remote Access</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="remote-access" checked>
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Allow remote control via API endpoints</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="api-key">API Access Key</label>
+                                        <div class="api-key-container">
+                                            <input type="password" id="api-key" placeholder="Enter API key" value="">
+                                            <button type="button" class="btn btn-small" id="generate-api-key">
+                                                <i class="fas fa-random"></i> Generate
+                                            </button>
+                                        </div>
+                                        <small>Required for remote API access</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="allowed-ips">Allowed IP Addresses</label>
+                                        <textarea id="allowed-ips" rows="3" placeholder="192.168.1.0/24&#10;10.0.0.0/8"></textarea>
+                                        <small>CIDR notation, one per line (empty = allow all)</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="encryption-enabled">Enable Encryption</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="encryption-enabled">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Encrypt sensitive data in logs and notifications</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Configuration Actions -->
+                            <div class="config-actions">
+                                <div class="config-actions-left">
+                                    <button id="load-config" class="btn btn-secondary">
+                                        <i class="fas fa-folder-open"></i> Load Configuration
+                                    </button>
+                                    <button id="save-config" class="btn btn-secondary">
+                                        <i class="fas fa-save"></i> Save Configuration
+                                    </button>
+                                </div>
+                                <div class="config-actions-right">
+                                    <button id="reset-config" class="btn btn-danger">
+                                        <i class="fas fa-undo"></i> Reset to Defaults
+                                    </button>
+                                    <button id="apply-config" class="btn btn-success">
+                                        <i class="fas fa-check"></i> Apply Configuration
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Configuration Status -->
+                            <div class="config-status" id="config-status" style="display: none;">
+                                <div class="config-status-content">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span id="config-status-text">Configuration updated successfully</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Notification Channels Tab -->
+                    <div id="notifications-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-bell"></i> Notification Channels</h2>
+                            <p>Configure alert notifications for Slack, Discord, webhooks, and email</p>
+                            
+                            <!-- Slack Configuration -->
+                            <div class="notification-channel" data-channel="slack">
+                                <div class="channel-header">
+                                    <h3><i class="fab fa-slack"></i> Slack Integration</h3>
+                                    <div class="channel-toggle">
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="slack-enabled">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <label for="slack-enabled">Enable Slack</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="channel-config" id="slack-config">
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <label for="slack-webhook-url">Webhook URL</label>
+                                            <input type="url" id="slack-webhook-url" placeholder="https://hooks.slack.com/services/...">
+                                            <small>Create an Incoming Webhook in your Slack workspace</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="slack-channel">Channel</label>
+                                            <input type="text" id="slack-channel" placeholder="#alerts" value="#alerts">
+                                            <small>Slack channel to post notifications (optional)</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="slack-username">Bot Username</label>
+                                            <input type="text" id="slack-username" placeholder="Installation Bot" value="Installation Up 4evr">
+                                            <small>Display name for the bot</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="slack-icon">Bot Icon</label>
+                                            <select id="slack-icon">
+                                                <option value=":computer:">💻 Computer</option>
+                                                <option value=":warning:">⚠️ Warning</option>
+                                                <option value=":robot_face:">🤖 Robot</option>
+                                                <option value=":gear:">⚙️ Gear</option>
+                                                <option value=":bell:">🔔 Bell</option>
+                                            </select>
+                                            <small>Emoji icon for the bot messages</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="test-section">
+                                        <button id="test-slack" class="btn btn-secondary">
+                                            <i class="fas fa-paper-plane"></i> Test Slack Connection
+                                        </button>
+                                        <div class="test-result" id="slack-test-result"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Discord Configuration -->
+                            <div class="notification-channel" data-channel="discord">
+                                <div class="channel-header">
+                                    <h3><i class="fab fa-discord"></i> Discord Integration</h3>
+                                    <div class="channel-toggle">
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="discord-enabled">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <label for="discord-enabled">Enable Discord</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="channel-config" id="discord-config">
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <label for="discord-webhook-url">Webhook URL</label>
+                                            <input type="url" id="discord-webhook-url" placeholder="https://discord.com/api/webhooks/...">
+                                            <small>Create a webhook in your Discord server settings</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="discord-username">Bot Username</label>
+                                            <input type="text" id="discord-username" placeholder="Installation Bot" value="Installation Up 4evr">
+                                            <small>Display name for the webhook</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="discord-avatar">Avatar URL</label>
+                                            <input type="url" id="discord-avatar" placeholder="https://example.com/avatar.png">
+                                            <small>Custom avatar image URL (optional)</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="discord-embed">Use Rich Embeds</label>
+                                            <div class="toggle-switch">
+                                                <input type="checkbox" id="discord-embed" checked>
+                                                <span class="toggle-slider"></span>
+                                            </div>
+                                            <small>Send formatted rich embed messages</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="test-section">
+                                        <button id="test-discord" class="btn btn-secondary">
+                                            <i class="fas fa-paper-plane"></i> Test Discord Connection
+                                        </button>
+                                        <div class="test-result" id="discord-test-result"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Webhook Configuration -->
+                            <div class="notification-channel" data-channel="webhook">
+                                <div class="channel-header">
+                                    <h3><i class="fas fa-link"></i> Custom Webhooks</h3>
+                                    <div class="channel-toggle">
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="webhook-enabled">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <label for="webhook-enabled">Enable Webhooks</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="channel-config" id="webhook-config">
+                                    <div class="webhook-list" id="webhook-list">
+                                        <!-- Dynamic webhook entries will be added here -->
+                                    </div>
+                                    
+                                    <div class="webhook-add-section">
+                                        <h4><i class="fas fa-plus"></i> Add Webhook</h4>
+                                        <div class="config-grid">
+                                            <div class="config-item">
+                                                <label for="webhook-name">Name</label>
+                                                <input type="text" id="webhook-name" placeholder="My API">
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="webhook-url">URL</label>
+                                                <input type="url" id="webhook-url" placeholder="https://api.example.com/alerts">
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="webhook-method">Method</label>
+                                                <select id="webhook-method">
+                                                    <option value="POST">POST</option>
+                                                    <option value="PUT">PUT</option>
+                                                    <option value="PATCH">PATCH</option>
+                                                </select>
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="webhook-headers">Headers (JSON)</label>
+                                                <textarea id="webhook-headers" rows="2" placeholder='{"Authorization": "Bearer token"}'></textarea>
+                                                <small>Optional custom headers as JSON</small>
+                                            </div>
+                                        </div>
+                                        <button id="add-webhook" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i> Add Webhook
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email Configuration -->
+                            <div class="notification-channel" data-channel="email">
+                                <div class="channel-header">
+                                    <h3><i class="fas fa-envelope"></i> Email Notifications</h3>
+                                    <div class="channel-toggle">
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="email-enabled">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <label for="email-enabled">Enable Email</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="channel-config" id="email-config">
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <label for="smtp-server">SMTP Server</label>
+                                            <input type="text" id="smtp-server" placeholder="smtp.gmail.com">
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="smtp-port">Port</label>
+                                            <input type="number" id="smtp-port" value="587" min="1" max="65535">
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="smtp-username">Username</label>
+                                            <input type="email" id="smtp-username" placeholder="alerts@example.com">
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="smtp-password">Password</label>
+                                            <input type="password" id="smtp-password" placeholder="App password or API key">
+                                            <small>Use app-specific passwords for Gmail/Outlook</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="email-from">From Address</label>
+                                            <input type="email" id="email-from" placeholder="alerts@example.com">
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="email-to">To Addresses</label>
+                                            <textarea id="email-to" rows="2" placeholder="admin@example.com&#10;team@example.com"></textarea>
+                                            <small>One email address per line</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="email-use-tls">Use TLS/SSL</label>
+                                            <div class="toggle-switch">
+                                                <input type="checkbox" id="email-use-tls" checked>
+                                                <span class="toggle-slider"></span>
+                                            </div>
+                                            <small>Enable secure connection</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="test-section">
+                                        <button id="test-email" class="btn btn-secondary">
+                                            <i class="fas fa-paper-plane"></i> Test Email Connection
+                                        </button>
+                                        <div class="test-result" id="email-test-result"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notification Settings -->
+                            <div class="notification-settings">
+                                <h3><i class="fas fa-cogs"></i> Notification Settings</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="notification-levels">Alert Levels</label>
+                                        <div class="checkbox-group">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" value="info" checked> Info
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" value="warning" checked> Warning
+                                            </label>
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" value="critical" checked> Critical
+                                            </label>
+                                        </div>
+                                        <small>Which alert levels to send notifications for</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="rate-limit">Rate Limiting (minutes)</label>
+                                        <input type="number" id="rate-limit" value="5" min="1" max="60">
+                                        <small>Minimum time between duplicate alerts</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="quiet-hours">Quiet Hours</label>
+                                        <div class="time-range">
+                                            <input type="time" id="quiet-start" value="22:00">
+                                            <span>to</span>
+                                            <input type="time" id="quiet-end" value="08:00">
+                                        </div>
+                                        <small>Suppress non-critical alerts during these hours</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="test-all-channels">Test All Channels</label>
+                                        <button id="test-all-channels" class="btn btn-warning">
+                                            <i class="fas fa-broadcast-tower"></i> Send Test Alert to All Enabled Channels
+                                        </button>
+                                        <small>Send a test notification to verify all configurations</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notification Actions -->
+                            <div class="config-actions">
+                                <div class="config-actions-left">
+                                    <button id="load-notification-config" class="btn btn-secondary">
+                                        <i class="fas fa-folder-open"></i> Load Config
+                                    </button>
+                                    <button id="save-notification-config" class="btn btn-secondary">
+                                        <i class="fas fa-save"></i> Save Config
+                                    </button>
+                                </div>
+                                <div class="config-actions-right">
+                                    <button id="reset-notification-config" class="btn btn-danger">
+                                        <i class="fas fa-undo"></i> Reset to Defaults
+                                    </button>
+                                    <button id="apply-notification-config" class="btn btn-success">
+                                        <i class="fas fa-check"></i> Apply Configuration
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Notification Status -->
+                            <div class="config-status" id="notification-status" style="display: none;">
+                                <div class="config-status-content">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span id="notification-status-text">Notification settings updated successfully</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Monitoring & Alerts Configuration Tab -->
+                    <div id="monitoring-config-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-chart-bar"></i> Monitoring & Alert Configuration</h2>
+                            <p>Configure monitoring thresholds and alert conditions for real-time system monitoring</p>
+                            
+                            <!-- Current System Status -->
+                            <div class="monitoring-status-section">
+                                <h3><i class="fas fa-heartbeat"></i> Current System Status</h3>
+                                <div class="status-grid">
+                                    <div class="status-card" id="cpu-status-card">
+                                        <div class="status-icon">💻</div>
+                                        <div class="status-info">
+                                            <div class="status-label">CPU Usage</div>
+                                            <div class="status-value" id="current-cpu">--</div>
+                                            <div class="status-trend" id="cpu-trend"></div>
+                                        </div>
+                                        <div class="status-indicator" id="cpu-indicator">🟡</div>
+                                    </div>
+                                    
+                                    <div class="status-card" id="memory-status-card">
+                                        <div class="status-icon">🧠</div>
+                                        <div class="status-info">
+                                            <div class="status-label">Memory Usage</div>
+                                            <div class="status-value" id="current-memory">--</div>
+                                            <div class="status-trend" id="memory-trend"></div>
+                                        </div>
+                                        <div class="status-indicator" id="memory-indicator">🟡</div>
+                                    </div>
+                                    
+                                    <div class="status-card" id="disk-status-card">
+                                        <div class="status-icon">💾</div>
+                                        <div class="status-info">
+                                            <div class="status-label">Disk Usage</div>
+                                            <div class="status-value" id="current-disk">--</div>
+                                            <div class="status-trend" id="disk-trend"></div>
+                                        </div>
+                                        <div class="status-indicator" id="disk-indicator">🟡</div>
+                                    </div>
+                                    
+                                    <div class="status-card" id="temperature-status-card">
+                                        <div class="status-icon">🌡️</div>
+                                        <div class="status-info">
+                                            <div class="status-label">Temperature</div>
+                                            <div class="status-value" id="current-temperature">--</div>
+                                            <div class="status-trend" id="temperature-trend"></div>
+                                        </div>
+                                        <div class="status-indicator" id="temperature-indicator">🟡</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Threshold Configuration -->
+                            <div class="threshold-section">
+                                <h3><i class="fas fa-sliders-h"></i> Alert Thresholds</h3>
+                                
+                                <!-- CPU Thresholds -->
+                                <div class="threshold-group">
+                                    <h4><i class="fas fa-microchip"></i> CPU Usage Thresholds</h4>
+                                    <div class="threshold-controls">
+                                        <div class="threshold-item">
+                                            <label>Warning Level (%)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="cpu-warning-slider" min="50" max="100" value="75">
+                                                <input type="number" id="cpu-warning-input" min="50" max="100" value="75">
+                                                <span class="threshold-color warning"></span>
+                                            </div>
+                                            <small>Alert when CPU usage exceeds this level</small>
+                                        </div>
+                                        <div class="threshold-item">
+                                            <label>Critical Level (%)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="cpu-critical-slider" min="60" max="100" value="90">
+                                                <input type="number" id="cpu-critical-input" min="60" max="100" value="90">
+                                                <span class="threshold-color critical"></span>
+                                            </div>
+                                            <small>Critical alert when CPU usage exceeds this level</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Memory Thresholds -->
+                                <div class="threshold-group">
+                                    <h4><i class="fas fa-memory"></i> Memory Usage Thresholds</h4>
+                                    <div class="threshold-controls">
+                                        <div class="threshold-item">
+                                            <label>Warning Level (%)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="memory-warning-slider" min="50" max="100" value="80">
+                                                <input type="number" id="memory-warning-input" min="50" max="100" value="80">
+                                                <span class="threshold-color warning"></span>
+                                            </div>
+                                            <small>Alert when memory usage exceeds this level</small>
+                                        </div>
+                                        <div class="threshold-item">
+                                            <label>Critical Level (%)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="memory-critical-slider" min="60" max="100" value="95">
+                                                <input type="number" id="memory-critical-input" min="60" max="100" value="95">
+                                                <span class="threshold-color critical"></span>
+                                            </div>
+                                            <small>Critical alert when memory usage exceeds this level</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Disk Thresholds -->
+                                <div class="threshold-group">
+                                    <h4><i class="fas fa-hdd"></i> Disk Usage Thresholds</h4>
+                                    <div class="threshold-controls">
+                                        <div class="threshold-item">
+                                            <label>Warning Level (%)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="disk-warning-slider" min="50" max="100" value="85">
+                                                <input type="number" id="disk-warning-input" min="50" max="100" value="85">
+                                                <span class="threshold-color warning"></span>
+                                            </div>
+                                            <small>Alert when disk usage exceeds this level</small>
+                                        </div>
+                                        <div class="threshold-item">
+                                            <label>Critical Level (%)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="disk-critical-slider" min="60" max="100" value="95">
+                                                <input type="number" id="disk-critical-input" min="60" max="100" value="95">
+                                                <span class="threshold-color critical"></span>
+                                            </div>
+                                            <small>Critical alert when disk usage exceeds this level</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Temperature Thresholds -->
+                                <div class="threshold-group">
+                                    <h4><i class="fas fa-thermometer-half"></i> Temperature Thresholds</h4>
+                                    <div class="threshold-controls">
+                                        <div class="threshold-item">
+                                            <label>Warning Level (°C)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="temperature-warning-slider" min="60" max="100" value="75">
+                                                <input type="number" id="temperature-warning-input" min="60" max="100" value="75">
+                                                <span class="threshold-color warning"></span>
+                                            </div>
+                                            <small>Alert when system temperature exceeds this level</small>
+                                        </div>
+                                        <div class="threshold-item">
+                                            <label>Critical Level (°C)</label>
+                                            <div class="threshold-input-group">
+                                                <input type="range" id="temperature-critical-slider" min="70" max="100" value="85">
+                                                <input type="number" id="temperature-critical-input" min="70" max="100" value="85">
+                                                <span class="threshold-color critical"></span>
+                                            </div>
+                                            <small>Critical alert when system temperature exceeds this level</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alert Behavior Configuration -->
+                            <div class="alert-behavior-section">
+                                <h3><i class="fas fa-cogs"></i> Alert Behavior</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="monitoring-interval-config">Check Interval (seconds)</label>
+                                        <input type="number" id="monitoring-interval-config" min="5" max="300" value="30">
+                                        <small>How often to check system metrics (5-300 seconds)</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="alert-cooldown">Alert Cooldown (minutes)</label>
+                                        <input type="number" id="alert-cooldown" min="1" max="60" value="5">
+                                        <small>Minimum time between identical alerts</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="escalation-time">Escalation Time (minutes)</label>
+                                        <input type="number" id="escalation-time" min="5" max="120" value="15">
+                                        <small>Escalate warning to critical after this duration</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="auto-recovery-check">Auto-Recovery Detection</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="auto-recovery-check" checked>
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically send recovery notifications when issues resolve</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Application Monitoring -->
+                            <div class="app-monitoring-section">
+                                <h3><i class="fas fa-desktop"></i> Application Monitoring</h3>
+                                <div class="app-monitor-list" id="app-monitor-list">
+                                    <!-- Dynamic application entries will be added here -->
+                                </div>
+                                
+                                <div class="app-monitor-add-section">
+                                    <h4><i class="fas fa-plus"></i> Add Application to Monitor</h4>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <label for="app-monitor-name">Application Name</label>
+                                            <input type="text" id="app-monitor-name" placeholder="My App">
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="app-monitor-process">Process Name</label>
+                                            <input type="text" id="app-monitor-process" placeholder="MyApp.app">
+                                            <small>Exact process name or app bundle name</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="app-monitor-critical">Critical Process</label>
+                                            <div class="toggle-switch">
+                                                <input type="checkbox" id="app-monitor-critical">
+                                                <span class="toggle-slider"></span>
+                                            </div>
+                                            <small>Send critical alerts if this process stops</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="app-monitor-restart">Auto-Restart</label>
+                                            <div class="toggle-switch">
+                                                <input type="checkbox" id="app-monitor-restart" checked>
+                                                <span class="toggle-slider"></span>
+                                            </div>
+                                            <small>Automatically restart if process crashes</small>
+                                        </div>
+                                    </div>
+                                    <button id="add-app-monitor" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Application Monitor
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Test Alert System -->
+                            <div class="test-alert-section">
+                                <h3><i class="fas fa-vial"></i> Test Alert System</h3>
+                                <div class="test-buttons-grid">
+                                    <button id="test-warning-alert" class="btn btn-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> Test Warning Alert
+                                    </button>
+                                    <button id="test-critical-alert" class="btn btn-danger">
+                                        <i class="fas fa-exclamation-circle"></i> Test Critical Alert
+                                    </button>
+                                    <button id="test-recovery-alert" class="btn btn-success">
+                                        <i class="fas fa-check-circle"></i> Test Recovery Alert
+                                    </button>
+                                    <button id="simulate-high-load" class="btn btn-secondary">
+                                        <i class="fas fa-chart-line"></i> Simulate High Load
+                                    </button>
+                                </div>
+                                <div class="test-result" id="alert-test-result"></div>
+                            </div>
+
+                            <!-- Monitoring Actions -->
+                            <div class="config-actions">
+                                <div class="config-actions-left">
+                                    <button id="load-monitoring-config" class="btn btn-secondary">
+                                        <i class="fas fa-folder-open"></i> Load Config
+                                    </button>
+                                    <button id="save-monitoring-config" class="btn btn-secondary">
+                                        <i class="fas fa-save"></i> Save Config
+                                    </button>
+                                </div>
+                                <div class="config-actions-right">
+                                    <button id="reset-monitoring-config" class="btn btn-danger">
+                                        <i class="fas fa-undo"></i> Reset to Defaults
+                                    </button>
+                                    <button id="apply-monitoring-config" class="btn btn-success">
+                                        <i class="fas fa-check"></i> Apply Configuration
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Monitoring Status -->
+                            <div class="config-status" id="monitoring-status" style="display: none;">
+                                <div class="config-status-content">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span id="monitoring-status-text">Monitoring configuration updated successfully</span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Installation Settings Tab -->
+                    <div id="installation-settings-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-microchip"></i> Installation Settings</h2>
+                            <p>Configure installation-specific parameters and thresholds for your creative technology setup</p>
+                            <div class="info-banner">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Demo Mode:</strong> These settings demonstrate API capabilities for real installations with cameras, sensors, and audio equipment. Values can be configured and saved but won't control actual hardware in this demo.
+                            </div>
+                            
+                            <!-- Camera Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-camera"></i> Camera Settings <span class="example-label">(Example)</span></h3>
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="camera-threshold">Motion Detection Threshold</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="camera-threshold-slider" min="0" max="100" value="25">
+                                            <input type="number" id="camera-threshold-input" min="0" max="100" value="25">
+                                            <span class="unit">%</span>
+                                        </div>
+                                        <small>Sensitivity level for motion detection triggers</small>
+                                    </div>
+                                    
+                                    <div class="setting-item">
+                                        <label for="camera-timeout">Motion Timeout</label>
+                                        <div class="input-group">
+                                            <input type="number" id="camera-timeout" min="1" max="3600" value="30">
+                                            <span class="unit">seconds</span>
+                                        </div>
+                                        <small>Time to wait before considering motion stopped</small>
+                                    </div>
+                                    
+                                    <div class="setting-item">
+                                        <label for="camera-fps">Frame Rate</label>
+                                        <select id="camera-fps">
+                                            <option value="15">15 FPS</option>
+                                            <option value="30" selected>30 FPS</option>
+                                            <option value="60">60 FPS</option>
+                                        </select>
+                                        <small>Camera capture frame rate</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Capacitive Sensing Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-hand-paper"></i> Capacitive Sensing <span class="example-label">(Example)</span></h3>
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="capacitive-threshold">Touch Sensitivity</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="capacitive-threshold-slider" min="0" max="100" value="50">
+                                            <input type="number" id="capacitive-threshold-input" min="0" max="100" value="50">
+                                            <span class="unit">%</span>
+                                        </div>
+                                        <small>Sensitivity level for capacitive touch detection</small>
+                                    </div>
+                                    
+                                    <div class="setting-item">
+                                        <label for="capacitive-debounce">Debounce Time</label>
+                                        <div class="input-group">
+                                            <input type="number" id="capacitive-debounce" min="10" max="1000" value="100">
+                                            <span class="unit">ms</span>
+                                        </div>
+                                        <small>Minimum time between touch events</small>
+                                    </div>
+                                    
+                                    <div class="setting-item">
+                                        <label for="capacitive-pins">Active Pins</label>
+                                        <div class="pin-selector">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="0" checked> Pin 0
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="1" checked> Pin 1
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="2"> Pin 2
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="3"> Pin 3
+                                            </label>
+                                        </div>
+                                        <small>Select which capacitive pins to monitor</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Audio Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-volume-up"></i> Audio Settings <span class="example-label">(Example)</span></h3>
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="audio-threshold">Audio Trigger Level</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="audio-threshold-slider" min="0" max="100" value="40">
+                                            <input type="number" id="audio-threshold-input" min="0" max="100" value="40">
+                                            <span class="unit">dB</span>
+                                        </div>
+                                        <small>Minimum audio level to trigger events</small>
+                                    </div>
+                                    
+                                    <div class="setting-item">
+                                        <label for="audio-sample-rate">Sample Rate</label>
+                                        <select id="audio-sample-rate">
+                                            <option value="22050">22.05 kHz</option>
+                                            <option value="44100" selected>44.1 kHz</option>
+                                            <option value="48000">48 kHz</option>
+                                        </select>
+                                        <small>Audio input sample rate</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Parameters Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-wrench"></i> Custom Parameters</h3>
+                                <div class="custom-params-container">
+                                    <div id="custom-params-list">
+                                        <!-- Custom parameters populated by JavaScript -->
+                                    </div>
+                                    <button id="add-custom-param" class="btn btn-secondary">
+                                        <i class="fas fa-plus"></i> Add Custom Parameter
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Installation Profiles -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-save"></i> Installation Profiles</h3>
+                                <div class="profile-controls">
+                                    <div class="profile-selector">
+                                        <label for="installation-profile">Load Profile:</label>
+                                        <select id="installation-profile">
+                                            <option value="">-- Select Profile --</option>
+                                            <option value="interactive-wall">Interactive Wall</option>
+                                            <option value="motion-tracking">Motion Tracking Setup</option>
+                                            <option value="audio-reactive">Audio Reactive Installation</option>
+                                            <option value="touch-interface">Touch Interface</option>
+                                            <option value="sensor-array">Sensor Array Setup</option>
+                                        </select>
+                                        <button id="load-profile" class="btn btn-secondary">
+                                            <i class="fas fa-download"></i> Load
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="profile-actions">
+                                        <input type="text" id="profile-name" placeholder="Profile name...">
+                                        <button id="save-profile" class="btn btn-success">
+                                            <i class="fas fa-save"></i> Save Profile
+                                        </button>
+                                        <button id="export-profile" class="btn btn-primary">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                        <input type="file" id="import-profile" accept=".json" style="display: none;">
+                                        <button id="import-profile-btn" class="btn btn-secondary">
+                                            <i class="fas fa-upload"></i> Import
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Apply Settings -->
+                            <div class="action-buttons">
+                                <button id="test-installation-settings" class="btn btn-secondary" title="Validate the current installation settings without applying them">
+                                    <i class="fas fa-play-circle"></i> Test Settings
+                                </button>
+                                <button id="reset-installation-settings" class="btn btn-warning" title="Reset all installation settings to their default values">
+                                    <i class="fas fa-undo"></i> Reset to Defaults
+                                </button>
+                                <button id="apply-installation-settings" class="btn btn-success" title="Save these installation settings to configuration files">
+                                    <i class="fas fa-check"></i> Apply Settings
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Results Section (moved inside content area) -->
+                    <div id="results-section" class="tab-pane results-section" style="display: none;">
+                        <section class="card">
+                            <div class="results-header">
+                                <h2><i class="fas fa-terminal"></i> Results</h2>
+                                <button id="close-results" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Close Results
+                                </button>
+                            </div>
+                            <div id="results-content" class="results-content">
+                                <!-- Results populated by JavaScript -->
+                            </div>
+                        </section>
+                    </div>
                 </div>
             </div>
-
-            <!-- Results Section -->
-            <section class="card results-section" id="results-section" style="display: none;">
-                <h2><i class="fas fa-terminal"></i> Results</h2>
-                <div id="results-content" class="results-content">
-                    <!-- Results populated by JavaScript -->
-                </div>
-            </section>
+        </div>
         </main>
     </div>
 

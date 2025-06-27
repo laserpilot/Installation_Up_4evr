@@ -3,7 +3,7 @@
  * Handles native macOS integration, file access, and privilege escalation
  */
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu, Tray, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const { spawn, exec } = require('child_process');
@@ -25,6 +25,10 @@ class InstallationUp4evrApp {
     constructor() {
         this.mainWindow = null;
         this.backendServer = null;
+        this.tray = null;
+        this.isQuitting = false;
+        this.quitMode = 'ask'; // 'ask', 'keep-backend', 'quit-all'
+        this.backendStatus = 'unknown';
         
         // CRITICAL: Prevent multiple instances
         if (!this.enforceingleInstance()) {
@@ -57,13 +61,18 @@ class InstallationUp4evrApp {
 
     setupApp() {
         // App event handlers
-        app.whenReady().then(() => this.createWindow());
+        app.whenReady().then(() => {
+            this.createWindow();
+            this.createApplicationMenu();
+            this.createTray();
+        });
         
         app.on('window-all-closed', () => {
+            // Always quit on non-macOS platforms
             if (process.platform !== 'darwin') {
-                this.cleanup();
-                app.quit();
+                this.handleAppQuit();
             }
+            // On macOS, we keep the app running by default (standard behavior)
         });
 
         app.on('activate', () => {
@@ -72,8 +81,11 @@ class InstallationUp4evrApp {
             }
         });
 
-        app.on('before-quit', () => {
-            this.cleanup();
+        app.on('before-quit', (event) => {
+            if (!this.isQuitting) {
+                event.preventDefault();
+                this.handleAppQuit();
+            }
         });
 
         // IPC handlers
@@ -117,6 +129,493 @@ class InstallationUp4evrApp {
             shell.openExternal(url);
             return { action: 'deny' };
         });
+
+        // Handle window close
+        this.mainWindow.on('close', (event) => {
+            if (!this.isQuitting) {
+                event.preventDefault();
+                if (this.quitMode === 'keep-backend') {
+                    // Just hide the window when in keep-backend mode
+                    this.mainWindow.hide();
+                    this.updateTrayMenu();
+                } else {
+                    this.handleWindowClose();
+                }
+            }
+        });
+    }
+
+    createApplicationMenu() {
+        const template = [
+            {
+                label: 'Installation Up 4evr',
+                submenu: [
+                    {
+                        label: 'About Installation Up 4evr',
+                        role: 'about'
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Quit Mode: Keep Backend Running',
+                        type: 'radio',
+                        checked: this.quitMode === 'keep-backend',
+                        click: () => {
+                            this.quitMode = 'keep-backend';
+                            this.updateMenuCheckmarks();
+                        }
+                    },
+                    {
+                        label: 'Quit Mode: Ask Each Time',
+                        type: 'radio',
+                        checked: this.quitMode === 'ask',
+                        click: () => {
+                            this.quitMode = 'ask';
+                            this.updateMenuCheckmarks();
+                        }
+                    },
+                    {
+                        label: 'Quit Mode: Close Everything',
+                        type: 'radio',
+                        checked: this.quitMode === 'quit-all',
+                        click: () => {
+                            this.quitMode = 'quit-all';
+                            this.updateMenuCheckmarks();
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Quit',
+                        accelerator: 'CmdOrCtrl+Q',
+                        click: () => {
+                            this.handleAppQuit();
+                        }
+                    }
+                ]
+            },
+            {
+                label: 'Edit',
+                submenu: [
+                    { role: 'undo' },
+                    { role: 'redo' },
+                    { type: 'separator' },
+                    { role: 'cut' },
+                    { role: 'copy' },
+                    { role: 'paste' },
+                    { role: 'selectall' }
+                ]
+            },
+            {
+                label: 'View',
+                submenu: [
+                    { role: 'reload' },
+                    { role: 'forceReload' },
+                    { role: 'toggleDevTools' },
+                    { type: 'separator' },
+                    { role: 'resetZoom' },
+                    { role: 'zoomIn' },
+                    { role: 'zoomOut' },
+                    { type: 'separator' },
+                    { role: 'togglefullscreen' }
+                ]
+            },
+            {
+                label: 'Window',
+                submenu: [
+                    { role: 'minimize' },
+                    { role: 'close' }
+                ]
+            }
+        ];
+
+        const menu = Menu.buildFromTemplate(template);
+        Menu.setApplicationMenu(menu);
+        this.applicationMenu = menu;
+    }
+
+    updateMenuCheckmarks() {
+        if (this.applicationMenu) {
+            this.createApplicationMenu();
+        }
+    }
+
+    async handleWindowClose() {
+        const options = {
+            type: 'question',
+            buttons: ['Keep Running in Background', 'Quit Completely', 'Cancel'],
+            defaultId: 0,
+            cancelId: 2,
+            title: 'Installation Up 4evr',
+            message: 'What would you like to do?',
+            detail: 'Keep Running: The backend service continues running for monitoring and remote control.\nQuit Completely: Stops all processes including backend service.'
+        };
+
+        const { response } = await dialog.showMessageBox(this.mainWindow, options);
+
+        switch (response) {
+            case 0: // Keep Running
+                this.mainWindow.hide();
+                break;
+            case 1: // Quit Completely
+                this.quitMode = 'quit-all';
+                this.forceQuit();
+                break;
+            case 2: // Cancel
+                // Do nothing
+                break;
+        }
+    }
+
+    async handleAppQuit() {
+        switch (this.quitMode) {
+            case 'keep-backend':
+                this.quitApp(false);
+                break;
+            case 'quit-all':
+                this.quitApp(true);
+                break;
+            case 'ask':
+            default:
+                await this.askUserQuitPreference();
+                break;
+        }
+    }
+
+    async askUserQuitPreference() {
+        const options = {
+            type: 'question',
+            buttons: ['Keep Backend Running', 'Quit Everything', 'Cancel'],
+            defaultId: 0,
+            cancelId: 2,
+            title: 'Installation Up 4evr',
+            message: 'How would you like to quit?',
+            detail: 'Keep Backend Running: The monitoring and automation service continues in the background.\nQuit Everything: Stops all processes completely.',
+            checkboxLabel: 'Remember this choice',
+            checkboxChecked: false
+        };
+
+        const { response, checkboxChecked } = await dialog.showMessageBox(this.mainWindow, options);
+
+        if (checkboxChecked) {
+            switch (response) {
+                case 0:
+                    this.quitMode = 'keep-backend';
+                    break;
+                case 1:
+                    this.quitMode = 'quit-all';
+                    break;
+            }
+            this.updateMenuCheckmarks();
+        }
+
+        switch (response) {
+            case 0: // Keep Backend Running
+                this.quitApp(false);
+                break;
+            case 1: // Quit Everything
+                this.quitApp(true);
+                break;
+            case 2: // Cancel
+                // Do nothing
+                break;
+        }
+    }
+
+    forceQuit() {
+        this.isQuitting = true;
+        this.cleanup();
+        app.quit();
+    }
+
+    quitApp(killBackend = false) {
+        debugLog(`Quitting app - killBackend: ${killBackend}`);
+        this.isQuitting = true;
+        
+        if (killBackend) {
+            this.cleanup();
+        } else {
+            debugLog('Keeping backend running - not calling cleanup');
+        }
+        
+        app.quit();
+    }
+
+    createTray() {
+        // Create tray icon - use a simple template icon for macOS
+        let trayIcon;
+        try {
+            // Try to load custom icon first
+            const iconPath = path.join(__dirname, 'assets', 'tray-icon.png');
+            if (require('fs').existsSync(iconPath)) {
+                trayIcon = nativeImage.createFromPath(iconPath);
+            } else {
+                // Fallback to a simple template icon
+                trayIcon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFYSURBVDiNpZM9SwNBEIafJQQLwcJCG1sLwcJCG1sLwcK2sLGwsLCwsLGwsLCwsLGwsLCwsLGwsLCwsLGwsLCwsLGwsLCwsLGwsLCwsLCwsLGwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCw');
+            }
+        } catch (error) {
+            debugLog('Failed to load tray icon: ' + error.message);
+            // Create a simple 16x16 black square as fallback
+            trayIcon = nativeImage.createFromBuffer(Buffer.from([
+                0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
+                0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10,
+                0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x91, 0x68, 0x36, 0x00, 0x00, 0x00,
+                0x0C, 0x49, 0x44, 0x41, 0x54, 0x28, 0x91, 0x63, 0x60, 0x18, 0x05, 0xA3,
+                0x60, 0x14, 0x8C, 0x02, 0x08, 0x00, 0x00, 0x04, 0x10, 0x00, 0x01, 0x27,
+                0x6F, 0xBE, 0x54, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+                0x42, 0x60, 0x82
+            ]));
+        }
+
+        // Make it template on macOS for proper dark mode support
+        if (process.platform === 'darwin') {
+            trayIcon.setTemplateImage(true);
+        }
+
+        this.tray = new Tray(trayIcon);
+        this.tray.setToolTip('Installation Up 4evr - Monitoring & Automation');
+        
+        // Create context menu
+        this.updateTrayMenu();
+
+        // Double-click to show/hide window
+        this.tray.on('double-click', () => {
+            this.toggleWindow();
+        });
+
+        // Periodically update backend status
+        this.startBackendStatusUpdater();
+    }
+
+    updateTrayMenu() {
+        const contextMenu = Menu.buildFromTemplate([
+            {
+                label: 'Installation Up 4evr',
+                type: 'normal',
+                enabled: false
+            },
+            {
+                label: `Backend: ${this.getBackendStatusLabel()}`,
+                type: 'normal',
+                enabled: false
+            },
+            { type: 'separator' },
+            {
+                label: 'Show Window',
+                click: () => this.showWindow()
+            },
+            {
+                label: 'Hide Window',
+                click: () => this.hideWindow(),
+                enabled: this.mainWindow && this.mainWindow.isVisible()
+            },
+            { type: 'separator' },
+            {
+                label: 'Open in Browser',
+                click: () => shell.openExternal('http://localhost:3001')
+            },
+            {
+                label: 'Service Control',
+                submenu: [
+                    {
+                        label: 'Start Backend Service',
+                        click: () => this.startBackendFromTray(),
+                        enabled: this.backendStatus !== 'running'
+                    },
+                    {
+                        label: 'Stop Backend Service',
+                        click: () => this.stopBackendFromTray(),
+                        enabled: this.backendStatus === 'running'
+                    },
+                    {
+                        label: 'Restart Backend Service',
+                        click: () => this.restartBackendFromTray(),
+                        enabled: this.backendStatus === 'running'
+                    }
+                ]
+            },
+            { type: 'separator' },
+            {
+                label: 'Quit Mode',
+                submenu: [
+                    {
+                        label: 'Keep Backend Running',
+                        type: 'radio',
+                        checked: this.quitMode === 'keep-backend',
+                        click: () => {
+                            this.quitMode = 'keep-backend';
+                            this.updateMenuCheckmarks();
+                            this.updateTrayMenu();
+                        }
+                    },
+                    {
+                        label: 'Ask Each Time',
+                        type: 'radio',
+                        checked: this.quitMode === 'ask',
+                        click: () => {
+                            this.quitMode = 'ask';
+                            this.updateMenuCheckmarks();
+                            this.updateTrayMenu();
+                        }
+                    },
+                    {
+                        label: 'Quit Everything',
+                        type: 'radio',
+                        checked: this.quitMode === 'quit-all',
+                        click: () => {
+                            this.quitMode = 'quit-all';
+                            this.updateMenuCheckmarks();
+                            this.updateTrayMenu();
+                        }
+                    }
+                ]
+            },
+            { type: 'separator' },
+            {
+                label: 'Quit',
+                click: () => this.handleAppQuit()
+            }
+        ]);
+
+        this.tray.setContextMenu(contextMenu);
+    }
+
+    getBackendStatusLabel() {
+        switch (this.backendStatus) {
+            case 'running': return '🟢 Running';
+            case 'stopped': return '🔴 Stopped';
+            case 'error': return '🟡 Error';
+            case 'starting': return '🟡 Starting';
+            default: return '⚪ Unknown';
+        }
+    }
+
+    toggleWindow() {
+        if (this.mainWindow) {
+            if (this.mainWindow.isVisible()) {
+                this.mainWindow.hide();
+            } else {
+                this.showWindow();
+            }
+        } else {
+            this.createWindow();
+        }
+    }
+
+    showWindow() {
+        if (this.mainWindow) {
+            this.mainWindow.show();
+            this.mainWindow.focus();
+        } else {
+            this.createWindow();
+        }
+        this.updateTrayMenu();
+    }
+
+    hideWindow() {
+        if (this.mainWindow) {
+            this.mainWindow.hide();
+        }
+        this.updateTrayMenu();
+    }
+
+    async startBackendFromTray() {
+        try {
+            this.backendStatus = 'starting';
+            this.updateTrayMenu();
+            
+            const response = await fetch('http://localhost:3001/api/service/start', {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                this.backendStatus = 'running';
+                this.showNotification('Backend service started successfully');
+            } else {
+                this.backendStatus = 'error';
+                this.showNotification('Failed to start backend service');
+            }
+        } catch (error) {
+            debugLog('Failed to start backend from tray: ' + error.message);
+            this.backendStatus = 'error';
+            this.showNotification('Failed to start backend service: ' + error.message);
+        }
+        this.updateTrayMenu();
+    }
+
+    async stopBackendFromTray() {
+        try {
+            const response = await fetch('http://localhost:3001/api/service/stop', {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                this.backendStatus = 'stopped';
+                this.showNotification('Backend service stopped');
+            } else {
+                this.backendStatus = 'error';
+                this.showNotification('Failed to stop backend service');
+            }
+        } catch (error) {
+            debugLog('Failed to stop backend from tray: ' + error.message);
+            this.backendStatus = 'stopped'; // Assume it's stopped if we can't reach it
+            this.showNotification('Backend service appears to be stopped');
+        }
+        this.updateTrayMenu();
+    }
+
+    async restartBackendFromTray() {
+        await this.stopBackendFromTray();
+        setTimeout(() => this.startBackendFromTray(), 2000);
+    }
+
+    showNotification(message) {
+        if (this.tray) {
+            this.tray.displayBalloon({
+                title: 'Installation Up 4evr',
+                content: message
+            });
+        }
+    }
+
+    startBackendStatusUpdater() {
+        // Initial status check
+        setTimeout(async () => {
+            try {
+                const response = await fetch('http://localhost:3001/api/service/status', {
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    const status = await response.json();
+                    this.backendStatus = status.status === 'online' ? 'running' : 'stopped';
+                } else {
+                    this.backendStatus = 'error';
+                }
+            } catch (error) {
+                this.backendStatus = 'stopped';
+            }
+            
+            this.updateTrayMenu();
+        }, 2000);
+
+        // Check backend status every 30 seconds
+        setInterval(async () => {
+            try {
+                const response = await fetch('http://localhost:3001/api/service/status', {
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    const status = await response.json();
+                    this.backendStatus = status.status === 'online' ? 'running' : 'stopped';
+                } else {
+                    this.backendStatus = 'error';
+                }
+            } catch (error) {
+                this.backendStatus = 'stopped';
+            }
+            
+            this.updateTrayMenu();
+        }, 30000);
     }
 
     async startBackendServer() {
@@ -420,6 +919,13 @@ class InstallationUp4evrApp {
 
     cleanup() {
         debugLog('Cleaning up resources...');
+        
+        // Destroy tray
+        if (this.tray) {
+            this.tray.destroy();
+            this.tray = null;
+        }
+        
         if (this.backendServer && !this.backendServer.killed) {
             debugLog('Killing backend server process');
             this.backendServer.kill('SIGTERM');

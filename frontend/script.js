@@ -105,6 +105,44 @@ class InstallationUp4evr {
         document.getElementById('install-service').addEventListener('click', () => this.installService());
         document.getElementById('refresh-logs').addEventListener('click', () => this.refreshServiceLogs());
         document.getElementById('clear-logs').addEventListener('click', () => this.clearServiceLogs());
+
+        // Configuration Management Actions
+        document.getElementById('load-config').addEventListener('click', () => this.loadConfiguration());
+        document.getElementById('save-config').addEventListener('click', () => this.saveConfiguration());
+        document.getElementById('reset-config').addEventListener('click', () => this.resetConfiguration());
+        document.getElementById('apply-config').addEventListener('click', () => this.applyConfiguration());
+        document.getElementById('generate-api-key').addEventListener('click', () => this.generateApiKey());
+
+        // Notification Channel Actions
+        document.getElementById('test-slack').addEventListener('click', () => this.testNotificationChannel('slack'));
+        document.getElementById('test-discord').addEventListener('click', () => this.testNotificationChannel('discord'));
+        document.getElementById('test-email').addEventListener('click', () => this.testNotificationChannel('email'));
+        document.getElementById('test-all-channels').addEventListener('click', () => this.testAllChannels());
+        document.getElementById('add-webhook').addEventListener('click', () => this.addWebhook());
+        document.getElementById('load-notification-config').addEventListener('click', () => this.loadNotificationConfig());
+        document.getElementById('save-notification-config').addEventListener('click', () => this.saveNotificationConfig());
+        document.getElementById('reset-notification-config').addEventListener('click', () => this.resetNotificationConfig());
+        document.getElementById('apply-notification-config').addEventListener('click', () => this.applyNotificationConfig());
+
+        // Channel toggle events
+        document.getElementById('slack-enabled').addEventListener('change', (e) => this.toggleChannel('slack', e.target.checked));
+        document.getElementById('discord-enabled').addEventListener('change', (e) => this.toggleChannel('discord', e.target.checked));
+        document.getElementById('webhook-enabled').addEventListener('change', (e) => this.toggleChannel('webhook', e.target.checked));
+        document.getElementById('email-enabled').addEventListener('change', (e) => this.toggleChannel('email', e.target.checked));
+
+        // Monitoring & Alerts Actions
+        document.getElementById('test-warning-alert').addEventListener('click', () => this.testAlert('warning'));
+        document.getElementById('test-critical-alert').addEventListener('click', () => this.testAlert('critical'));
+        document.getElementById('test-recovery-alert').addEventListener('click', () => this.testAlert('recovery'));
+        document.getElementById('simulate-high-load').addEventListener('click', () => this.simulateHighLoad());
+        document.getElementById('add-app-monitor').addEventListener('click', () => this.addAppMonitor());
+        document.getElementById('load-monitoring-config').addEventListener('click', () => this.loadMonitoringConfig());
+        document.getElementById('save-monitoring-config').addEventListener('click', () => this.saveMonitoringConfig());
+        document.getElementById('reset-monitoring-config').addEventListener('click', () => this.resetMonitoringConfig());
+        document.getElementById('apply-monitoring-config').addEventListener('click', () => this.applyMonitoringConfig());
+
+        // Threshold slider sync events
+        this.setupThresholdSliders();
     }
 
     // API Communication
@@ -566,8 +604,39 @@ class InstallationUp4evr {
         `;
         
         content.innerHTML = html;
+        
+        // Hide all other tab panes and show results
+        document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+        section.classList.add('active');
         section.style.display = 'block';
-        section.scrollIntoView({ behavior: 'smooth' });
+        
+        // Update sidebar button states
+        document.querySelectorAll('.sidebar-button').forEach(btn => btn.classList.remove('active'));
+        
+        // Setup close button if not already done
+        const closeBtn = document.getElementById('close-results');
+        if (closeBtn && !closeBtn.hasAttribute('data-setup')) {
+            closeBtn.setAttribute('data-setup', 'true');
+            closeBtn.addEventListener('click', () => {
+                this.closeResults();
+            });
+        }
+    }
+
+    closeResults() {
+        // Hide results section
+        const resultsSection = document.getElementById('results-section');
+        resultsSection.classList.remove('active');
+        resultsSection.style.display = 'none';
+        
+        // Return to system prefs tab (first tab)
+        const systemPrefsTab = document.getElementById('system-prefs-tab');
+        const systemPrefsBtn = document.querySelector('[data-tab="system-prefs"]');
+        
+        if (systemPrefsTab && systemPrefsBtn) {
+            systemPrefsTab.classList.add('active');
+            systemPrefsBtn.classList.add('active');
+        }
     }
 
     // UI Helpers
@@ -610,15 +679,15 @@ class InstallationUp4evr {
 
     // Tab Navigation
     setupTabNavigation() {
-        const tabButtons = document.querySelectorAll('.tab-button');
+        const sidebarButtons = document.querySelectorAll('.sidebar-button');
         const tabPanes = document.querySelectorAll('.tab-pane');
 
-        tabButtons.forEach(button => {
+        sidebarButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const targetTab = button.dataset.tab;
                 
                 // Remove active class from all buttons and panes
-                tabButtons.forEach(btn => btn.classList.remove('active'));
+                sidebarButtons.forEach(btn => btn.classList.remove('active'));
                 tabPanes.forEach(pane => pane.classList.remove('active'));
                 
                 // Add active class to clicked button and corresponding pane
@@ -636,6 +705,12 @@ class InstallationUp4evr {
                     this.loadServiceStatus();
                     this.refreshServiceLogs();
                     this.startServiceStatusUpdates();
+                }
+                
+                // Load installation settings if installation settings tab is selected
+                if (targetTab === 'installation-settings') {
+                    this.loadInstallationSettings();
+                    this.setupInstallationSettingsHandlers();
                 }
             });
         });
@@ -1111,11 +1186,1261 @@ class InstallationUp4evr {
             </div>
         `;
     }
+
+    // Configuration Management Methods
+    async loadConfiguration() {
+        try {
+            const config = await this.apiCall('/api/config/get');
+            this.populateConfigurationForm(config);
+            this.showConfigStatus('Configuration loaded successfully', 'success');
+        } catch (error) {
+            this.showConfigStatus('Failed to load configuration: ' + error.message, 'error');
+        }
+    }
+
+    async saveConfiguration() {
+        try {
+            const config = this.getConfigurationFromForm();
+            
+            if (this.isElectron) {
+                // Use Electron's save dialog
+                const filePath = await window.electronAPI.saveProfile(config);
+                if (filePath) {
+                    this.showConfigStatus(`Configuration saved to ${filePath}`, 'success');
+                } else {
+                    this.showConfigStatus('Save cancelled', 'warning');
+                }
+            } else {
+                // Download as JSON file for web version
+                const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `installation-config-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showConfigStatus('Configuration downloaded', 'success');
+            }
+        } catch (error) {
+            this.showConfigStatus('Failed to save configuration: ' + error.message, 'error');
+        }
+    }
+
+    async resetConfiguration() {
+        if (confirm('Are you sure you want to reset all configuration to defaults? This cannot be undone.')) {
+            try {
+                const defaults = await this.apiCall('/api/config/defaults');
+                this.populateConfigurationForm(defaults);
+                this.showConfigStatus('Configuration reset to defaults', 'success');
+            } catch (error) {
+                this.showConfigStatus('Failed to reset configuration: ' + error.message, 'error');
+            }
+        }
+    }
+
+    async applyConfiguration() {
+        try {
+            const config = this.getConfigurationFromForm();
+            await this.apiCall('/api/config/apply', {
+                method: 'POST',
+                body: JSON.stringify(config)
+            });
+            this.showConfigStatus('Configuration applied successfully - restart may be required for some changes', 'success');
+        } catch (error) {
+            this.showConfigStatus('Failed to apply configuration: ' + error.message, 'error');
+        }
+    }
+
+    generateApiKey() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 32; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('api-key').value = result;
+        this.showConfigStatus('New API key generated', 'success');
+    }
+
+    getConfigurationFromForm() {
+        return {
+            global: {
+                installationName: document.getElementById('installation-name').value,
+                location: document.getElementById('installation-location').value,
+                contactInfo: document.getElementById('contact-info').value,
+                timezone: document.getElementById('timezone').value
+            },
+            monitoring: {
+                interval: parseInt(document.getElementById('monitoring-interval').value),
+                heartbeatInterval: parseInt(document.getElementById('heartbeat-interval').value),
+                logRetention: parseInt(document.getElementById('log-retention').value),
+                debugMode: document.getElementById('debug-mode').checked
+            },
+            alerts: {
+                cpuThreshold: parseInt(document.getElementById('cpu-threshold').value),
+                memoryThreshold: parseInt(document.getElementById('memory-threshold').value),
+                diskThreshold: parseInt(document.getElementById('disk-threshold').value),
+                temperatureThreshold: parseInt(document.getElementById('temperature-threshold').value)
+            },
+            recovery: {
+                autoRestartApps: document.getElementById('auto-restart-apps').checked,
+                restartDelay: parseInt(document.getElementById('restart-delay').value),
+                maxRestartAttempts: parseInt(document.getElementById('max-restart-attempts').value),
+                autoReboot: document.getElementById('auto-reboot').checked
+            },
+            security: {
+                remoteAccess: document.getElementById('remote-access').checked,
+                apiKey: document.getElementById('api-key').value,
+                allowedIPs: document.getElementById('allowed-ips').value.split('\n').filter(ip => ip.trim()),
+                encryptionEnabled: document.getElementById('encryption-enabled').checked
+            }
+        };
+    }
+
+    populateConfigurationForm(config) {
+        // Global settings
+        if (config.global) {
+            document.getElementById('installation-name').value = config.global.installationName || '';
+            document.getElementById('installation-location').value = config.global.location || '';
+            document.getElementById('contact-info').value = config.global.contactInfo || '';
+            document.getElementById('timezone').value = config.global.timezone || 'America/New_York';
+        }
+
+        // Monitoring settings
+        if (config.monitoring) {
+            document.getElementById('monitoring-interval').value = config.monitoring.interval || 30;
+            document.getElementById('heartbeat-interval').value = config.monitoring.heartbeatInterval || 300;
+            document.getElementById('log-retention').value = config.monitoring.logRetention || 30;
+            document.getElementById('debug-mode').checked = config.monitoring.debugMode || false;
+        }
+
+        // Alert thresholds
+        if (config.alerts) {
+            document.getElementById('cpu-threshold').value = config.alerts.cpuThreshold || 80;
+            document.getElementById('memory-threshold').value = config.alerts.memoryThreshold || 85;
+            document.getElementById('disk-threshold').value = config.alerts.diskThreshold || 90;
+            document.getElementById('temperature-threshold').value = config.alerts.temperatureThreshold || 75;
+        }
+
+        // Recovery settings
+        if (config.recovery) {
+            document.getElementById('auto-restart-apps').checked = config.recovery.autoRestartApps !== false;
+            document.getElementById('restart-delay').value = config.recovery.restartDelay || 5;
+            document.getElementById('max-restart-attempts').value = config.recovery.maxRestartAttempts || 3;
+            document.getElementById('auto-reboot').checked = config.recovery.autoReboot || false;
+        }
+
+        // Security settings
+        if (config.security) {
+            document.getElementById('remote-access').checked = config.security.remoteAccess !== false;
+            document.getElementById('api-key').value = config.security.apiKey || '';
+            document.getElementById('allowed-ips').value = (config.security.allowedIPs || []).join('\n');
+            document.getElementById('encryption-enabled').checked = config.security.encryptionEnabled || false;
+        }
+    }
+
+    showConfigStatus(message, type = 'success') {
+        const statusElement = document.getElementById('config-status');
+        const textElement = document.getElementById('config-status-text');
+        
+        statusElement.className = `config-status ${type}`;
+        textElement.textContent = message;
+        statusElement.style.display = 'block';
+        
+        // Hide after 5 seconds
+        setTimeout(() => {
+            statusElement.style.display = 'none';
+        }, 5000);
+    }
+
+    // Notification Channel Management Methods
+    toggleChannel(channel, enabled) {
+        const channelElement = document.querySelector(`[data-channel="${channel}"]`);
+        if (channelElement) {
+            channelElement.classList.toggle('enabled', enabled);
+        }
+    }
+
+    async testNotificationChannel(channel) {
+        const button = document.getElementById(`test-${channel}`);
+        const resultElement = document.getElementById(`${channel}-test-result`);
+        
+        // Show loading state
+        button.classList.add('loading');
+        button.disabled = true;
+        resultElement.className = 'test-result loading';
+        resultElement.textContent = 'Testing connection...';
+        
+        try {
+            const config = this.getNotificationChannelConfig(channel);
+            const response = await this.apiCall(`/api/notifications/test/${channel}`, {
+                method: 'POST',
+                body: JSON.stringify(config)
+            });
+            
+            resultElement.className = 'test-result success';
+            resultElement.textContent = response.message || 'Test notification sent successfully!';
+        } catch (error) {
+            resultElement.className = 'test-result error';
+            resultElement.textContent = 'Test failed: ' + error.message;
+        } finally {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    }
+
+    async testAllChannels() {
+        const button = document.getElementById('test-all-channels');
+        button.classList.add('loading');
+        button.disabled = true;
+        
+        try {
+            const config = this.getNotificationConfiguration();
+            const response = await this.apiCall('/api/notifications/test-all', {
+                method: 'POST',
+                body: JSON.stringify(config)
+            });
+            
+            this.showNotificationStatus('Test notifications sent to all enabled channels', 'success');
+        } catch (error) {
+            this.showNotificationStatus('Failed to send test notifications: ' + error.message, 'error');
+        } finally {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    }
+
+    addWebhook() {
+        const name = document.getElementById('webhook-name').value.trim();
+        const url = document.getElementById('webhook-url').value.trim();
+        const method = document.getElementById('webhook-method').value;
+        const headers = document.getElementById('webhook-headers').value.trim();
+        
+        if (!name || !url) {
+            this.showNotificationStatus('Please provide both name and URL for the webhook', 'error');
+            return;
+        }
+        
+        let parsedHeaders = {};
+        if (headers) {
+            try {
+                parsedHeaders = JSON.parse(headers);
+            } catch (error) {
+                this.showNotificationStatus('Invalid JSON in headers field', 'error');
+                return;
+            }
+        }
+        
+        const webhook = {
+            id: Date.now().toString(),
+            name,
+            url,
+            method,
+            headers: parsedHeaders
+        };
+        
+        this.addWebhookToList(webhook);
+        
+        // Clear form
+        document.getElementById('webhook-name').value = '';
+        document.getElementById('webhook-url').value = '';
+        document.getElementById('webhook-headers').value = '';
+        
+        this.showNotificationStatus('Webhook added successfully', 'success');
+    }
+
+    addWebhookToList(webhook) {
+        const list = document.getElementById('webhook-list');
+        const item = document.createElement('div');
+        item.className = 'webhook-item';
+        item.dataset.webhookId = webhook.id;
+        
+        item.innerHTML = `
+            <div class="webhook-item-info">
+                <div class="webhook-item-name">${webhook.name}</div>
+                <div class="webhook-item-url">${webhook.method} ${webhook.url}</div>
+            </div>
+            <div class="webhook-item-actions">
+                <button class="btn btn-small btn-secondary" onclick="app.testWebhook('${webhook.id}')">
+                    <i class="fas fa-paper-plane"></i> Test
+                </button>
+                <button class="btn btn-small btn-danger" onclick="app.removeWebhook('${webhook.id}')">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        `;
+        
+        list.appendChild(item);
+    }
+
+    async testWebhook(webhookId) {
+        const webhookItem = document.querySelector(`[data-webhook-id="${webhookId}"]`);
+        const webhook = this.getWebhookById(webhookId);
+        
+        if (!webhook) {
+            this.showNotificationStatus('Webhook not found', 'error');
+            return;
+        }
+        
+        try {
+            const response = await this.apiCall('/api/notifications/test/webhook', {
+                method: 'POST',
+                body: JSON.stringify({ webhook })
+            });
+            
+            this.showNotificationStatus(`Webhook "${webhook.name}" test successful`, 'success');
+        } catch (error) {
+            this.showNotificationStatus(`Webhook "${webhook.name}" test failed: ${error.message}`, 'error');
+        }
+    }
+
+    removeWebhook(webhookId) {
+        const webhookItem = document.querySelector(`[data-webhook-id="${webhookId}"]`);
+        if (webhookItem) {
+            webhookItem.remove();
+            this.showNotificationStatus('Webhook removed', 'success');
+        }
+    }
+
+    getWebhookById(webhookId) {
+        const webhookItem = document.querySelector(`[data-webhook-id="${webhookId}"]`);
+        if (!webhookItem) return null;
+        
+        const name = webhookItem.querySelector('.webhook-item-name').textContent;
+        const urlAndMethod = webhookItem.querySelector('.webhook-item-url').textContent;
+        const [method, ...urlParts] = urlAndMethod.split(' ');
+        const url = urlParts.join(' ');
+        
+        return { id: webhookId, name, url, method, headers: {} };
+    }
+
+    getNotificationChannelConfig(channel) {
+        switch (channel) {
+            case 'slack':
+                return {
+                    enabled: document.getElementById('slack-enabled').checked,
+                    webhookUrl: document.getElementById('slack-webhook-url').value,
+                    channel: document.getElementById('slack-channel').value,
+                    username: document.getElementById('slack-username').value,
+                    icon: document.getElementById('slack-icon').value
+                };
+            case 'discord':
+                return {
+                    enabled: document.getElementById('discord-enabled').checked,
+                    webhookUrl: document.getElementById('discord-webhook-url').value,
+                    username: document.getElementById('discord-username').value,
+                    avatar: document.getElementById('discord-avatar').value,
+                    useEmbeds: document.getElementById('discord-embed').checked
+                };
+            case 'email':
+                return {
+                    enabled: document.getElementById('email-enabled').checked,
+                    smtp: {
+                        server: document.getElementById('smtp-server').value,
+                        port: parseInt(document.getElementById('smtp-port').value),
+                        username: document.getElementById('smtp-username').value,
+                        password: document.getElementById('smtp-password').value,
+                        useTLS: document.getElementById('email-use-tls').checked
+                    },
+                    from: document.getElementById('email-from').value,
+                    to: document.getElementById('email-to').value.split('\n').filter(email => email.trim())
+                };
+            default:
+                return {};
+        }
+    }
+
+    getNotificationConfiguration() {
+        // Get all webhooks
+        const webhooks = Array.from(document.querySelectorAll('.webhook-item')).map(item => {
+            return this.getWebhookById(item.dataset.webhookId);
+        });
+
+        // Get alert levels
+        const alertLevels = Array.from(document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked'))
+            .map(checkbox => checkbox.value);
+
+        return {
+            slack: this.getNotificationChannelConfig('slack'),
+            discord: this.getNotificationChannelConfig('discord'),
+            email: this.getNotificationChannelConfig('email'),
+            webhooks: {
+                enabled: document.getElementById('webhook-enabled').checked,
+                urls: webhooks
+            },
+            settings: {
+                alertLevels,
+                rateLimit: parseInt(document.getElementById('rate-limit').value) || 5,
+                quietHours: {
+                    start: document.getElementById('quiet-start').value,
+                    end: document.getElementById('quiet-end').value
+                }
+            }
+        };
+    }
+
+    populateNotificationConfiguration(config) {
+        // Slack
+        if (config.slack) {
+            document.getElementById('slack-enabled').checked = config.slack.enabled || false;
+            document.getElementById('slack-webhook-url').value = config.slack.webhookUrl || '';
+            document.getElementById('slack-channel').value = config.slack.channel || '#alerts';
+            document.getElementById('slack-username').value = config.slack.username || 'Installation Up 4evr';
+            document.getElementById('slack-icon').value = config.slack.icon || ':computer:';
+            this.toggleChannel('slack', config.slack.enabled);
+        }
+
+        // Discord
+        if (config.discord) {
+            document.getElementById('discord-enabled').checked = config.discord.enabled || false;
+            document.getElementById('discord-webhook-url').value = config.discord.webhookUrl || '';
+            document.getElementById('discord-username').value = config.discord.username || 'Installation Up 4evr';
+            document.getElementById('discord-avatar').value = config.discord.avatar || '';
+            document.getElementById('discord-embed').checked = config.discord.useEmbeds !== false;
+            this.toggleChannel('discord', config.discord.enabled);
+        }
+
+        // Email
+        if (config.email) {
+            document.getElementById('email-enabled').checked = config.email.enabled || false;
+            if (config.email.smtp) {
+                document.getElementById('smtp-server').value = config.email.smtp.server || '';
+                document.getElementById('smtp-port').value = config.email.smtp.port || 587;
+                document.getElementById('smtp-username').value = config.email.smtp.username || '';
+                document.getElementById('smtp-password').value = config.email.smtp.password || '';
+                document.getElementById('email-use-tls').checked = config.email.smtp.useTLS !== false;
+            }
+            document.getElementById('email-from').value = config.email.from || '';
+            document.getElementById('email-to').value = (config.email.to || []).join('\n');
+            this.toggleChannel('email', config.email.enabled);
+        }
+
+        // Webhooks
+        if (config.webhooks) {
+            document.getElementById('webhook-enabled').checked = config.webhooks.enabled || false;
+            this.toggleChannel('webhook', config.webhooks.enabled);
+            
+            // Clear existing webhooks
+            document.getElementById('webhook-list').innerHTML = '';
+            
+            // Add webhooks
+            if (config.webhooks.urls) {
+                config.webhooks.urls.forEach(webhook => {
+                    this.addWebhookToList(webhook);
+                });
+            }
+        }
+
+        // Settings
+        if (config.settings) {
+            // Alert levels
+            document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = config.settings.alertLevels?.includes(checkbox.value) !== false;
+            });
+            
+            document.getElementById('rate-limit').value = config.settings.rateLimit || 5;
+            
+            if (config.settings.quietHours) {
+                document.getElementById('quiet-start').value = config.settings.quietHours.start || '22:00';
+                document.getElementById('quiet-end').value = config.settings.quietHours.end || '08:00';
+            }
+        }
+    }
+
+    async loadNotificationConfig() {
+        try {
+            const config = await this.apiCall('/api/notifications/config');
+            this.populateNotificationConfiguration(config);
+            this.showNotificationStatus('Notification configuration loaded successfully', 'success');
+        } catch (error) {
+            this.showNotificationStatus('Failed to load notification configuration: ' + error.message, 'error');
+        }
+    }
+
+    async saveNotificationConfig() {
+        try {
+            const config = this.getNotificationConfiguration();
+            
+            if (this.isElectron) {
+                const filePath = await window.electronAPI.saveProfile(config);
+                if (filePath) {
+                    this.showNotificationStatus(`Notification configuration saved to ${filePath}`, 'success');
+                } else {
+                    this.showNotificationStatus('Save cancelled', 'warning');
+                }
+            } else {
+                const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `notification-config-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showNotificationStatus('Notification configuration downloaded', 'success');
+            }
+        } catch (error) {
+            this.showNotificationStatus('Failed to save notification configuration: ' + error.message, 'error');
+        }
+    }
+
+    async resetNotificationConfig() {
+        if (confirm('Are you sure you want to reset all notification settings to defaults? This cannot be undone.')) {
+            try {
+                const defaults = await this.apiCall('/api/notifications/defaults');
+                this.populateNotificationConfiguration(defaults);
+                this.showNotificationStatus('Notification configuration reset to defaults', 'success');
+            } catch (error) {
+                this.showNotificationStatus('Failed to reset notification configuration: ' + error.message, 'error');
+            }
+        }
+    }
+
+    async applyNotificationConfig() {
+        try {
+            const config = this.getNotificationConfiguration();
+            await this.apiCall('/api/notifications/config', {
+                method: 'POST',
+                body: JSON.stringify(config)
+            });
+            this.showNotificationStatus('Notification configuration applied successfully', 'success');
+        } catch (error) {
+            this.showNotificationStatus('Failed to apply notification configuration: ' + error.message, 'error');
+        }
+    }
+
+    showNotificationStatus(message, type = 'success') {
+        const statusElement = document.getElementById('notification-status');
+        const textElement = document.getElementById('notification-status-text');
+        
+        statusElement.className = `config-status ${type}`;
+        textElement.textContent = message;
+        statusElement.style.display = 'block';
+        
+        // Hide after 5 seconds
+        setTimeout(() => {
+            statusElement.style.display = 'none';
+        }, 5000);
+    }
+
+    // Monitoring & Alerts Management Methods
+    setupThresholdSliders() {
+        const metrics = ['cpu', 'memory', 'disk', 'temperature'];
+        const levels = ['warning', 'critical'];
+        
+        metrics.forEach(metric => {
+            levels.forEach(level => {
+                const slider = document.getElementById(`${metric}-${level}-slider`);
+                const input = document.getElementById(`${metric}-${level}-input`);
+                
+                if (slider && input) {
+                    slider.addEventListener('input', (e) => {
+                        input.value = e.target.value;
+                        this.updateThresholdVisuals(metric, level, e.target.value);
+                    });
+                    
+                    input.addEventListener('input', (e) => {
+                        slider.value = e.target.value;
+                        this.updateThresholdVisuals(metric, level, e.target.value);
+                    });
+                }
+            });
+        });
+    }
+
+    updateThresholdVisuals(metric, level, value) {
+        // Update the current status card if it exceeds the threshold
+        const currentValueElement = document.getElementById(`current-${metric}`);
+        const statusCard = document.getElementById(`${metric}-status-card`);
+        
+        if (currentValueElement && statusCard) {
+            const currentValue = parseFloat(currentValueElement.textContent) || 0;
+            const threshold = parseFloat(value);
+            
+            if (currentValue > threshold) {
+                statusCard.classList.add(level);
+            } else {
+                statusCard.classList.remove(level);
+            }
+        }
+    }
+
+    async loadSystemStatus() {
+        try {
+            const status = await this.apiCall('/api/monitoring/status');
+            this.updateSystemStatus(status);
+        } catch (error) {
+            console.log('Failed to load system status:', error.message);
+            // Set loading state
+            ['cpu', 'memory', 'disk', 'temperature'].forEach(metric => {
+                const element = document.getElementById(`current-${metric}`);
+                if (element) element.textContent = '--';
+            });
+        }
+    }
+
+    updateSystemStatus(status) {
+        if (status.cpu !== undefined) {
+            document.getElementById('current-cpu').textContent = `${status.cpu.toFixed(1)}%`;
+            this.updateStatusCard('cpu', status.cpu, this.getThresholds('cpu'));
+        }
+        
+        if (status.memory !== undefined) {
+            document.getElementById('current-memory').textContent = `${status.memory.toFixed(1)}%`;
+            this.updateStatusCard('memory', status.memory, this.getThresholds('memory'));
+        }
+        
+        if (status.disk !== undefined) {
+            document.getElementById('current-disk').textContent = `${status.disk.toFixed(1)}%`;
+            this.updateStatusCard('disk', status.disk, this.getThresholds('disk'));
+        }
+        
+        if (status.temperature !== undefined) {
+            document.getElementById('current-temperature').textContent = `${status.temperature.toFixed(1)}°C`;
+            this.updateStatusCard('temperature', status.temperature, this.getThresholds('temperature'));
+        }
+    }
+
+    getThresholds(metric) {
+        const warning = parseFloat(document.getElementById(`${metric}-warning-input`).value) || 75;
+        const critical = parseFloat(document.getElementById(`${metric}-critical-input`).value) || 90;
+        return { warning, critical };
+    }
+
+    updateStatusCard(metric, value, thresholds) {
+        const card = document.getElementById(`${metric}-status-card`);
+        const indicator = document.getElementById(`${metric}-indicator`);
+        
+        // Remove existing status classes
+        card.classList.remove('normal', 'warning', 'critical');
+        
+        // Apply appropriate status
+        if (value >= thresholds.critical) {
+            card.classList.add('critical');
+            indicator.textContent = '🔴';
+        } else if (value >= thresholds.warning) {
+            card.classList.add('warning');
+            indicator.textContent = '🟡';
+        } else {
+            card.classList.add('normal');
+            indicator.textContent = '🟢';
+        }
+    }
+
+    async testAlert(type) {
+        const button = document.getElementById(`test-${type}-alert`);
+        const resultElement = document.getElementById('alert-test-result');
+        
+        button.classList.add('loading');
+        button.disabled = true;
+        resultElement.className = 'test-result loading';
+        resultElement.textContent = `Sending ${type} test alert...`;
+        
+        try {
+            const response = await this.apiCall(`/api/monitoring/test-alert/${type}`, {
+                method: 'POST'
+            });
+            
+            resultElement.className = 'test-result success';
+            resultElement.textContent = response.message || `${type} alert sent successfully!`;
+        } catch (error) {
+            resultElement.className = 'test-result error';
+            resultElement.textContent = `Failed to send ${type} alert: ${error.message}`;
+        } finally {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    }
+
+    async simulateHighLoad() {
+        const button = document.getElementById('simulate-high-load');
+        const resultElement = document.getElementById('alert-test-result');
+        
+        button.classList.add('loading');
+        button.disabled = true;
+        resultElement.className = 'test-result loading';
+        resultElement.textContent = 'Simulating high system load...';
+        
+        try {
+            const response = await this.apiCall('/api/monitoring/simulate-load', {
+                method: 'POST'
+            });
+            
+            resultElement.className = 'test-result success';
+            resultElement.textContent = response.message || 'Load simulation started - watch the metrics!';
+            
+            // Start updating status more frequently during simulation
+            this.startLoadSimulationMonitoring();
+        } catch (error) {
+            resultElement.className = 'test-result error';
+            resultElement.textContent = `Failed to simulate load: ${error.message}`;
+        } finally {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    }
+
+    startLoadSimulationMonitoring() {
+        // Update status every 2 seconds during simulation
+        const interval = setInterval(() => {
+            this.loadSystemStatus();
+        }, 2000);
+        
+        // Stop after 30 seconds
+        setTimeout(() => {
+            clearInterval(interval);
+        }, 30000);
+    }
+
+    addAppMonitor() {
+        const name = document.getElementById('app-monitor-name').value.trim();
+        const process = document.getElementById('app-monitor-process').value.trim();
+        const critical = document.getElementById('app-monitor-critical').checked;
+        const restart = document.getElementById('app-monitor-restart').checked;
+        
+        if (!name || !process) {
+            this.showMonitoringStatus('Please provide both application name and process name', 'error');
+            return;
+        }
+        
+        const monitor = {
+            id: Date.now().toString(),
+            name,
+            process,
+            critical,
+            restart
+        };
+        
+        this.addAppMonitorToList(monitor);
+        
+        // Clear form
+        document.getElementById('app-monitor-name').value = '';
+        document.getElementById('app-monitor-process').value = '';
+        document.getElementById('app-monitor-critical').checked = false;
+        document.getElementById('app-monitor-restart').checked = true;
+        
+        this.showMonitoringStatus('Application monitor added successfully', 'success');
+    }
+
+    addAppMonitorToList(monitor) {
+        const list = document.getElementById('app-monitor-list');
+        const item = document.createElement('div');
+        item.className = 'app-monitor-item';
+        item.dataset.monitorId = monitor.id;
+        
+        const badges = [];
+        if (monitor.critical) badges.push('<span class="app-monitor-badge critical">Critical</span>');
+        if (monitor.restart) badges.push('<span class="app-monitor-badge restart">Auto-Restart</span>');
+        
+        item.innerHTML = `
+            <div class="app-monitor-info">
+                <div class="app-monitor-name">${monitor.name}</div>
+                <div class="app-monitor-process">${monitor.process}</div>
+                <div class="app-monitor-badges">${badges.join('')}</div>
+            </div>
+            <div class="app-monitor-actions">
+                <button class="btn btn-small btn-secondary" onclick="app.testAppMonitor('${monitor.id}')">
+                    <i class="fas fa-play"></i> Test
+                </button>
+                <button class="btn btn-small btn-danger" onclick="app.removeAppMonitor('${monitor.id}')">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        `;
+        
+        list.appendChild(item);
+    }
+
+    async testAppMonitor(monitorId) {
+        const monitor = this.getAppMonitorById(monitorId);
+        if (!monitor) {
+            this.showMonitoringStatus('App monitor not found', 'error');
+            return;
+        }
+        
+        try {
+            const response = await this.apiCall('/api/monitoring/test-app', {
+                method: 'POST',
+                body: JSON.stringify({ monitor })
+            });
+            
+            this.showMonitoringStatus(`App monitor "${monitor.name}" test successful`, 'success');
+        } catch (error) {
+            this.showMonitoringStatus(`App monitor "${monitor.name}" test failed: ${error.message}`, 'error');
+        }
+    }
+
+    removeAppMonitor(monitorId) {
+        const item = document.querySelector(`[data-monitor-id="${monitorId}"]`);
+        if (item) {
+            item.remove();
+            this.showMonitoringStatus('App monitor removed', 'success');
+        }
+    }
+
+    getAppMonitorById(monitorId) {
+        const item = document.querySelector(`[data-monitor-id="${monitorId}"]`);
+        if (!item) return null;
+        
+        const name = item.querySelector('.app-monitor-name').textContent;
+        const process = item.querySelector('.app-monitor-process').textContent;
+        const critical = item.querySelector('.app-monitor-badge.critical') !== null;
+        const restart = item.querySelector('.app-monitor-badge.restart') !== null;
+        
+        return { id: monitorId, name, process, critical, restart };
+    }
+
+    getMonitoringConfiguration() {
+        // Get all app monitors
+        const appMonitors = Array.from(document.querySelectorAll('.app-monitor-item')).map(item => {
+            return this.getAppMonitorById(item.dataset.monitorId);
+        });
+
+        return {
+            thresholds: {
+                cpu: {
+                    warning: parseInt(document.getElementById('cpu-warning-input').value),
+                    critical: parseInt(document.getElementById('cpu-critical-input').value)
+                },
+                memory: {
+                    warning: parseInt(document.getElementById('memory-warning-input').value),
+                    critical: parseInt(document.getElementById('memory-critical-input').value)
+                },
+                disk: {
+                    warning: parseInt(document.getElementById('disk-warning-input').value),
+                    critical: parseInt(document.getElementById('disk-critical-input').value)
+                },
+                temperature: {
+                    warning: parseInt(document.getElementById('temperature-warning-input').value),
+                    critical: parseInt(document.getElementById('temperature-critical-input').value)
+                }
+            },
+            behavior: {
+                checkInterval: parseInt(document.getElementById('monitoring-interval-config').value),
+                alertCooldown: parseInt(document.getElementById('alert-cooldown').value),
+                escalationTime: parseInt(document.getElementById('escalation-time').value),
+                autoRecovery: document.getElementById('auto-recovery-check').checked
+            },
+            appMonitors
+        };
+    }
+
+    populateMonitoringConfiguration(config) {
+        // Thresholds
+        if (config.thresholds) {
+            Object.keys(config.thresholds).forEach(metric => {
+                const thresholds = config.thresholds[metric];
+                if (thresholds.warning !== undefined) {
+                    document.getElementById(`${metric}-warning-slider`).value = thresholds.warning;
+                    document.getElementById(`${metric}-warning-input`).value = thresholds.warning;
+                }
+                if (thresholds.critical !== undefined) {
+                    document.getElementById(`${metric}-critical-slider`).value = thresholds.critical;
+                    document.getElementById(`${metric}-critical-input`).value = thresholds.critical;
+                }
+            });
+        }
+
+        // Behavior
+        if (config.behavior) {
+            document.getElementById('monitoring-interval-config').value = config.behavior.checkInterval || 30;
+            document.getElementById('alert-cooldown').value = config.behavior.alertCooldown || 5;
+            document.getElementById('escalation-time').value = config.behavior.escalationTime || 15;
+            document.getElementById('auto-recovery-check').checked = config.behavior.autoRecovery !== false;
+        }
+
+        // App monitors
+        if (config.appMonitors) {
+            // Clear existing monitors
+            document.getElementById('app-monitor-list').innerHTML = '';
+            
+            // Add monitors
+            config.appMonitors.forEach(monitor => {
+                this.addAppMonitorToList(monitor);
+            });
+        }
+    }
+
+    async loadMonitoringConfig() {
+        try {
+            const config = await this.apiCall('/api/monitoring/config');
+            this.populateMonitoringConfiguration(config);
+            this.showMonitoringStatus('Monitoring configuration loaded successfully', 'success');
+        } catch (error) {
+            this.showMonitoringStatus('Failed to load monitoring configuration: ' + error.message, 'error');
+        }
+    }
+
+    async saveMonitoringConfig() {
+        try {
+            const config = this.getMonitoringConfiguration();
+            
+            if (this.isElectron) {
+                const filePath = await window.electronAPI.saveProfile(config);
+                if (filePath) {
+                    this.showMonitoringStatus(`Monitoring configuration saved to ${filePath}`, 'success');
+                } else {
+                    this.showMonitoringStatus('Save cancelled', 'warning');
+                }
+            } else {
+                const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `monitoring-config-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showMonitoringStatus('Monitoring configuration downloaded', 'success');
+            }
+        } catch (error) {
+            this.showMonitoringStatus('Failed to save monitoring configuration: ' + error.message, 'error');
+        }
+    }
+
+    async resetMonitoringConfig() {
+        if (confirm('Are you sure you want to reset all monitoring settings to defaults? This cannot be undone.')) {
+            try {
+                const defaults = await this.apiCall('/api/monitoring/defaults');
+                this.populateMonitoringConfiguration(defaults);
+                this.showMonitoringStatus('Monitoring configuration reset to defaults', 'success');
+            } catch (error) {
+                this.showMonitoringStatus('Failed to reset monitoring configuration: ' + error.message, 'error');
+            }
+        }
+    }
+
+    async applyMonitoringConfig() {
+        try {
+            const config = this.getMonitoringConfiguration();
+            await this.apiCall('/api/monitoring/config', {
+                method: 'POST',
+                body: JSON.stringify(config)
+            });
+            this.showMonitoringStatus('Monitoring configuration applied successfully', 'success');
+        } catch (error) {
+            this.showMonitoringStatus('Failed to apply monitoring configuration: ' + error.message, 'error');
+        }
+    }
+
+    showMonitoringStatus(message, type = 'success') {
+        const statusElement = document.getElementById('monitoring-status');
+        const textElement = document.getElementById('monitoring-status-text');
+        
+        statusElement.className = `config-status ${type}`;
+        textElement.textContent = message;
+        statusElement.style.display = 'block';
+        
+        // Hide after 5 seconds
+        setTimeout(() => {
+            statusElement.style.display = 'none';
+        }, 5000);
+    }
+
+    // Installation Settings Management
+    async loadInstallationSettings() {
+        try {
+            const response = await this.apiCall('/api/installation/settings');
+            if (response.success) {
+                this.populateInstallationSettings(response.settings);
+            }
+        } catch (error) {
+            console.error('Failed to load installation settings:', error);
+            this.showToast('Failed to load installation settings', 'error');
+        }
+    }
+
+    populateInstallationSettings(settings = {}) {
+        // Camera settings
+        this.setSettingValue('camera-threshold-slider', settings.cameraThreshold || 25);
+        this.setSettingValue('camera-threshold-input', settings.cameraThreshold || 25);
+        this.setSettingValue('camera-timeout', settings.cameraTimeout || 30);
+        this.setSettingValue('camera-fps', settings.cameraFps || 30);
+
+        // Capacitive sensing settings
+        this.setSettingValue('capacitive-threshold-slider', settings.capacitiveThreshold || 50);
+        this.setSettingValue('capacitive-threshold-input', settings.capacitiveThreshold || 50);
+        this.setSettingValue('capacitive-debounce', settings.capacitiveDebounce || 100);
+
+        // Audio settings
+        this.setSettingValue('audio-threshold-slider', settings.audioThreshold || 40);
+        this.setSettingValue('audio-threshold-input', settings.audioThreshold || 40);
+        this.setSettingValue('audio-sample-rate', settings.audioSampleRate || 44100);
+
+        // Set active capacitive pins
+        if (settings.capacitivePins) {
+            document.querySelectorAll('#capacitive-pins input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = settings.capacitivePins.includes(parseInt(checkbox.value));
+            });
+        }
+
+        // Load custom parameters
+        this.loadCustomParameters(settings.customParams || []);
+    }
+
+    setSettingValue(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.value = value;
+        }
+    }
+
+    setupInstallationSettingsHandlers() {
+        // Sync slider and input pairs
+        this.setupSliderSync('camera-threshold');
+        this.setupSliderSync('capacitive-threshold');  
+        this.setupSliderSync('audio-threshold');
+
+        // Custom parameters
+        document.getElementById('add-custom-param')?.addEventListener('click', () => {
+            this.addCustomParameter();
+        });
+
+        // Profile management
+        document.getElementById('load-profile')?.addEventListener('click', () => {
+            this.loadInstallationProfile();
+        });
+
+        document.getElementById('save-profile')?.addEventListener('click', () => {
+            this.saveInstallationProfile();
+        });
+
+        document.getElementById('export-profile')?.addEventListener('click', () => {
+            this.exportInstallationProfile();
+        });
+
+        document.getElementById('import-profile-btn')?.addEventListener('click', () => {
+            document.getElementById('import-profile').click();
+        });
+
+        document.getElementById('import-profile')?.addEventListener('change', (e) => {
+            this.importInstallationProfile(e);
+        });
+
+        // Action buttons
+        document.getElementById('test-installation-settings')?.addEventListener('click', () => {
+            this.testInstallationSettings();
+        });
+
+        document.getElementById('reset-installation-settings')?.addEventListener('click', () => {
+            this.resetInstallationSettings();
+        });
+
+        document.getElementById('apply-installation-settings')?.addEventListener('click', () => {
+            this.applyInstallationSettings();
+        });
+    }
+
+    setupSliderSync(baseName) {
+        const slider = document.getElementById(`${baseName}-slider`);
+        const input = document.getElementById(`${baseName}-input`);
+
+        if (slider && input) {
+            slider.addEventListener('input', () => {
+                input.value = slider.value;
+            });
+
+            input.addEventListener('input', () => {
+                slider.value = input.value;
+            });
+        }
+    }
+
+    loadCustomParameters(params = []) {
+        const container = document.getElementById('custom-params-list');
+        if (!container) return;
+
+        container.innerHTML = '';
+        params.forEach(param => {
+            this.addCustomParameterItem(param.name, param.value, param.type);
+        });
+    }
+
+    addCustomParameter() {
+        this.addCustomParameterItem('', '', 'string');
+    }
+
+    addCustomParameterItem(name = '', value = '', type = 'string') {
+        const container = document.getElementById('custom-params-list');
+        if (!container) return;
+
+        const paramDiv = document.createElement('div');
+        paramDiv.className = 'custom-param-item';
+        
+        paramDiv.innerHTML = `
+            <input type="text" placeholder="Parameter name..." value="${name}" class="param-name">
+            <select class="param-type">
+                <option value="string" ${type === 'string' ? 'selected' : ''}>String</option>
+                <option value="number" ${type === 'number' ? 'selected' : ''}>Number</option>
+                <option value="boolean" ${type === 'boolean' ? 'selected' : ''}>Boolean</option>
+            </select>
+            <input type="text" placeholder="Value..." value="${value}" class="param-value">
+            <button type="button" class="custom-param-remove">Remove</button>
+        `;
+
+        paramDiv.querySelector('.custom-param-remove').addEventListener('click', () => {
+            paramDiv.remove();
+        });
+
+        container.appendChild(paramDiv);
+    }
+
+    getInstallationSettings() {
+        const settings = {
+            cameraThreshold: parseInt(document.getElementById('camera-threshold-input')?.value || 25),
+            cameraTimeout: parseInt(document.getElementById('camera-timeout')?.value || 30),
+            cameraFps: parseInt(document.getElementById('camera-fps')?.value || 30),
+            capacitiveThreshold: parseInt(document.getElementById('capacitive-threshold-input')?.value || 50),
+            capacitiveDebounce: parseInt(document.getElementById('capacitive-debounce')?.value || 100),
+            audioThreshold: parseInt(document.getElementById('audio-threshold-input')?.value || 40),
+            audioSampleRate: parseInt(document.getElementById('audio-sample-rate')?.value || 44100),
+            capacitivePins: [],
+            customParams: []
+        };
+
+        // Get active capacitive pins
+        document.querySelectorAll('#capacitive-pins input[type="checkbox"]:checked').forEach(checkbox => {
+            settings.capacitivePins.push(parseInt(checkbox.value));
+        });
+
+        // Get custom parameters
+        document.querySelectorAll('.custom-param-item').forEach(item => {
+            const name = item.querySelector('.param-name').value.trim();
+            const type = item.querySelector('.param-type').value;
+            const value = item.querySelector('.param-value').value.trim();
+            
+            if (name && value) {
+                settings.customParams.push({ name, type, value });
+            }
+        });
+
+        return settings;
+    }
+
+    async loadInstallationProfile() {
+        const profileSelect = document.getElementById('installation-profile');
+        const profileName = profileSelect?.value;
+        
+        if (!profileName) {
+            this.showToast('Please select a profile to load', 'warning');
+            return;
+        }
+
+        try {
+            const response = await this.apiCall(`/api/installation/profiles/${profileName}`);
+            if (response.success) {
+                this.populateInstallationSettings(response.profile);
+                this.showToast(`Profile "${profileName}" loaded successfully`, 'success');
+            }
+        } catch (error) {
+            this.showToast(`Failed to load profile: ${error.message}`, 'error');
+        }
+    }
+
+    async saveInstallationProfile() {
+        const profileNameInput = document.getElementById('profile-name');
+        const profileName = profileNameInput?.value.trim();
+        
+        if (!profileName) {
+            this.showToast('Please enter a profile name', 'warning');
+            return;
+        }
+
+        try {
+            const settings = this.getInstallationSettings();
+            const response = await this.apiCall('/api/installation/profiles', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: profileName,
+                    settings: settings
+                })
+            });
+
+            if (response.success) {
+                this.showToast(`Profile "${profileName}" saved successfully`, 'success');
+                profileNameInput.value = '';
+            }
+        } catch (error) {
+            this.showToast(`Failed to save profile: ${error.message}`, 'error');
+        }
+    }
+
+    exportInstallationProfile() {
+        const settings = this.getInstallationSettings();
+        const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'installation-settings.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('Profile exported successfully', 'success');
+    }
+
+    importInstallationProfile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const settings = JSON.parse(e.target.result);
+                this.populateInstallationSettings(settings);
+                this.showToast('Profile imported successfully', 'success');
+            } catch (error) {
+                this.showToast('Failed to import profile: Invalid file format', 'error');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    async testInstallationSettings() {
+        try {
+            const settings = this.getInstallationSettings();
+            const response = await this.apiCall('/api/installation/test', {
+                method: 'POST',
+                body: JSON.stringify(settings)
+            });
+
+            if (response.success) {
+                this.showToast('Installation settings test completed successfully', 'success');
+                this.showResultsSection(response.testResults);
+            }
+        } catch (error) {
+            this.showToast(`Test failed: ${error.message}`, 'error');
+        }
+    }
+
+    resetInstallationSettings() {
+        if (confirm('Are you sure you want to reset all installation settings to defaults?')) {
+            this.populateInstallationSettings({});
+            this.showToast('Installation settings reset to defaults', 'info');
+        }
+    }
+
+    async applyInstallationSettings() {
+        try {
+            const settings = this.getInstallationSettings();
+            const response = await this.apiCall('/api/installation/settings', {
+                method: 'POST',
+                body: JSON.stringify(settings)
+            });
+
+            if (response.success) {
+                this.showToast('Installation settings applied successfully', 'success');
+            }
+        } catch (error) {
+            this.showToast(`Failed to apply settings: ${error.message}`, 'error');
+        }
+    }
 }
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new InstallationUp4evr();
+    window.app = new InstallationUp4evr();
 });
 
 // Add slideOut animation to CSS
