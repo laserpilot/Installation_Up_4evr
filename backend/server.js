@@ -547,6 +547,15 @@ app.get('/api/monitoring/app-health/:appName', (req, res) => {
     }
 });
 
+app.get('/api/monitoring/config', (req, res) => {
+    try {
+        const config = monitoring.getMonitoringConfig();
+        res.json(config);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Remote Control API Routes
 app.post('/api/remote-control/command', async (req, res) => {
     try {

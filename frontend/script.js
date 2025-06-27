@@ -844,9 +844,17 @@ class InstallationUp4evr {
         // Network status
         const networkElement = document.getElementById('network-status');
         if (networkElement && data.network) {
-            const connected = data.network.internetConnected ? 'Connected' : 'Disconnected';
-            const interfaces = Object.keys(data.network).filter(k => k !== 'internetConnected').length;
-            networkElement.textContent = `${connected} (${interfaces} interfaces)`;
+            if (data.network.summary) {
+                const status = data.network.summary.status;
+                const ip = data.network.summary.primaryIP;
+                const interfaces = data.network.summary.totalInterfaces;
+                networkElement.textContent = `${status} - ${ip} (${interfaces} interfaces)`;
+            } else {
+                // Fallback for older data format
+                const connected = data.network.internetConnected ? 'Connected' : 'Disconnected';
+                const interfaces = Object.keys(data.network).filter(k => k !== 'internetConnected' && k !== 'summary').length;
+                networkElement.textContent = `${connected} (${interfaces} interfaces)`;
+            }
         }
 
         // Uptime
@@ -1841,24 +1849,56 @@ class InstallationUp4evr {
     }
 
     updateSystemStatus(status) {
-        if (status.cpu !== undefined) {
-            document.getElementById('current-cpu').textContent = `${status.cpu.toFixed(1)}%`;
-            this.updateStatusCard('cpu', status.cpu, this.getThresholds('cpu'));
+        // Extract data from the monitoring status response
+        const systemData = status.system || {};
+        const storageData = status.storage || {};
+        const temperatureData = status.temperature || {};
+        
+        // CPU usage
+        if (systemData.cpuUsage !== undefined) {
+            document.getElementById('current-cpu').textContent = `${systemData.cpuUsage.toFixed(1)}%`;
+            this.updateStatusCard('cpu', systemData.cpuUsage, this.getThresholds('cpu'));
         }
         
-        if (status.memory !== undefined) {
-            document.getElementById('current-memory').textContent = `${status.memory.toFixed(1)}%`;
-            this.updateStatusCard('memory', status.memory, this.getThresholds('memory'));
+        // Memory usage
+        if (systemData.memoryUsage !== undefined) {
+            document.getElementById('current-memory').textContent = `${systemData.memoryUsage.toFixed(1)}%`;
+            this.updateStatusCard('memory', systemData.memoryUsage, this.getThresholds('memory'));
         }
         
-        if (status.disk !== undefined) {
-            document.getElementById('current-disk').textContent = `${status.disk.toFixed(1)}%`;
-            this.updateStatusCard('disk', status.disk, this.getThresholds('disk'));
+        // Disk usage - get from main disk or first volume
+        let diskUsage = null;
+        if (storageData.mainDisk && storageData.mainDisk.usagePercent !== undefined) {
+            diskUsage = storageData.mainDisk.usagePercent;
+        } else if (storageData.volumes) {
+            const volumes = Object.values(storageData.volumes);
+            if (volumes.length > 0) {
+                diskUsage = volumes[0].usagePercent;
+            }
         }
         
-        if (status.temperature !== undefined) {
-            document.getElementById('current-temperature').textContent = `${status.temperature.toFixed(1)}°C`;
-            this.updateStatusCard('temperature', status.temperature, this.getThresholds('temperature'));
+        if (diskUsage !== null) {
+            document.getElementById('current-disk').textContent = `${diskUsage.toFixed(1)}%`;
+            this.updateStatusCard('disk', diskUsage, this.getThresholds('disk'));
+        }
+        
+        // Temperature - handle different possible data structures
+        let temperature = null;
+        if (typeof temperatureData === 'number') {
+            temperature = temperatureData;
+        } else if (temperatureData.celsius !== undefined) {
+            temperature = temperatureData.celsius;
+        } else if (temperatureData.cpu !== undefined) {
+            temperature = temperatureData.cpu;
+        }
+        
+        if (temperature !== null && temperature > 0) {
+            document.getElementById('current-temperature').textContent = `${temperature.toFixed(1)}°C`;
+            this.updateStatusCard('temperature', temperature, this.getThresholds('temperature'));
+        } else {
+            // Temperature not available
+            document.getElementById('current-temperature').textContent = 'N/A';
+            this.updateStatusCard('temperature', null, this.getThresholds('temperature'));
         }
     }
 
@@ -1872,8 +1912,17 @@ class InstallationUp4evr {
         const card = document.getElementById(`${metric}-status-card`);
         const indicator = document.getElementById(`${metric}-indicator`);
         
+        if (!card || !indicator) return;
+        
         // Remove existing status classes
         card.classList.remove('normal', 'warning', 'critical');
+        
+        // Handle null/undefined values (like temperature N/A)
+        if (value === null || value === undefined) {
+            card.classList.add('normal');
+            indicator.textContent = '⚪';
+            return;
+        }
         
         // Apply appropriate status
         if (value >= thresholds.critical) {
