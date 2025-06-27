@@ -2305,3 +2305,106 @@ input[type="range"]::-moz-range-thumb {
         align-items: stretch;
     }
 }
+
+/* App Health Styles */
+.apps-summary {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.apps-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.app-health-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.app-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.app-health {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.health-score {
+    font-weight: 700;
+    font-size: 0.9rem;
+    min-width: 30px;
+    text-align: right;
+}
+
+.health-status {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    min-width: 70px;
+    text-align: center;
+}
+
+.status-excellent {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-good {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-critical {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-unknown {
+    background: #e2e3e5;
+    color: #6c757d;
+}
+
+.no-apps {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: var(--spacing-md);
+}
+
+.error {
+    color: var(--danger-color);
+    font-size: 0.9rem;
+}
+
+/* Maintenance Actions */
+.maintenance-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+    .maintenance-actions {
+        flex-direction: column;
+    }
+}

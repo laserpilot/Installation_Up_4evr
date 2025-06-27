@@ -657,6 +657,13 @@ class MonitoringSystem extends EventEmitter {
     }
 
     /**
+     * Get list of watched application names
+     */
+    getWatchedApplications() {
+        return Array.from(this.watchedApplications.keys());
+    }
+
+    /**
      * Get app health score based on recent performance
      */
     getAppHealthScore(appName) {
@@ -743,16 +750,26 @@ class MonitoringSystem extends EventEmitter {
             const data = JSON.parse(stdout);
             
             const displays = {};
+            let displayCount = 0;
             
             if (data.SPDisplaysDataType) {
-                data.SPDisplaysDataType.forEach((display, index) => {
-                    displays[`display_${index}`] = {
-                        name: display._name || `Display ${index + 1}`,
-                        resolution: display.spdisplays_resolution || 'Unknown',
-                        online: display.spdisplays_online === 'spdisplays_yes',
-                        connection: display.spdisplays_connection_type || 'Unknown',
-                        displayType: display.spdisplays_display_type || 'Unknown'
-                    };
+                data.SPDisplaysDataType.forEach((graphicsCard) => {
+                    // Check if this graphics card has connected displays
+                    if (graphicsCard.spdisplays_ndrvs && Array.isArray(graphicsCard.spdisplays_ndrvs)) {
+                        graphicsCard.spdisplays_ndrvs.forEach((display) => {
+                            displays[`display_${displayCount}`] = {
+                                name: display._name || `Display ${displayCount + 1}`,
+                                resolution: display.spdisplays_resolution || display._spdisplays_pixels || 'Unknown',
+                                online: display.spdisplays_online === 'spdisplays_yes',
+                                connection: display.spdisplays_connection_type || 'Unknown',
+                                displayType: display.spdisplays_display_type || 'Unknown',
+                                isMain: display.spdisplays_main === 'spdisplays_yes',
+                                pixelResolution: display.spdisplays_pixelresolution || display._spdisplays_pixels || 'Unknown',
+                                graphicsCard: graphicsCard._name || 'Unknown GPU'
+                            };
+                            displayCount++;
+                        });
+                    }
                 });
             }
 
@@ -770,7 +787,10 @@ class MonitoringSystem extends EventEmitter {
         try {
             const interfaces = os.networkInterfaces();
             const networkInfo = {};
+            let primaryInterface = null;
+            let primaryIP = null;
 
+            // Collect interface information
             for (const [name, addresses] of Object.entries(interfaces)) {
                 const ipv4 = addresses.find(addr => addr.family === 'IPv4' && !addr.internal);
                 if (ipv4) {
@@ -780,16 +800,31 @@ class MonitoringSystem extends EventEmitter {
                         mac: ipv4.mac,
                         connected: true
                     };
+                    
+                    // Prioritize ethernet connections, then wifi
+                    if (!primaryInterface || name.toLowerCase().includes('en') || name.toLowerCase().includes('ethernet')) {
+                        primaryInterface = name;
+                        primaryIP = ipv4.address;
+                    }
                 }
             }
 
             // Test internet connectivity
             try {
-                await execAsync('ping -c 1 8.8.8.8');
+                await execAsync('ping -c 1 -W 3000 8.8.8.8');
                 networkInfo.internetConnected = true;
             } catch (error) {
                 networkInfo.internetConnected = false;
             }
+
+            // Add summary information for easier UI display
+            networkInfo.summary = {
+                primaryInterface: primaryInterface || 'None',
+                primaryIP: primaryIP || 'No IP assigned',
+                totalInterfaces: Object.keys(networkInfo).filter(k => k !== 'internetConnected' && k !== 'summary').length,
+                internetConnected: networkInfo.internetConnected,
+                status: networkInfo.internetConnected ? 'Connected' : 'Offline'
+            };
 
             return networkInfo;
         } catch (error) {

@@ -269,7 +269,7 @@
                                 </div>
                                 
                                 <div class="detail-card">
-                                    <h4><i class="fas fa-clock"></i> Installation Uptime</h4>
+                                    <h4><i class="fas fa-clock"></i> Time Since Reboot</h4>
                                     <div id="uptime-status" class="detail-content">Loading...</div>
                                 </div>
                                 
@@ -500,6 +500,57 @@
                                         </div>
                                         <small>Automatically reboot system for critical failures</small>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Maintenance & Scheduling -->
+                            <div class="config-section">
+                                <h3><i class="fas fa-calendar-alt"></i> Maintenance & Scheduling</h3>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="scheduled-reboot">Enable Scheduled Reboots</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="scheduled-reboot">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically reboot system on a schedule</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="reboot-frequency">Reboot Frequency</label>
+                                        <select id="reboot-frequency">
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                        </select>
+                                        <small>How often to perform scheduled reboots</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="reboot-time">Reboot Time</label>
+                                        <input type="time" id="reboot-time" value="03:00">
+                                        <small>Time of day to perform reboot (24-hour format)</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="app-restart-cycle">App Restart Cycle</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="app-restart-cycle">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically restart applications periodically</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="restart-cycle-hours">Restart Cycle (hours)</label>
+                                        <input type="number" id="restart-cycle-hours" min="1" max="168" value="24">
+                                        <small>How often to restart applications (1-168 hours)</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="maintenance-actions">
+                                    <button type="button" class="btn btn-warning" id="reboot-now">
+                                        <i class="fas fa-power-off"></i> Reboot Now
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="restart-apps-now">
+                                        <i class="fas fa-redo"></i> Restart All Apps
+                                    </button>
                                 </div>
                             </div>
 
