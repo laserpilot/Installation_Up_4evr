@@ -141,6 +141,10 @@ class InstallationUp4evr {
         document.getElementById('reset-monitoring-config').addEventListener('click', () => this.resetMonitoringConfig());
         document.getElementById('apply-monitoring-config').addEventListener('click', () => this.applyMonitoringConfig());
 
+        // Maintenance & Scheduling Actions
+        document.getElementById('reboot-now').addEventListener('click', () => this.rebootNow());
+        document.getElementById('restart-apps-now').addEventListener('click', () => this.restartAppsNow());
+
         // Threshold slider sync events
         this.setupThresholdSliders();
     }
@@ -852,10 +856,10 @@ class InstallationUp4evr {
             uptimeElement.textContent = uptime;
         }
 
-        // Monitored apps
+        // Monitored apps with health scores
         const appsElement = document.getElementById('apps-status');
         if (appsElement && data.watchedApps) {
-            appsElement.textContent = `${data.watchedApps.length} applications monitored`;
+            this.updateAppsStatus(appsElement, data.watchedApps);
         }
     }
 
@@ -873,6 +877,61 @@ class InstallationUp4evr {
         } else {
             return `${minutes}m`;
         }
+    }
+
+    async updateAppsStatus(element, watchedApps) {
+        if (watchedApps.length === 0) {
+            element.innerHTML = '<div class="no-apps">No applications being monitored</div>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`${this.baseUrl}/api/monitoring/app-health`);
+            const healthScores = await response.json();
+            
+            let html = `<div class="apps-summary">${watchedApps.length} applications monitored</div>`;
+            html += '<div class="apps-health-list">';
+            
+            watchedApps.forEach(appName => {
+                const health = healthScores[appName] || { score: 0, status: 'unknown' };
+                const statusClass = this.getHealthStatusClass(health.status);
+                const scoreColor = this.getScoreColor(health.score);
+                
+                html += `
+                    <div class="app-health-item">
+                        <div class="app-name">${appName}</div>
+                        <div class="app-health">
+                            <span class="health-score" style="color: ${scoreColor}">${health.score}</span>
+                            <span class="health-status ${statusClass}">${health.status}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            element.innerHTML = html;
+        } catch (error) {
+            console.error('Failed to load app health scores:', error);
+            element.innerHTML = `<div class="error">${watchedApps.length} applications monitored (health scores unavailable)</div>`;
+        }
+    }
+
+    getHealthStatusClass(status) {
+        const statusMap = {
+            'excellent': 'status-excellent',
+            'good': 'status-good', 
+            'warning': 'status-warning',
+            'critical': 'status-critical',
+            'unknown': 'status-unknown'
+        };
+        return statusMap[status] || 'status-unknown';
+    }
+
+    getScoreColor(score) {
+        if (score >= 85) return '#34C759'; // Green
+        if (score >= 60) return '#FF9500'; // Orange
+        if (score >= 30) return '#FF9500'; // Orange
+        return '#FF3B30'; // Red
     }
 
     startMonitoringUpdates() {
@@ -2434,6 +2493,60 @@ class InstallationUp4evr {
             }
         } catch (error) {
             this.showToast(`Failed to apply settings: ${error.message}`, 'error');
+        }
+    }
+
+    async rebootNow() {
+        const confirmed = confirm(
+            'Are you sure you want to reboot the system now?\n\n' +
+            'This will shut down all applications and restart the computer.'
+        );
+        
+        if (!confirmed) return;
+
+        try {
+            this.showToast('Initiating system reboot...', 'warning');
+            
+            const response = await this.apiCall('/api/remote-control/command', {
+                method: 'POST',
+                body: JSON.stringify({
+                    command: 'reboot',
+                    parameters: { delay: 5 }
+                })
+            });
+
+            if (response.success) {
+                this.showToast('System will reboot in 5 seconds', 'info');
+            }
+        } catch (error) {
+            this.showToast(`Failed to reboot system: ${error.message}`, 'error');
+        }
+    }
+
+    async restartAppsNow() {
+        const confirmed = confirm(
+            'Are you sure you want to restart all monitored applications?\n\n' +
+            'This will close and reopen all watched applications.'
+        );
+        
+        if (!confirmed) return;
+
+        try {
+            this.showToast('Restarting all monitored applications...', 'info');
+            
+            const response = await this.apiCall('/api/remote-control/command', {
+                method: 'POST',
+                body: JSON.stringify({
+                    command: 'restart-applications',
+                    parameters: {}
+                })
+            });
+
+            if (response.success) {
+                this.showToast('All monitored applications are being restarted', 'success');
+            }
+        } catch (error) {
+            this.showToast(`Failed to restart applications: ${error.message}`, 'error');
         }
     }
 }

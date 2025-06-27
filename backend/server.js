@@ -522,6 +522,31 @@ app.post('/api/monitoring/alerts/:alertId/acknowledge', (req, res) => {
     }
 });
 
+app.get('/api/monitoring/app-health', (req, res) => {
+    try {
+        const healthScores = {};
+        const watchedApps = monitoring.getWatchedApplications();
+        
+        watchedApps.forEach(appName => {
+            healthScores[appName] = monitoring.getAppHealthScore(appName);
+        });
+        
+        res.json(healthScores);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/monitoring/app-health/:appName', (req, res) => {
+    try {
+        const { appName } = req.params;
+        const healthScore = monitoring.getAppHealthScore(appName);
+        res.json(healthScore);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Remote Control API Routes
 app.post('/api/remote-control/command', async (req, res) => {
     try {
