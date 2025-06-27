@@ -412,8 +412,34 @@ class RemoteControlSystem extends EventEmitter {
                 await execAsync(`defaults -currentHost write com.apple.screensaver idleTime ${delay}`);
                 return { message: `Screensaver delay set to ${value}` };
             
+            // Installation-specific settings
+            case 'cameraThreshold':
+                return await this.setCameraThreshold(value);
+            
+            case 'cameraTimeout':
+                return await this.setCameraTimeout(value);
+            
+            case 'cameraFps':
+                return await this.setCameraFps(value);
+            
+            case 'capacitiveThreshold':
+                return await this.setCapacitiveThreshold(value);
+            
+            case 'capacitiveDebounce':
+                return await this.setCapacitiveDebounce(value);
+            
+            case 'capacitivePins':
+                return await this.setCapacitivePins(value);
+            
+            case 'audioThreshold':
+                return await this.setAudioThreshold(value);
+            
+            case 'audioSampleRate':
+                return await this.setAudioSampleRate(value);
+            
             default:
-                throw new Error(`Unknown setting: ${key}`);
+                // Handle custom parameters
+                return await this.setCustomParameter(key, value);
         }
     }
 
@@ -535,6 +561,241 @@ class RemoteControlSystem extends EventEmitter {
         }
         
         return cleaned;
+    }
+
+    /**
+     * Camera threshold setting
+     */
+    async setCameraThreshold(threshold) {
+        // Store in configuration file or send to camera service
+        const configPath = '/tmp/installation-camera-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.motionThreshold = parseInt(threshold);
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Camera motion threshold set to ${threshold}%`);
+            return { message: `Camera motion detection threshold set to ${threshold}%` };
+        } catch (error) {
+            throw new Error(`Failed to set camera threshold: ${error.message}`);
+        }
+    }
+
+    /**
+     * Camera timeout setting
+     */
+    async setCameraTimeout(timeout) {
+        const configPath = '/tmp/installation-camera-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.motionTimeout = parseInt(timeout);
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Camera motion timeout set to ${timeout} seconds`);
+            return { message: `Camera motion timeout set to ${timeout} seconds` };
+        } catch (error) {
+            throw new Error(`Failed to set camera timeout: ${error.message}`);
+        }
+    }
+
+    /**
+     * Camera FPS setting
+     */
+    async setCameraFps(fps) {
+        const configPath = '/tmp/installation-camera-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.frameRate = parseInt(fps);
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Camera frame rate set to ${fps} FPS`);
+            return { message: `Camera frame rate set to ${fps} FPS` };
+        } catch (error) {
+            throw new Error(`Failed to set camera FPS: ${error.message}`);
+        }
+    }
+
+    /**
+     * Capacitive sensing threshold
+     */
+    async setCapacitiveThreshold(threshold) {
+        const configPath = '/tmp/installation-capacitive-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.touchThreshold = parseInt(threshold);
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Capacitive touch threshold set to ${threshold}%`);
+            return { message: `Capacitive touch sensitivity set to ${threshold}%` };
+        } catch (error) {
+            throw new Error(`Failed to set capacitive threshold: ${error.message}`);
+        }
+    }
+
+    /**
+     * Capacitive sensing debounce time
+     */
+    async setCapacitiveDebounce(debounce) {
+        const configPath = '/tmp/installation-capacitive-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.debounceTime = parseInt(debounce);
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Capacitive debounce time set to ${debounce}ms`);
+            return { message: `Capacitive debounce time set to ${debounce}ms` };
+        } catch (error) {
+            throw new Error(`Failed to set capacitive debounce: ${error.message}`);
+        }
+    }
+
+    /**
+     * Capacitive sensing active pins
+     */
+    async setCapacitivePins(pins) {
+        const configPath = '/tmp/installation-capacitive-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.activePins = Array.isArray(pins) ? pins : [pins];
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Capacitive active pins set to: ${config.activePins.join(', ')}`);
+            return { message: `Capacitive active pins set to: ${config.activePins.join(', ')}` };
+        } catch (error) {
+            throw new Error(`Failed to set capacitive pins: ${error.message}`);
+        }
+    }
+
+    /**
+     * Audio threshold setting
+     */
+    async setAudioThreshold(threshold) {
+        const configPath = '/tmp/installation-audio-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.triggerLevel = parseInt(threshold);
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Audio trigger level set to ${threshold}dB`);
+            return { message: `Audio trigger level set to ${threshold}dB` };
+        } catch (error) {
+            throw new Error(`Failed to set audio threshold: ${error.message}`);
+        }
+    }
+
+    /**
+     * Audio sample rate setting
+     */
+    async setAudioSampleRate(sampleRate) {
+        const configPath = '/tmp/installation-audio-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config.sampleRate = parseInt(sampleRate);
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Audio sample rate set to ${sampleRate}Hz`);
+            return { message: `Audio sample rate set to ${sampleRate}Hz` };
+        } catch (error) {
+            throw new Error(`Failed to set audio sample rate: ${error.message}`);
+        }
+    }
+
+    /**
+     * Set custom parameter
+     */
+    async setCustomParameter(key, value) {
+        const configPath = '/tmp/installation-custom-config.json';
+        const fs = require('fs').promises;
+        
+        try {
+            let config = {};
+            try {
+                const data = await fs.readFile(configPath, 'utf8');
+                config = JSON.parse(data);
+            } catch (error) {
+                // File doesn't exist, start with empty config
+            }
+            
+            config[key] = value;
+            await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+            
+            this.monitoring.log('info', `Custom parameter '${key}' set to '${value}'`);
+            return { message: `Custom parameter '${key}' set to '${value}'` };
+        } catch (error) {
+            throw new Error(`Failed to set custom parameter: ${error.message}`);
+        }
     }
 }
 
