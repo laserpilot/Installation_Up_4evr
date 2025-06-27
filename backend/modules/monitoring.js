@@ -26,6 +26,7 @@ class MonitoringSystem extends EventEmitter {
             status: 'unknown'
         };
         this.watchedApplications = new Map();
+        this.appHistory = new Map(); // Historical app performance data
         this.monitoringInterval = null;
         this.heartbeatInterval = null;
         this.notifications = [];
@@ -187,9 +188,13 @@ class MonitoringSystem extends EventEmitter {
                 uptime: os.uptime(),
                 cpuUsage: cpuInfo.usage,
                 cpuCores: os.cpus().length,
-                memoryUsage: memoryInfo.percentage,
+                memoryUsage: memoryInfo.pressurePercentage, // Use pressure instead of simple percentage
+                memoryPressure: memoryInfo.pressurePercentage,
                 memoryTotal: memoryInfo.total,
                 memoryFree: memoryInfo.free,
+                memoryActive: memoryInfo.active,
+                memoryWired: memoryInfo.wired,
+                memoryCompressed: memoryInfo.compressed,
                 loadAverage: loadAverage,
                 temperature: temperatureInfo,
                 timestamp: new Date().toISOString()
@@ -201,34 +206,143 @@ class MonitoringSystem extends EventEmitter {
     }
 
     /**
-     * Get CPU usage percentage
+     * Get CPU usage percentage (improved to show total CPU usage)
      */
     async getCpuUsage() {
         try {
-            const { stdout } = await execAsync('top -l 1 -s 0 | grep "CPU usage"');
-            const match = stdout.match(/(\d+\.?\d*)% user/);
-            const usage = match ? parseFloat(match[1]) : 0;
-            return { usage, raw: stdout.trim() };
+            // Use top with 2 samples for more accurate averaging
+            const { stdout } = await execAsync('top -l 2 -s 1 | grep "CPU usage" | tail -1');
+            
+            // Parse both user and system CPU to get total usage
+            const userMatch = stdout.match(/(\d+\.?\d*)% user/);
+            const systemMatch = stdout.match(/(\d+\.?\d*)% sys/);
+            const idleMatch = stdout.match(/(\d+\.?\d*)% idle/);
+            
+            const userCpu = userMatch ? parseFloat(userMatch[1]) : 0;
+            const systemCpu = systemMatch ? parseFloat(systemMatch[1]) : 0;
+            const idleCpu = idleMatch ? parseFloat(idleMatch[1]) : 0;
+            
+            // Calculate total CPU usage (user + system)
+            const totalUsage = userCpu + systemCpu;
+            
+            // Alternative calculation: 100 - idle (sometimes more accurate)
+            const usageFromIdle = idleCpu ? 100 - idleCpu : totalUsage;
+            
+            // Use the more conservative estimate
+            const finalUsage = Math.min(totalUsage, usageFromIdle);
+            
+            return {
+                usage: Math.min(finalUsage, 100), // Cap at 100%
+                userCpu: userCpu,
+                systemCpu: systemCpu,
+                idleCpu: idleCpu,
+                totalCpu: totalUsage,
+                raw: stdout.trim()
+            };
         } catch (error) {
-            return { usage: 0, error: error.message };
+            // Fallback to simpler approach if the above fails
+            try {
+                const { stdout } = await execAsync('top -l 1 -s 0 | grep "CPU usage"');
+                const userMatch = stdout.match(/(\d+\.?\d*)% user/);
+                const systemMatch = stdout.match(/(\d+\.?\d*)% sys/);
+                
+                const userCpu = userMatch ? parseFloat(userMatch[1]) : 0;
+                const systemCpu = systemMatch ? parseFloat(systemMatch[1]) : 0;
+                const totalUsage = Math.min(userCpu + systemCpu, 100);
+                
+                return {
+                    usage: totalUsage,
+                    userCpu: userCpu,
+                    systemCpu: systemCpu,
+                    raw: stdout.trim()
+                };
+            } catch (fallbackError) {
+                return { usage: 0, error: fallbackError.message };
+            }
         }
     }
 
     /**
-     * Get memory usage information
+     * Get memory usage information (macOS-specific with vm_stat)
      */
     async getMemoryUsage() {
-        const totalMemory = os.totalmem();
-        const freeMemory = os.freemem();
-        const usedMemory = totalMemory - freeMemory;
-        const percentage = (usedMemory / totalMemory) * 100;
+        try {
+            // Get total physical memory
+            const totalMemory = os.totalmem();
+            
+            // Use vm_stat for accurate macOS memory statistics
+            const { stdout } = await execAsync('vm_stat');
+            const pageSize = 4096; // Default page size on macOS
+            
+            // Parse vm_stat output to get accurate memory usage
+            const lines = stdout.split('\n');
+            let freePages = 0;
+            let activePages = 0;
+            let inactivePages = 0;
+            let wiredPages = 0;
+            let compressedPages = 0;
+            
+            lines.forEach(line => {
+                const match = line.match(/^Pages\s+([^:]+):\s+(\d+)\./);
+                if (match) {
+                    const pages = parseInt(match[2]);
+                    const type = match[1].toLowerCase().trim();
+                    
+                    if (type.includes('free')) freePages = pages;
+                    else if (type.includes('active')) activePages = pages;
+                    else if (type.includes('inactive')) inactivePages = pages;
+                    else if (type.includes('wired down')) wiredPages = pages;
+                    else if (type.includes('compressed')) compressedPages = pages;
+                }
+            });
+            
+            // Calculate actual memory usage
+            const freeMemory = freePages * pageSize;
+            const activeMemory = activePages * pageSize;
+            const inactiveMemory = inactivePages * pageSize;
+            const wiredMemory = wiredPages * pageSize;
+            const compressedMemory = compressedPages * pageSize;
+            
+            // Calculate memory pressure (more accurate than simple used/free)
+            const usedMemory = activeMemory + wiredMemory;
+            const availableMemory = freeMemory + inactiveMemory;
+            const pressuredMemory = usedMemory + compressedMemory;
+            
+            // Memory pressure percentage (what users should actually see)
+            const pressurePercentage = (pressuredMemory / totalMemory) * 100;
+            
+            // Traditional usage percentage for compatibility
+            const usagePercentage = (usedMemory / totalMemory) * 100;
+            
+            return {
+                total: totalMemory,
+                free: freeMemory,
+                used: usedMemory,
+                active: activeMemory,
+                inactive: inactiveMemory,
+                wired: wiredMemory,
+                compressed: compressedMemory,
+                available: availableMemory,
+                percentage: Math.min(usagePercentage, 100), // Cap at 100%
+                pressurePercentage: Math.min(pressurePercentage, 100), // Memory pressure metric
+                raw: stdout.trim()
+            };
+        } catch (error) {
+            // Fallback to basic Node.js memory info if vm_stat fails
+            const totalMemory = os.totalmem();
+            const freeMemory = os.freemem();
+            const usedMemory = totalMemory - freeMemory;
+            const percentage = Math.min((usedMemory / totalMemory) * 100, 100);
 
-        return {
-            total: totalMemory,
-            free: freeMemory,
-            used: usedMemory,
-            percentage: percentage
-        };
+            return {
+                total: totalMemory,
+                free: freeMemory,
+                used: usedMemory,
+                percentage: percentage,
+                pressurePercentage: percentage,
+                error: error.message
+            };
+        }
     }
 
     /**
@@ -270,7 +384,7 @@ class MonitoringSystem extends EventEmitter {
     }
 
     /**
-     * Get status of specific application
+     * Get status of specific application with enhanced monitoring
      */
     async getAppStatus(appName, config = {}) {
         try {
@@ -278,33 +392,326 @@ class MonitoringSystem extends EventEmitter {
             const lines = stdout.trim().split('\n').filter(line => line.trim());
 
             if (lines.length === 0) {
-                return {
+                const stoppedStatus = {
                     name: appName,
                     status: 'stopped',
                     pid: null,
                     cpuUsage: 0,
                     memoryUsage: 0,
+                    memoryMB: 0,
                     restartCount: config.restartCount || 0,
                     lastChecked: new Date().toISOString()
                 };
+                
+                // Record this status in history
+                this.recordAppMetrics(appName, stoppedStatus);
+                return stoppedStatus;
             }
 
-            // Parse process information
+            // Parse basic process information
             const processInfo = this.parseProcessInfo(lines[0]);
             
-            return {
+            // Get enhanced metrics using top for this specific PID
+            let enhancedMetrics = null;
+            try {
+                enhancedMetrics = await this.getEnhancedAppMetrics(processInfo.pid);
+            } catch (error) {
+                // Fall back to ps data if top fails
+                console.warn(`Failed to get enhanced metrics for ${appName}: ${error.message}`);
+            }
+            
+            const appStatus = {
                 name: appName,
                 status: 'running',
                 pid: processInfo.pid,
-                cpuUsage: processInfo.cpu,
-                memoryUsage: processInfo.memory,
+                cpuUsage: enhancedMetrics ? enhancedMetrics.cpu : processInfo.cpu,
+                memoryUsage: enhancedMetrics ? enhancedMetrics.memoryPercent : processInfo.memory,
+                memoryMB: enhancedMetrics ? enhancedMetrics.memoryMB : (processInfo.rss / 1024), // Convert KB to MB
+                rss: processInfo.rss,
+                vsz: processInfo.vsz,
                 uptime: processInfo.time,
                 restartCount: config.restartCount || 0,
-                lastChecked: new Date().toISOString()
+                lastChecked: new Date().toISOString(),
+                enhanced: !!enhancedMetrics
             };
+            
+            // Record metrics in history for trend analysis
+            this.recordAppMetrics(appName, appStatus);
+            
+            return appStatus;
         } catch (error) {
             throw new Error(`Failed to get app status: ${error.message}`);
         }
+    }
+
+    /**
+     * Get enhanced app metrics using top command for specific PID
+     */
+    async getEnhancedAppMetrics(pid) {
+        try {
+            const { stdout } = await execAsync(`top -pid ${pid} -l 2 -s 1 | tail -1`);
+            const lines = stdout.trim().split('\n');
+            
+            // Find the process line (skip header)
+            for (const line of lines) {
+                if (line.includes(pid.toString())) {
+                    const parts = line.trim().split(/\s+/);
+                    if (parts.length >= 12) {
+                        return {
+                            cpu: parseFloat(parts[2]) || 0,
+                            memoryMB: this.parseMemorySize(parts[7]),
+                            memoryPercent: parseFloat(parts[8]) || 0
+                        };
+                    }
+                }
+            }
+            
+            return null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    /**
+     * Parse memory size from top output (e.g., "123M", "45K", "1.2G")
+     */
+    parseMemorySize(memStr) {
+        if (!memStr) return 0;
+        
+        const match = memStr.match(/^(\d+\.?\d*)[KMGT]?$/i);
+        if (!match) return 0;
+        
+        const value = parseFloat(match[1]);
+        const unit = memStr.slice(-1).toUpperCase();
+        
+        switch (unit) {
+            case 'K': return value / 1024; // KB to MB
+            case 'M': return value;        // Already MB
+            case 'G': return value * 1024; // GB to MB
+            case 'T': return value * 1024 * 1024; // TB to MB
+            default: return value / (1024 * 1024); // Assume bytes, convert to MB
+        }
+    }
+
+    /**
+     * Record app metrics in historical data
+     */
+    recordAppMetrics(appName, metrics) {
+        if (!this.appHistory.has(appName)) {
+            this.appHistory.set(appName, {
+                name: appName,
+                dataPoints: [],
+                baseline: null,
+                anomalies: [],
+                lastCalculated: null
+            });
+        }
+        
+        const history = this.appHistory.get(appName);
+        const timestamp = new Date().toISOString();
+        
+        // Add new data point
+        history.dataPoints.push({
+            timestamp: timestamp,
+            cpuUsage: metrics.cpuUsage || 0,
+            memoryMB: metrics.memoryMB || 0,
+            memoryUsage: metrics.memoryUsage || 0,
+            status: metrics.status,
+            pid: metrics.pid
+        });
+        
+        // Keep only last 24 hours of data (assuming 30s intervals = 2880 points)
+        const maxDataPoints = 2880;
+        if (history.dataPoints.length > maxDataPoints) {
+            history.dataPoints = history.dataPoints.slice(-maxDataPoints);
+        }
+        
+        // Update baseline and check for anomalies if we have enough data
+        if (history.dataPoints.length >= 10) {
+            this.updateAppBaseline(appName);
+            this.checkAppAnomalies(appName, metrics);
+        }
+    }
+
+    /**
+     * Update baseline performance metrics for an app
+     */
+    updateAppBaseline(appName) {
+        const history = this.appHistory.get(appName);
+        if (!history || history.dataPoints.length < 10) return;
+        
+        // Use data from last hour for baseline (assuming 30s intervals = 120 points)
+        const recentData = history.dataPoints.slice(-120);
+        const runningData = recentData.filter(point => point.status === 'running');
+        
+        if (runningData.length === 0) return;
+        
+        // Calculate baseline metrics
+        const avgCpu = runningData.reduce((sum, point) => sum + point.cpuUsage, 0) / runningData.length;
+        const avgMemory = runningData.reduce((sum, point) => sum + point.memoryMB, 0) / runningData.length;
+        const maxMemory = Math.max(...runningData.map(point => point.memoryMB));
+        const minMemory = Math.min(...runningData.map(point => point.memoryMB));
+        
+        history.baseline = {
+            avgCpuUsage: avgCpu,
+            avgMemoryMB: avgMemory,
+            maxMemoryMB: maxMemory,
+            minMemoryMB: minMemory,
+            memoryGrowthRate: this.calculateMemoryGrowthRate(runningData),
+            calculatedAt: new Date().toISOString(),
+            sampleSize: runningData.length
+        };
+        
+        history.lastCalculated = new Date().toISOString();
+    }
+
+    /**
+     * Calculate memory growth rate to detect memory leaks
+     */
+    calculateMemoryGrowthRate(dataPoints) {
+        if (dataPoints.length < 5) return 0;
+        
+        // Simple linear regression to detect memory growth trend
+        const n = dataPoints.length;
+        let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+        
+        dataPoints.forEach((point, index) => {
+            const x = index;
+            const y = point.memoryMB;
+            sumX += x;
+            sumY += y;
+            sumXY += x * y;
+            sumXX += x * x;
+        });
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        return slope || 0; // MB per data point
+    }
+
+    /**
+     * Check for anomalies in app behavior
+     */
+    checkAppAnomalies(appName, currentMetrics) {
+        const history = this.appHistory.get(appName);
+        if (!history || !history.baseline || currentMetrics.status !== 'running') return;
+        
+        const baseline = history.baseline;
+        const anomalies = [];
+        
+        // Check for CPU spikes (>3x baseline)
+        if (currentMetrics.cpuUsage > baseline.avgCpuUsage * 3 && baseline.avgCpuUsage > 1) {
+            anomalies.push({
+                type: 'cpu-spike',
+                severity: 'warning',
+                current: currentMetrics.cpuUsage,
+                baseline: baseline.avgCpuUsage,
+                message: `CPU usage spike: ${currentMetrics.cpuUsage.toFixed(1)}% (baseline: ${baseline.avgCpuUsage.toFixed(1)}%)`
+            });
+        }
+        
+        // Check for memory leaks (significant growth above baseline)
+        if (currentMetrics.memoryMB > baseline.maxMemoryMB * 1.5 && baseline.memoryGrowthRate > 0.1) {
+            anomalies.push({
+                type: 'memory-leak',
+                severity: 'critical',
+                current: currentMetrics.memoryMB,
+                baseline: baseline.avgMemoryMB,
+                growthRate: baseline.memoryGrowthRate,
+                message: `Possible memory leak: ${currentMetrics.memoryMB.toFixed(1)}MB (baseline: ${baseline.avgMemoryMB.toFixed(1)}MB, growth: ${baseline.memoryGrowthRate.toFixed(2)}MB/check)`
+            });
+        }
+        
+        // Record anomalies
+        if (anomalies.length > 0) {
+            const timestamp = new Date().toISOString();
+            anomalies.forEach(anomaly => {
+                anomaly.timestamp = timestamp;
+                anomaly.appName = appName;
+                history.anomalies.push(anomaly);
+                
+                // Log the anomaly
+                this.log('warning', `App anomaly detected: ${appName}`, anomaly);
+                
+                // Send notification for critical anomalies
+                if (anomaly.severity === 'critical') {
+                    this.sendNotification(`🚨 ${appName}: ${anomaly.message}`, {
+                        severity: 'critical',
+                        category: 'app-anomaly',
+                        data: anomaly
+                    });
+                }
+            });
+            
+            // Keep only recent anomalies (last 50)
+            if (history.anomalies.length > 50) {
+                history.anomalies = history.anomalies.slice(-50);
+            }
+        }
+    }
+
+    /**
+     * Get app performance history
+     */
+    getAppHistory(appName) {
+        return this.appHistory.get(appName) || null;
+    }
+
+    /**
+     * Get app health score based on recent performance
+     */
+    getAppHealthScore(appName) {
+        const history = this.appHistory.get(appName);
+        if (!history || history.dataPoints.length < 5) {
+            return { score: 100, status: 'unknown', reason: 'Insufficient data' };
+        }
+        
+        const recentData = history.dataPoints.slice(-10);
+        const runningPoints = recentData.filter(p => p.status === 'running');
+        
+        if (runningPoints.length === 0) {
+            return { score: 0, status: 'critical', reason: 'App not running' };
+        }
+        
+        let score = 100;
+        const issues = [];
+        
+        // Deduct points for recent anomalies
+        const recentAnomalies = history.anomalies.filter(a => {
+            const anomalyTime = new Date(a.timestamp);
+            const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+            return anomalyTime > hourAgo;
+        });
+        
+        recentAnomalies.forEach(anomaly => {
+            if (anomaly.severity === 'critical') {
+                score -= 30;
+                issues.push(anomaly.message);
+            } else if (anomaly.severity === 'warning') {
+                score -= 15;
+                issues.push(anomaly.message);
+            }
+        });
+        
+        // Deduct points for high restart count
+        if (history.dataPoints[history.dataPoints.length - 1]?.restartCount > 3) {
+            score -= 20;
+            issues.push('High restart count');
+        }
+        
+        // Ensure score doesn't go below 0
+        score = Math.max(0, score);
+        
+        let status = 'excellent';
+        if (score < 30) status = 'critical';
+        else if (score < 60) status = 'warning';
+        else if (score < 85) status = 'good';
+        
+        return {
+            score: score,
+            status: status,
+            issues: issues,
+            recentAnomalies: recentAnomalies.length
+        };
     }
 
     /**
@@ -392,7 +799,7 @@ class MonitoringSystem extends EventEmitter {
     }
 
     /**
-     * Get storage information
+     * Get storage information (filtered for relevant disks only)
      */
     async getStorageInfo() {
         try {
@@ -400,29 +807,98 @@ class MonitoringSystem extends EventEmitter {
             const lines = stdout.trim().split('\n').slice(1); // Skip header
             
             const storage = {};
+            const mainDisk = { usagePercent: 0, mountPoint: '/' }; // Track main disk for summary
             
             lines.forEach(line => {
                 const parts = line.trim().split(/\s+/);
                 if (parts.length >= 6) {
+                    const filesystem = parts[0];
                     const mountPoint = parts[5];
                     const usageMatch = parts[4].match(/(\d+)%/);
+                    const usagePercent = usageMatch ? parseInt(usageMatch[1]) : 0;
                     
-                    storage[mountPoint] = {
-                        filesystem: parts[0],
-                        total: parts[1],
-                        used: parts[2],
-                        available: parts[3],
-                        usagePercent: usageMatch ? parseInt(usageMatch[1]) : 0,
-                        mountPoint: mountPoint
-                    };
+                    // Filter out irrelevant filesystems for cleaner reporting
+                    const isRelevant = this.isRelevantFilesystem(filesystem, mountPoint);
+                    
+                    if (isRelevant) {
+                        storage[mountPoint] = {
+                            filesystem: filesystem,
+                            total: parts[1],
+                            used: parts[2],
+                            available: parts[3],
+                            usagePercent: usagePercent,
+                            mountPoint: mountPoint,
+                            isMain: mountPoint === '/'
+                        };
+                        
+                        // Track main disk for overall system health
+                        if (mountPoint === '/' || (mountPoint.includes('Macintosh') && usagePercent > mainDisk.usagePercent)) {
+                            mainDisk.usagePercent = usagePercent;
+                            mainDisk.mountPoint = mountPoint;
+                            mainDisk.total = parts[1];
+                            mainDisk.used = parts[2];
+                            mainDisk.available = parts[3];
+                        }
+                    }
                 }
             });
 
-            return storage;
+            // Return both detailed storage info and main disk summary
+            return {
+                volumes: storage,
+                mainDisk: mainDisk,
+                primaryUsage: mainDisk.usagePercent // For dashboard display
+            };
         } catch (error) {
             this.log('error', 'Failed to get storage info', { error: error.message });
-            return {};
+            return {
+                volumes: {},
+                mainDisk: { usagePercent: 0, mountPoint: '/', error: error.message },
+                primaryUsage: 0
+            };
         }
+    }
+
+    /**
+     * Determine if a filesystem is relevant for monitoring
+     */
+    isRelevantFilesystem(filesystem, mountPoint) {
+        // Skip these filesystem types/mount points
+        const skipFilesystems = [
+            'devfs',           // Device filesystem
+            'map',             // Automount map
+            'localhost:',      // Network mounts
+            'tmpfs',           // Temporary filesystems
+            '//.',             // Windows shares
+            'osxfuse',         // FUSE filesystems
+        ];
+        
+        const skipMountPoints = [
+            '/dev',
+            '/net',
+            '/tmp',
+            '/var/folders',    // Temporary folders
+            '/private/var',    // Private temp
+            '/System/Volumes', // System volumes in Big Sur+
+            '/Library/Developer', // Xcode simulators
+        ];
+        
+        // Check if filesystem should be skipped
+        for (const skip of skipFilesystems) {
+            if (filesystem.toLowerCase().includes(skip.toLowerCase())) {
+                return false;
+            }
+        }
+        
+        // Check if mount point should be skipped
+        for (const skip of skipMountPoints) {
+            if (mountPoint.startsWith(skip)) {
+                return false;
+            }
+        }
+        
+        // Include main filesystems and external drives
+        return true;
     }
 
     /**
@@ -441,11 +917,20 @@ class MonitoringSystem extends EventEmitter {
             issues.push('high-memory');
         }
 
-        // Check disk usage
-        for (const [mount, info] of Object.entries(this.monitoringData.storage)) {
-            if (info.usagePercent > this.alertThresholds.diskUsage) {
+        // Check disk usage (updated for new storage format)
+        if (this.monitoringData.storage) {
+            // Check main disk usage first
+            if (this.monitoringData.storage.mainDisk && 
+                this.monitoringData.storage.mainDisk.usagePercent > this.alertThresholds.diskUsage) {
                 issues.push('high-disk');
-                break;
+            } else if (this.monitoringData.storage.volumes) {
+                // Check all volumes if main disk check didn't trigger
+                for (const [mount, info] of Object.entries(this.monitoringData.storage.volumes)) {
+                    if (info.usagePercent > this.alertThresholds.diskUsage) {
+                        issues.push('high-disk');
+                        break;
+                    }
+                }
             }
         }
 
