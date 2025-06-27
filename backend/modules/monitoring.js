@@ -941,15 +941,30 @@ class MonitoringSystem extends EventEmitter {
      */
     updateSystemStatus() {
         const issues = [];
+        const issueDetails = [];
         
         // Check CPU usage
         if (this.monitoringData.system.cpuUsage > this.alertThresholds.cpuUsage) {
             issues.push('high-cpu');
+            issueDetails.push({
+                type: 'high-cpu',
+                message: `CPU usage is ${this.monitoringData.system.cpuUsage.toFixed(1)}% (threshold: ${this.alertThresholds.cpuUsage}%)`,
+                severity: 'warning',
+                value: this.monitoringData.system.cpuUsage,
+                threshold: this.alertThresholds.cpuUsage
+            });
         }
 
         // Check memory usage
         if (this.monitoringData.system.memoryUsage > this.alertThresholds.memoryUsage) {
             issues.push('high-memory');
+            issueDetails.push({
+                type: 'high-memory',
+                message: `Memory usage is ${this.monitoringData.system.memoryUsage.toFixed(1)}% (threshold: ${this.alertThresholds.memoryUsage}%)`,
+                severity: 'warning',
+                value: this.monitoringData.system.memoryUsage,
+                threshold: this.alertThresholds.memoryUsage
+            });
         }
 
         // Check disk usage (updated for new storage format)
@@ -958,11 +973,27 @@ class MonitoringSystem extends EventEmitter {
             if (this.monitoringData.storage.mainDisk && 
                 this.monitoringData.storage.mainDisk.usagePercent > this.alertThresholds.diskUsage) {
                 issues.push('high-disk');
+                issueDetails.push({
+                    type: 'high-disk',
+                    message: `Disk usage is ${this.monitoringData.storage.mainDisk.usagePercent}% (threshold: ${this.alertThresholds.diskUsage}%)`,
+                    severity: 'warning',
+                    value: this.monitoringData.storage.mainDisk.usagePercent,
+                    threshold: this.alertThresholds.diskUsage,
+                    location: this.monitoringData.storage.mainDisk.mountPoint
+                });
             } else if (this.monitoringData.storage.volumes) {
                 // Check all volumes if main disk check didn't trigger
                 for (const [mount, info] of Object.entries(this.monitoringData.storage.volumes)) {
                     if (info.usagePercent > this.alertThresholds.diskUsage) {
                         issues.push('high-disk');
+                        issueDetails.push({
+                            type: 'high-disk',
+                            message: `Disk usage on ${mount} is ${info.usagePercent}% (threshold: ${this.alertThresholds.diskUsage}%)`,
+                            severity: 'warning',
+                            value: info.usagePercent,
+                            threshold: this.alertThresholds.diskUsage,
+                            location: mount
+                        });
                         break;
                     }
                 }
@@ -973,8 +1004,22 @@ class MonitoringSystem extends EventEmitter {
         for (const [name, app] of Object.entries(this.monitoringData.applications)) {
             if (app.status === 'stopped') {
                 issues.push('app-down');
+                issueDetails.push({
+                    type: 'app-down',
+                    message: `Application "${name}" is not running`,
+                    severity: 'critical',
+                    application: name
+                });
             } else if (app.restartCount > this.alertThresholds.appRestarts) {
                 issues.push('app-unstable');
+                issueDetails.push({
+                    type: 'app-unstable',
+                    message: `Application "${name}" has restarted ${app.restartCount} times (threshold: ${this.alertThresholds.appRestarts})`,
+                    severity: 'warning',
+                    application: name,
+                    value: app.restartCount,
+                    threshold: this.alertThresholds.appRestarts
+                });
             }
         }
 
@@ -982,6 +1027,11 @@ class MonitoringSystem extends EventEmitter {
         const onlineDisplays = Object.values(this.monitoringData.displays).filter(d => d.online);
         if (onlineDisplays.length === 0) {
             issues.push('no-display');
+            issueDetails.push({
+                type: 'no-display',
+                message: 'No displays are detected as online',
+                severity: 'critical'
+            });
         }
 
         // Determine status
@@ -994,6 +1044,7 @@ class MonitoringSystem extends EventEmitter {
         }
 
         this.monitoringData.issues = issues;
+        this.monitoringData.issueDetails = issueDetails;
     }
 
     /**
@@ -1084,6 +1135,40 @@ class MonitoringSystem extends EventEmitter {
             monitoringActive: this.monitoringInterval !== null,
             watchedApps: Array.from(this.watchedApplications.keys()),
             notifications: this.notifications.slice(-20) // Last 20 notifications
+        };
+    }
+
+    /**
+     * Get monitoring configuration
+     */
+    getMonitoringConfig() {
+        return {
+            thresholds: {
+                cpu: {
+                    warning: this.alertThresholds.cpuUsage,
+                    critical: Math.min(this.alertThresholds.cpuUsage + 10, 100)
+                },
+                memory: {
+                    warning: this.alertThresholds.memoryUsage,
+                    critical: Math.min(this.alertThresholds.memoryUsage + 10, 100)
+                },
+                disk: {
+                    warning: this.alertThresholds.diskUsage,
+                    critical: Math.min(this.alertThresholds.diskUsage + 5, 100)
+                },
+                temperature: {
+                    warning: this.alertThresholds.temperatureCpu,
+                    critical: Math.min(this.alertThresholds.temperatureCpu + 10, 100)
+                }
+            },
+            intervals: {
+                monitoring: 30000, // 30 seconds
+                heartbeat: 300000  // 5 minutes
+            },
+            watchedApplications: Array.from(this.watchedApplications.entries()).map(([name, config]) => ({
+                name,
+                ...config
+            }))
         };
     }
 
