@@ -199,7 +199,19 @@
 
                 <!-- Existing Launch Agents -->
                 <div class="existing-agents">
-                    <h4><i class="fas fa-list"></i> Existing Launch Agents</h4>
+                    <div class="section-header">
+                        <h4><i class="fas fa-list"></i> Existing Launch Agents</h4>
+                        <div class="agent-filters">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="user">User</button>
+                            <button class="filter-btn" data-filter="apps">Apps</button>
+                            <button class="filter-btn" data-filter="system">System</button>
+                        </div>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="agent-search" placeholder="Search launch agents..." class="search-input">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
                     <div id="launch-agents-list" class="agents-list">
                         <!-- Populated by JavaScript -->
                     </div>
@@ -894,7 +906,12 @@
                             
                             <!-- Current System Status -->
                             <div class="monitoring-status-section">
-                                <h3><i class="fas fa-heartbeat"></i> Current System Status</h3>
+                                <div class="section-header">
+                                    <h3><i class="fas fa-heartbeat"></i> Current System Status</h3>
+                                    <button id="refresh-system-status" class="btn btn-small btn-secondary">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                </div>
                                 <div class="status-grid">
                                     <div class="status-card" id="cpu-status-card">
                                         <div class="status-icon">💻</div>

@@ -144,6 +144,12 @@ class InstallationUp4evr {
         // Maintenance & Scheduling Actions
         document.getElementById('reboot-now').addEventListener('click', () => this.rebootNow());
         document.getElementById('restart-apps-now').addEventListener('click', () => this.restartAppsNow());
+        
+        // System Status Refresh
+        document.getElementById('refresh-system-status').addEventListener('click', () => this.refreshSystemStatus());
+        
+        // Launch Agent Filters
+        this.setupLaunchAgentFilters();
 
         // Threshold slider sync events
         this.setupThresholdSliders();
@@ -551,30 +557,140 @@ class InstallationUp4evr {
         const container = document.getElementById('launch-agents-list');
         
         if (agents.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No custom launch agents found</p>';
+            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No launch agents found</p>';
             return;
         }
 
-        container.innerHTML = agents.map(agent => {
-            const status = statusList.find(s => s.label === agent.label);
-            const isRunning = status && status.pid !== null;
-            const statusClass = isRunning ? 'running' : 'stopped';
-            const statusText = isRunning ? `Running (PID: ${status.pid})` : 'Stopped';
-            const statusIcon = isRunning ? 'fa-play' : 'fa-stop';
+        // Store original data for filtering
+        this.allAgents = agents;
+        this.agentStatusList = statusList;
+        
+        // Categorize agents
+        const categories = this.categorizeAgents(agents);
+        
+        // Apply current filter
+        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+        this.renderFilteredAgents(categories, activeFilter);
+    }
 
-            return `
-                <div class="agent-item">
-                    <div class="agent-info">
-                        <h5>${agent.label}</h5>
-                        <p>${agent.filename}</p>
-                    </div>
-                    <div class="agent-status ${statusClass}">
-                        <i class="fas ${statusIcon}"></i>
-                        ${statusText}
-                    </div>
+    categorizeAgents(agents) {
+        const categories = {
+            user: [],
+            apps: [],
+            system: []
+        };
+
+        agents.forEach(agent => {
+            const category = this.getAgentCategory(agent);
+            categories[category].push(agent);
+        });
+
+        return categories;
+    }
+
+    getAgentCategory(agent) {
+        const label = agent.label.toLowerCase();
+        
+        // User-created agents (usually custom labels or specific patterns)
+        if (label.includes('installation') || 
+            label.includes('custom') || 
+            label.includes('user') ||
+            !label.includes('.')) {
+            return 'user';
+        }
+        
+        // System agents (Apple and macOS services)
+        if (label.startsWith('com.apple.') ||
+            label.startsWith('com.googlecode.') ||
+            label.includes('system') ||
+            label.includes('daemon') ||
+            label.includes('service') ||
+            label.includes('helper') ||
+            label.includes('update') ||
+            label.includes('spotlight') ||
+            label.includes('backup')) {
+            return 'system';
+        }
+        
+        // Application agents (third-party apps)
+        return 'apps';
+    }
+
+    renderFilteredAgents(categories, filter = 'all') {
+        const container = document.getElementById('launch-agents-list');
+        let html = '';
+
+        if (filter === 'all') {
+            // Show all categories with collapsible sections
+            html += this.renderAgentCategory('User Created', categories.user, 'user', false);
+            html += this.renderAgentCategory('Applications', categories.apps, 'apps', false);
+            html += this.renderAgentCategory('System Services', categories.system, 'system', true);
+        } else {
+            // Show only selected category
+            const categoryData = categories[filter];
+            if (categoryData && categoryData.length > 0) {
+                html = categoryData.map(agent => this.renderAgentItem(agent)).join('');
+            } else {
+                html = '<p style="color: var(--text-secondary); text-align: center;">No agents found in this category</p>';
+            }
+        }
+
+        container.innerHTML = html;
+        
+        // Add click handlers for collapsible sections
+        this.setupCategoryToggle();
+    }
+
+    renderAgentCategory(title, agents, categoryType, collapsed = false) {
+        if (agents.length === 0) return '';
+        
+        const collapsedClass = collapsed ? 'collapsed' : '';
+        const agentsHtml = agents.map(agent => this.renderAgentItem(agent)).join('');
+        
+        return `
+            <div class="agent-category ${collapsedClass}" data-category="${categoryType}">
+                <h5>
+                    <i class="fas fa-${this.getCategoryIcon(categoryType)}"></i>
+                    ${title}
+                    <span class="category-count">${agents.length}</span>
+                    <i class="fas fa-chevron-down toggle-icon"></i>
+                </h5>
+                <div class="category-agents">
+                    ${agentsHtml}
                 </div>
-            `;
-        }).join('');
+            </div>
+        `;
+    }
+
+    renderAgentItem(agent) {
+        const status = this.agentStatusList.find(s => s.label === agent.label);
+        const isRunning = status && status.pid !== null;
+        const statusClass = isRunning ? 'running' : 'stopped';
+        const statusText = isRunning ? `Running (PID: ${status.pid})` : 'Stopped';
+        const statusIcon = isRunning ? 'fa-play' : 'fa-stop';
+        const category = this.getAgentCategory(agent);
+
+        return `
+            <div class="agent-item" data-category="${category}" data-label="${agent.label.toLowerCase()}">
+                <div class="agent-info">
+                    <h5>${agent.label}</h5>
+                    <p>${agent.filename}</p>
+                </div>
+                <div class="agent-status ${statusClass}">
+                    <i class="fas ${statusIcon}"></i>
+                    ${statusText}
+                </div>
+            </div>
+        `;
+    }
+
+    getCategoryIcon(category) {
+        const icons = {
+            user: 'user',
+            apps: 'desktop',
+            system: 'cogs'
+        };
+        return icons[category] || 'circle';
     }
 
     // Results Display
@@ -702,6 +818,12 @@ class InstallationUp4evr {
                 if (targetTab === 'monitoring') {
                     this.loadMonitoringData();
                     this.startMonitoringUpdates();
+                }
+                
+                // Load monitoring config and system status if monitoring-config tab is selected
+                if (targetTab === 'monitoring-config') {
+                    this.loadSystemStatus();
+                    this.startSystemStatusUpdates();
                 }
                 
                 // Load service status if service control tab is selected
@@ -959,6 +1081,25 @@ class InstallationUp4evr {
                 this.monitoringInterval = null;
             }
         }, 5000);
+    }
+
+    startSystemStatusUpdates() {
+        // Clear existing interval
+        if (this.systemStatusInterval) {
+            clearInterval(this.systemStatusInterval);
+        }
+        
+        // Update every 10 seconds when monitoring-config tab is active
+        this.systemStatusInterval = setInterval(() => {
+            const activeTab = document.querySelector('.tab-pane.active');
+            if (activeTab && activeTab.id === 'monitoring-config-tab') {
+                this.loadSystemStatus();
+            } else {
+                // Stop updates if not on monitoring-config tab
+                clearInterval(this.systemStatusInterval);
+                this.systemStatusInterval = null;
+            }
+        }, 10000);
     }
     
     // Service Control Management
@@ -2597,6 +2738,117 @@ class InstallationUp4evr {
         } catch (error) {
             this.showToast(`Failed to restart applications: ${error.message}`, 'error');
         }
+    }
+
+    async refreshSystemStatus() {
+        const button = document.getElementById('refresh-system-status');
+        const icon = button.querySelector('i');
+        
+        // Show loading state
+        button.disabled = true;
+        icon.classList.add('fa-spin');
+        
+        try {
+            await this.loadSystemStatus();
+            this.showToast('System status refreshed', 'success');
+        } catch (error) {
+            this.showToast(`Failed to refresh status: ${error.message}`, 'error');
+        } finally {
+            // Restore button state
+            button.disabled = false;
+            icon.classList.remove('fa-spin');
+        }
+    }
+
+    setupLaunchAgentFilters() {
+        // Filter button handlers
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                // Update active state
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Apply filter
+                const filter = e.target.dataset.filter;
+                this.filterAgents(filter);
+            });
+        });
+
+        // Search input handler
+        const searchInput = document.getElementById('agent-search');
+        searchInput.addEventListener('input', (e) => {
+            this.searchAgents(e.target.value);
+        });
+    }
+
+    filterAgents(filter) {
+        if (!this.allAgents) return;
+        
+        const categories = this.categorizeAgents(this.allAgents);
+        this.renderFilteredAgents(categories, filter);
+        
+        // Clear search when switching filters
+        const searchInput = document.getElementById('agent-search');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+    }
+
+    searchAgents(searchTerm) {
+        const container = document.getElementById('launch-agents-list');
+        const agentItems = container.querySelectorAll('.agent-item');
+        
+        if (!searchTerm.trim()) {
+            // Show all agents
+            agentItems.forEach(item => {
+                item.style.display = 'flex';
+            });
+            
+            // Show all categories
+            const categories = container.querySelectorAll('.agent-category');
+            categories.forEach(category => {
+                category.style.display = 'block';
+            });
+            return;
+        }
+        
+        const term = searchTerm.toLowerCase();
+        let visibleCategories = new Set();
+        
+        agentItems.forEach(item => {
+            const label = item.dataset.label;
+            const isMatch = label.includes(term);
+            
+            item.style.display = isMatch ? 'flex' : 'none';
+            
+            if (isMatch) {
+                visibleCategories.add(item.dataset.category);
+            }
+        });
+        
+        // Show/hide categories based on search results
+        const categories = container.querySelectorAll('.agent-category');
+        categories.forEach(category => {
+            const categoryType = category.dataset.category;
+            const hasVisibleItems = visibleCategories.has(categoryType);
+            category.style.display = hasVisibleItems ? 'block' : 'none';
+            
+            // Expand categories with search results
+            if (hasVisibleItems) {
+                category.classList.remove('collapsed');
+            }
+        });
+    }
+
+    setupCategoryToggle() {
+        const categoryHeaders = document.querySelectorAll('.agent-category h5');
+        categoryHeaders.forEach(header => {
+            header.addEventListener('click', (e) => {
+                const category = e.target.closest('.agent-category');
+                category.classList.toggle('collapsed');
+            });
+        });
     }
 }
 
