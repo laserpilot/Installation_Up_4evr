@@ -7,6 +7,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "concurrently --kill-others --success first \"cd backend && npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
+    "dev:legacy": "concurrently --kill-others --success first \"cd backend && npm run legacy\" \"wait-on http://localhost:3001 && electron .\"",
     "dev:safe": "pkill -f 'Installation Up 4evr' || true && npm run dev",
     "build": "electron-builder",
     "build:mac": "electron-builder --mac",

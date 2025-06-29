@@ -83,6 +83,38 @@ app.get('/', (req, res) => {
 
 // Enhanced API Routes with Platform Manager Support
 
+// Platform manager route handler (priority routing for new features)
+app.all('/api/*', async (req, res, next) => {
+    if (compatibility.isUsingPlatformManager()) {
+        try {
+            const apiPath = req.path.replace('/api', '');
+            const method = req.method;
+            const data = method === 'GET' ? req.query : req.body;
+            
+            console.log(`[API] ${method} ${req.path} (platform mode)`);
+            const result = await compatibility.platformManager.handleAPIRequest(apiPath, method, data);
+            
+            if (result.success) {
+                res.json(result);
+                return; // Don't fall through to legacy routes
+            } else if (result.error?.code === 'ROUTE_NOT_FOUND') {
+                // Route not found in platform manager, try legacy routes
+                next();
+            } else {
+                // Other errors should be returned immediately
+                res.status(result.error?.status || 500).json(result);
+                return;
+            }
+        } catch (error) {
+            console.warn(`[API] Platform manager error for ${method} ${req.path}:`, error.message);
+            // Fall through to legacy routes on error
+            next();
+        }
+    } else {
+        next();
+    }
+});
+
 // Health check with compatibility info
 app.get('/api/health', async (req, res) => {
     try {
@@ -237,6 +269,62 @@ app.get('/api/platform', async (req, res) => {
     }
 });
 
+// User preferences endpoints for first-run detection
+app.get('/api/config/user-preferences', async (req, res) => {
+    try {
+        if (compatibility.isUsingPlatformManager()) {
+            const config = compatibility.platformManager.getConfig();
+            const preferences = config.get('userPreferences') || {};
+            res.json({ success: true, data: preferences });
+        } else {
+            // Legacy mode - return default preferences
+            res.json({ 
+                success: true, 
+                data: {
+                    skipWizard: false,
+                    defaultView: 'dashboard',
+                    showTooltips: true,
+                    confirmActions: true
+                }
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
+    }
+});
+
+app.post('/api/config/user-preferences', async (req, res) => {
+    try {
+        if (compatibility.isUsingPlatformManager()) {
+            const config = compatibility.platformManager.getConfig();
+            const currentPrefs = config.get('userPreferences') || {};
+            const updatedPrefs = { ...currentPrefs, ...req.body };
+            
+            await config.update('userPreferences', updatedPrefs);
+            res.json({ 
+                success: true, 
+                message: 'User preferences updated',
+                data: updatedPrefs
+            });
+        } else {
+            console.warn('[LEGACY] User preferences update not supported in legacy mode');
+            res.json({ 
+                success: false, 
+                message: 'User preferences management requires platform manager mode',
+                note: 'Preferences not persisted in legacy mode'
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
+    }
+});
+
 // All other legacy routes preserved exactly as they were...
 // (Launch Agents, Profiles, Notifications, Remote Control, etc.)
 
@@ -339,6 +427,35 @@ async function startServer() {
         } catch (error) {
             console.warn('Failed to start monitoring:', error.message);
         }
+
+        // Test health scoring route
+        app.get('/api/health-score', async (req, res) => {
+            try {
+                if (compatibility.isUsingPlatformManager()) {
+                    const result = await compatibility.platformManager.handleAPIRequest('/health/score', 'GET');
+                    res.json(result);
+                } else {
+                    res.status(501).json({ error: 'Health scoring requires platform manager mode' });
+                }
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+        // Test validation workflow route
+        app.post('/api/validation-test', async (req, res) => {
+            try {
+                if (compatibility.isUsingPlatformManager()) {
+                    const result = await compatibility.platformManager.handleAPIRequest('/validation/run', 'POST', req.body);
+                    res.json(result);
+                } else {
+                    res.status(501).json({ error: 'Validation workflow requires platform manager mode' });
+                }
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            }
+        });
+
 
         // Start Express server
         app.listen(PORT, () => {

@@ -73,8 +73,28 @@ class APIManager {
      * Handle API request with standardized response format
      */
     async handleRequest(path, method, data = null, context = {}) {
-        const key = `${method.toUpperCase()}:${path}`;
-        const route = this.routes.get(key);
+        const upperMethod = method.toUpperCase();
+        
+        // First try exact match
+        const exactKey = `${upperMethod}:${path}`;
+        let route = this.routes.get(exactKey);
+        let params = {};
+
+        // If no exact match, try pattern matching for parameterized routes
+        if (!route) {
+            for (const [routeKey, routeConfig] of this.routes) {
+                const [routeMethod, routePath] = routeKey.split(':', 2);
+                
+                if (routeMethod === upperMethod) {
+                    const match = this.matchRoute(routePath, path);
+                    if (match) {
+                        route = routeConfig;
+                        params = match.params;
+                        break;
+                    }
+                }
+            }
+        }
 
         if (!route) {
             return APIResponse.error(
@@ -82,6 +102,9 @@ class APIManager {
                 `Route not found: ${method} ${path}`
             );
         }
+
+        // Add params to context
+        context.params = params;
 
         try {
             // Run global middleware
@@ -118,6 +141,36 @@ class APIManager {
 
             return APIResponse.error(error, `Failed to process ${method} ${path}`);
         }
+    }
+
+    /**
+     * Match route pattern with actual path and extract parameters
+     */
+    matchRoute(pattern, path) {
+        // Convert Express-style route to regex
+        // e.g., /config-profiles/:id -> /config-profiles/([^/]+)
+        const paramNames = [];
+        const regexPattern = pattern
+            .replace(/:[^/]+/g, (match) => {
+                paramNames.push(match.substring(1)); // Remove the ':'
+                return '([^/]+)';
+            })
+            .replace(/\//g, '\\/'); // Escape forward slashes
+
+        const regex = new RegExp(`^${regexPattern}$`);
+        const match = path.match(regex);
+
+        if (!match) {
+            return null;
+        }
+
+        // Extract parameters
+        const params = {};
+        for (let i = 0; i < paramNames.length; i++) {
+            params[paramNames[i]] = match[i + 1];
+        }
+
+        return { params };
     }
 
     /**

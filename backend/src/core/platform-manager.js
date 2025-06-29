@@ -7,12 +7,18 @@ const { PlatformFactory } = require('./interfaces');
 const MonitoringCore = require('./monitoring/monitoring-core');
 const ConfigManager = require('./config-manager');
 const { APIManager, APIResponse, DataTransformer } = require('./api-manager');
+const ConfigurationProfiles = require('./config-profiles');
+const HealthScoringEngine = require('./health-scoring');
+const ValidationWorkflow = require('./validation-workflow');
 
 class PlatformManager {
     constructor() {
         this.platform = PlatformFactory.getPlatform();
         this.config = new ConfigManager();
         this.api = new APIManager();
+        this.profiles = null;
+        this.healthScoring = new HealthScoringEngine();
+        this.validation = null;
         this.monitoring = null;
         this.systemManager = null;
         this.processManager = null;
@@ -28,12 +34,19 @@ class PlatformManager {
             // Initialize configuration
             await this.config.initialize();
 
+            // Initialize configuration profiles
+            this.profiles = new ConfigurationProfiles(this.config);
+            await this.profiles.initialize();
+
             // Initialize platform-specific managers
             this.systemManager = PlatformFactory.createSystemManager();
             this.processManager = PlatformFactory.createProcessManager();
 
             // Initialize monitoring
             this.monitoring = new MonitoringCore();
+
+            // Initialize validation workflow
+            this.validation = new ValidationWorkflow(this.config, this.monitoring, this.systemManager);
 
             // Setup API routes
             this.setupAPIRoutes();
@@ -160,6 +173,146 @@ class PlatformManager {
             }
             await this.config.importConfig(filePath);
             return APIResponse.success({ message: 'Configuration imported' });
+        });
+
+        // User preferences routes for first-run detection
+        this.api.registerRoute('/config/user-preferences', 'GET', async () => {
+            const preferences = this.config.get('userPreferences') || {};
+            return APIResponse.success(preferences);
+        });
+
+        this.api.registerRoute('/config/user-preferences', 'POST', async (data) => {
+            const currentPrefs = this.config.get('userPreferences') || {};
+            const updatedPrefs = { ...currentPrefs, ...data };
+            await this.config.update('userPreferences', updatedPrefs);
+            return APIResponse.success(updatedPrefs, 'User preferences updated');
+        });
+
+        // Configuration Profiles routes  
+        this.api.registerRoute('/config-profiles', 'GET', async () => {
+            const profiles = await this.profiles.listProfiles();
+            return APIResponse.success(profiles);
+        });
+
+        this.api.registerRoute('/config-profiles/:id', 'GET', async (data, context) => {
+            const profileId = context?.params?.id || data.id;
+            if (!profileId) throw new Error('Profile ID is required');
+            const profile = await this.profiles.getProfile(profileId);
+            return APIResponse.success(profile);
+        });
+
+        this.api.registerRoute('/config-profiles', 'POST', async (data) => {
+            const { name, description, settings, options = {} } = data;
+            if (!name || !settings) {
+                throw new Error('Name and settings are required');
+            }
+            const result = await this.profiles.saveProfile(name, description, settings, options);
+            return APIResponse.success(result, 'Profile saved successfully');
+        });
+
+        this.api.registerRoute('/config-profiles/:id/load', 'POST', async (data, context) => {
+            const profileId = context?.params?.id || data.id;
+            if (!profileId) throw new Error('Profile ID is required');
+            const result = await this.profiles.loadProfile(profileId, data.options);
+            return APIResponse.success(result);
+        });
+
+        this.api.registerRoute('/config-profiles/:id', 'DELETE', async (data, context) => {
+            const profileId = context?.params?.id || data.id;
+            if (!profileId) throw new Error('Profile ID is required');
+            const result = await this.profiles.deleteProfile(profileId);
+            return APIResponse.success(result);
+        });
+
+        this.api.registerRoute('/config-profiles/:id/export', 'POST', async (data, context) => {
+            const profileId = context?.params?.id || data.id;
+            if (!profileId) throw new Error('Profile ID is required');
+            const result = await this.profiles.exportProfile(profileId, data.exportPath);
+            return APIResponse.success(result);
+        });
+
+        this.api.registerRoute('/config-profiles/import', 'POST', async (data) => {
+            const { importPath } = data;
+            if (!importPath) throw new Error('Import path is required');
+            const result = await this.profiles.importProfile(importPath);
+            return APIResponse.success(result, 'Profile imported successfully');
+        });
+
+        this.api.registerRoute('/config-profiles/current', 'POST', async (data) => {
+            const { name, description, options = {} } = data;
+            if (!name) throw new Error('Profile name is required');
+            const result = await this.profiles.createProfileFromCurrentConfig(name, description, options);
+            return APIResponse.success(result, 'Profile created from current configuration');
+        });
+
+        this.api.registerRoute('/config-profiles/stats', 'GET', async () => {
+            const stats = await this.profiles.getProfileStats();
+            return APIResponse.success(stats);
+        });
+
+        // Health Scoring routes
+        this.api.registerRoute('/health/score', 'GET', async () => {
+            const systemData = this.monitoring.getCurrentData();
+            const configData = this.config.get();
+            const healthReport = this.healthScoring.generateHealthReport(systemData, configData);
+            return APIResponse.success(healthReport);
+        });
+
+        this.api.registerRoute('/health/recommendations', 'GET', async () => {
+            const systemData = this.monitoring.getCurrentData();
+            const configData = this.config.get();
+            const healthScore = this.healthScoring.calculateHealthScore(systemData, configData);
+            return APIResponse.success({
+                recommendations: healthScore.recommendations,
+                score: healthScore.overall,
+                rating: healthScore.rating
+            });
+        });
+
+        this.api.registerRoute('/health/breakdown', 'GET', async () => {
+            const systemData = this.monitoring.getCurrentData();
+            const configData = this.config.get();
+            const healthScore = this.healthScoring.calculateHealthScore(systemData, configData);
+            return APIResponse.success({
+                breakdown: healthScore.breakdown,
+                overall: healthScore.overall,
+                rating: healthScore.rating
+            });
+        });
+
+        // Validation Workflow routes
+        this.api.registerRoute('/validation/tests', 'GET', async () => {
+            const tests = this.validation.getAvailableTests();
+            return APIResponse.success(tests);
+        });
+
+        this.api.registerRoute('/validation/run', 'POST', async (data) => {
+            const options = data || {};
+            const result = await this.validation.runFullValidation(options);
+            return APIResponse.success(result);
+        });
+
+        this.api.registerRoute('/validation/results', 'GET', async () => {
+            const summary = this.validation.generateValidationSummary();
+            const recommendations = this.validation.getRecommendations();
+            return APIResponse.success({
+                summary,
+                recommendations,
+                results: this.validation.testResults
+            });
+        });
+
+        this.api.registerRoute('/validation/test/:id', 'GET', async (data, context) => {
+            const testId = context?.params?.id || data.id;
+            if (!testId) throw new Error('Test ID is required');
+            const result = this.validation.getTestResult(testId);
+            if (!result) throw new Error('Test result not found');
+            return APIResponse.success(result);
+        });
+
+        this.api.registerRoute('/validation/recommendations', 'GET', async () => {
+            const recommendations = this.validation.getRecommendations();
+            return APIResponse.success(recommendations);
         });
 
         // Health check
