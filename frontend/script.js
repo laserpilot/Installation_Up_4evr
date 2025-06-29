@@ -3865,22 +3865,69 @@ class InstallationUp4evr {
             this.dismissSudoDialog();
             this.showToast('Continuing with limited features. Some system modifications may not work.', 'warning');
         });
+
+        // Handle authentication method selection
+        const authMethodRadios = document.querySelectorAll('input[name="auth-method"]');
+        const passwordContainer = document.querySelector('.password-input-container');
+        
+        authMethodRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.value === 'password' && radio.checked) {
+                    passwordContainer.style.display = 'block';
+                } else {
+                    passwordContainer.style.display = 'none';
+                }
+            });
+        });
+
+        // Detect if we're in a browser and suggest password method
+        const isInBrowser = !window.electronAPI && !process?.versions?.electron;
+        if (isInBrowser) {
+            document.getElementById('use-password-auth').checked = true;
+            passwordContainer.style.display = 'block';
+        }
     }
 
     async requestSudoAccess() {
         try {
-            if (this.isElectron && window.electronAPI) {
-                // Use Electron's built-in sudo prompt
-                const result = await window.electronAPI.requestSudoAccess();
+            // Get selected authentication method
+            const selectedMethod = document.querySelector('input[name="auth-method"]:checked')?.value || 'native';
+            
+            if (selectedMethod === 'native') {
+                // Try native authentication first
+                const result = await this.apiCall('/api/auth/sudo-grant', 'POST', { method: 'native' });
+                
                 if (result.success) {
                     this.dismissSudoDialog();
-                    this.showToast('Administrator access granted successfully', 'success');
+                    this.showToast('Administrator access granted via native dialog', 'success');
                 } else {
-                    this.showToast('Access denied. Some features may not work properly.', 'warning');
+                    this.showToast('Native authentication failed. Try password method instead.', 'warning');
                 }
-            } else {
-                // Fallback for web version
-                this.showToast('Sudo access not available in web version', 'info');
+            } else if (selectedMethod === 'password') {
+                // Use password authentication
+                const passwordInput = document.getElementById('sudo-password-input');
+                const password = passwordInput?.value;
+                
+                if (!password) {
+                    this.showToast('Please enter your administrator password', 'warning');
+                    return;
+                }
+                
+                const result = await this.apiCall('/api/auth/sudo-grant', 'POST', { 
+                    method: 'password', 
+                    password: password 
+                });
+                
+                if (result.success) {
+                    this.dismissSudoDialog();
+                    this.showToast('Administrator access granted via password', 'success');
+                    if (result.securityWarning) {
+                        console.warn('Security Warning:', result.securityWarning);
+                    }
+                } else {
+                    this.showToast('Invalid password or authentication failed', 'error');
+                    passwordInput.value = ''; // Clear password on failure
+                }
             }
         } catch (error) {
             console.error('Failed to request sudo access:', error);
