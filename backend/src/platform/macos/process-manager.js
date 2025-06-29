@@ -1,0 +1,351 @@
+/**
+ * macOS Process Manager
+ * Platform-specific process and application management for macOS
+ */
+
+const { exec } = require('child_process');
+const util = require('util');
+const fs = require('fs').promises;
+const path = require('path');
+const os = require('os');
+const { ProcessManagerInterface } = require('../../core/interfaces');
+
+const execAsync = util.promisify(exec);
+
+class MacOSProcessManager extends ProcessManagerInterface {
+    constructor() {
+        super();
+        this.platform = 'macos';
+        this.launchAgentsDir = path.join(os.homedir(), 'Library', 'LaunchAgents');
+    }
+
+    async startApplication(appPath, options = {}) {
+        try {
+            const { background = true, arguments: args = [] } = options;
+            
+            if (appPath.endsWith('.app')) {
+                // macOS .app bundle
+                const argString = args.length > 0 ? ` --args ${args.join(' ')}` : '';
+                const backgroundFlag = background ? ' &' : '';
+                const command = `open "${appPath}"${argString}${backgroundFlag}`;
+                
+                const { stdout, stderr } = await execAsync(command);
+                
+                return {
+                    success: true,
+                    message: `Application started: ${path.basename(appPath)}`,
+                    command,
+                    output: stdout,
+                    stderr: stderr || null
+                };
+            } else {
+                // Direct executable
+                const argString = args.join(' ');
+                const backgroundFlag = background ? ' &' : '';
+                const command = `"${appPath}" ${argString}${backgroundFlag}`;
+                
+                const { stdout, stderr } = await execAsync(command);
+                
+                return {
+                    success: true,
+                    message: `Executable started: ${path.basename(appPath)}`,
+                    command,
+                    output: stdout,
+                    stderr: stderr || null
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to start application: ${error.message}`,
+                error: error.message
+            };
+        }
+    }
+
+    async stopApplication(appName) {
+        try {
+            // Try to find and kill the process
+            const { stdout } = await execAsync(`pgrep -f "${appName}"`);
+            const pids = stdout.trim().split('\n').filter(pid => pid);
+            
+            if (pids.length === 0) {
+                return {
+                    success: false,
+                    message: `No running processes found for: ${appName}`
+                };
+            }
+
+            // Kill all matching processes
+            for (const pid of pids) {
+                await execAsync(`kill ${pid}`);
+            }
+
+            return {
+                success: true,
+                message: `Stopped ${pids.length} process(es) for: ${appName}`,
+                pids
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to stop application: ${error.message}`,
+                error: error.message
+            };
+        }
+    }
+
+    async restartApplication(appName) {
+        try {
+            const stopResult = await this.stopApplication(appName);
+            
+            // Wait a moment for the process to fully stop
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // If we have a path stored somewhere, use it; otherwise user needs to provide it
+            const startResult = await this.startApplication(appName);
+            
+            return {
+                success: stopResult.success && startResult.success,
+                message: `Restart attempt for ${appName}`,
+                stopResult,
+                startResult
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to restart application: ${error.message}`,
+                error: error.message
+            };
+        }
+    }
+
+    async getRunningApplications() {
+        try {
+            // Get running applications using ps
+            const { stdout } = await execAsync('ps -ax -o pid,comm,args');
+            const lines = stdout.split('\n').slice(1); // Skip header
+            
+            const applications = [];
+            
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                
+                const parts = line.trim().split(/\s+/);
+                if (parts.length < 3) continue;
+                
+                const pid = parts[0];
+                const comm = parts[1];
+                const args = parts.slice(2).join(' ');
+                
+                // Filter for actual applications (not system processes)
+                if (comm.includes('.app') || args.includes('.app')) {
+                    applications.push({
+                        pid: parseInt(pid),
+                        name: this.extractAppName(args),
+                        command: comm,
+                        arguments: args,
+                        type: 'application'
+                    });
+                }
+            }
+
+            return applications;
+        } catch (error) {
+            console.error('Failed to get running applications:', error);
+            return [];
+        }
+    }
+
+    async createAutoStartEntry(appPath, options = {}) {
+        try {
+            const {
+                name = path.basename(appPath, '.app'),
+                description = `Auto-start for ${path.basename(appPath)}`,
+                startInterval = null,
+                keepAlive = true,
+                runAtLoad = true
+            } = options;
+
+            const launchAgentName = `com.installation-up-4evr.${name.toLowerCase().replace(/\s+/g, '-')}`;
+            const plistPath = path.join(this.launchAgentsDir, `${launchAgentName}.plist`);
+
+            // Create launch agent plist
+            const plistContent = this.generateLaunchAgentPlist({
+                label: launchAgentName,
+                program: appPath,
+                description,
+                startInterval,
+                keepAlive,
+                runAtLoad
+            });
+
+            // Ensure LaunchAgents directory exists
+            await fs.mkdir(this.launchAgentsDir, { recursive: true });
+
+            // Write plist file
+            await fs.writeFile(plistPath, plistContent);
+
+            // Load the launch agent
+            await execAsync(`launchctl load "${plistPath}"`);
+
+            return {
+                success: true,
+                message: `Auto-start entry created for ${name}`,
+                launchAgentName,
+                plistPath,
+                loaded: true
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to create auto-start entry: ${error.message}`,
+                error: error.message
+            };
+        }
+    }
+
+    async removeAutoStartEntry(name) {
+        try {
+            const launchAgentName = `com.installation-up-4evr.${name.toLowerCase().replace(/\s+/g, '-')}`;
+            const plistPath = path.join(this.launchAgentsDir, `${launchAgentName}.plist`);
+
+            // Unload the launch agent
+            try {
+                await execAsync(`launchctl unload "${plistPath}"`);
+            } catch (unloadError) {
+                console.warn('Failed to unload launch agent (may not be loaded):', unloadError.message);
+            }
+
+            // Remove plist file
+            await fs.unlink(plistPath);
+
+            return {
+                success: true,
+                message: `Auto-start entry removed for ${name}`,
+                launchAgentName,
+                plistPath
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to remove auto-start entry: ${error.message}`,
+                error: error.message
+            };
+        }
+    }
+
+    async getAutoStartEntries() {
+        try {
+            const files = await fs.readdir(this.launchAgentsDir);
+            const up4evrAgents = files.filter(file => 
+                file.startsWith('com.installation-up-4evr.') && file.endsWith('.plist')
+            );
+
+            const entries = [];
+            for (const file of up4evrAgents) {
+                try {
+                    const plistPath = path.join(this.launchAgentsDir, file);
+                    const content = await fs.readFile(plistPath, 'utf8');
+                    
+                    // Parse basic info from plist
+                    const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
+                    const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
+                    
+                    entries.push({
+                        name: file.replace('.plist', ''),
+                        label: labelMatch ? labelMatch[1] : 'Unknown',
+                        program: programMatch ? programMatch[1] : 'Unknown',
+                        plistPath,
+                        loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : '')
+                    });
+                } catch (parseError) {
+                    console.warn(`Failed to parse launch agent ${file}:`, parseError.message);
+                }
+            }
+
+            return entries;
+        } catch (error) {
+            console.error('Failed to get auto-start entries:', error);
+            return [];
+        }
+    }
+
+    // Helper methods
+    extractAppName(commandLine) {
+        // Extract application name from command line
+        const appMatch = commandLine.match(/([^\/]+)\.app/);
+        if (appMatch) {
+            return appMatch[1];
+        }
+        
+        // Fallback to first part of command
+        const parts = commandLine.split(' ');
+        return path.basename(parts[0]);
+    }
+
+    generateLaunchAgentPlist(config) {
+        const {
+            label,
+            program,
+            description,
+            startInterval,
+            keepAlive,
+            runAtLoad
+        } = config;
+
+        let plist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>${label}</string>
+    <key>Program</key>
+    <string>${program}</string>`;
+
+        if (description) {
+            plist += `
+    <key>ServiceDescription</key>
+    <string>${description}</string>`;
+        }
+
+        if (runAtLoad) {
+            plist += `
+    <key>RunAtLoad</key>
+    <true/>`;
+        }
+
+        if (keepAlive) {
+            plist += `
+    <key>KeepAlive</key>
+    <true/>`;
+        }
+
+        if (startInterval) {
+            plist += `
+    <key>StartInterval</key>
+    <integer>${startInterval}</integer>`;
+        }
+
+        plist += `
+    <key>StandardOutPath</key>
+    <string>/tmp/${label}.out</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/${label}.err</string>
+</dict>
+</plist>`;
+
+        return plist;
+    }
+
+    async isLaunchAgentLoaded(label) {
+        try {
+            const { stdout } = await execAsync('launchctl list');
+            return stdout.includes(label);
+        } catch (error) {
+            return false;
+        }
+    }
+}
+
+module.exports = MacOSProcessManager;
