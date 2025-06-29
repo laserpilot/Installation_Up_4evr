@@ -1,18 +1,18 @@
 /**
- * Test Suite for Server-v2 API Routes
- * Validates that the new platform abstraction routes work correctly
+ * Test Suite for Server API Routes
+ * Validates that the platform abstraction routes work correctly
  */
 
 const http = require('http');
 
-class ServerV2Tests {
+class ServerTests {
     constructor() {
         this.baseUrl = 'http://localhost:3001';
         this.testResults = [];
     }
 
     async runTests() {
-        console.log('🧪 Testing Server-v2 API Routes...\n');
+        console.log('🧪 Testing Server API Routes...\n');
 
         try {
             // Test basic health check
@@ -211,8 +211,8 @@ class ServerV2Tests {
         console.log('\n' + '='.repeat(50));
         
         if (failed === 0) {
-            console.log('🎉 All tests passed! Server-v2 is working correctly.');
-            console.log('✨ The new platform abstraction routes are now accessible.');
+            console.log('🎉 All tests passed! Server is working correctly.');
+            console.log('✨ The platform abstraction routes are accessible.');
             console.log('🔄 Legacy routes continue to work for backward compatibility.');
         } else {
             console.log(`💥 ${failed} tests failed. Check the issues above.`);
@@ -222,7 +222,7 @@ class ServerV2Tests {
 
 // Run tests if this file is executed directly
 if (require.main === module) {
-    const testSuite = new ServerV2Tests();
+    const testSuite = new ServerTests();
     
     // Wait a moment for server to be ready, then run tests
     setTimeout(() => {
@@ -237,4 +237,4 @@ if (require.main === module) {
     }, 2000);
 }
 
-module.exports = ServerV2Tests;
+module.exports = ServerTests;
