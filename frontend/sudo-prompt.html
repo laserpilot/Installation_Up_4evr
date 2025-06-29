@@ -1,0 +1,268 @@
+<!-- Sudo Permission Prompt Modal -->
+<div id="sudo-permission-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🔐 Administrator Access Required</h2>
+            <p>Installation Up 4evr needs administrator privileges to manage system settings safely.</p>
+        </div>
+        
+        <div class="modal-body">
+            <div class="permission-explanation">
+                <h3>Why do we need administrator access?</h3>
+                <ul>
+                    <li><strong>System Preferences:</strong> Modify display sleep, screensaver, and power settings</li>
+                    <li><strong>Launch Agents:</strong> Install and manage auto-start applications</li>
+                    <li><strong>Security Settings:</strong> Check and configure system security features</li>
+                    <li><strong>Performance Monitoring:</strong> Access detailed system information</li>
+                </ul>
+                
+                <!-- Authentication Method Selection -->
+                <div class="auth-method-selection">
+                    <h4>🔐 Choose Authentication Method:</h4>
+                    
+                    <div class="auth-method" id="native-auth-method">
+                        <div class="method-header">
+                            <input type="radio" id="use-native-auth" name="auth-method" value="native" checked>
+                            <label for="use-native-auth">
+                                <strong>🔒 Native macOS Dialog (Recommended)</strong>
+                            </label>
+                        </div>
+                        <div class="method-description">
+                            <p>✅ Most secure - uses system authentication dialog</p>
+                            <p>⚠️ Only works in Electron app, not web browser</p>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-method" id="password-auth-method">
+                        <div class="method-header">
+                            <input type="radio" id="use-password-auth" name="auth-method" value="password">
+                            <label for="use-password-auth">
+                                <strong>⚠️ Password Input (Browser Fallback)</strong>
+                            </label>
+                        </div>
+                        <div class="method-description">
+                            <p>⚠️ Less secure - password sent over network</p>
+                            <p>✅ Works in web browsers</p>
+                            <div class="password-input-container" style="display: none;">
+                                <input type="password" id="sudo-password-input" placeholder="Enter administrator password" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="security-note">
+                    <h4>🛡️ Security Information</h4>
+                    <p><strong>Native Dialog:</strong> Most secure, uses macOS built-in authentication.</p>
+                    <p><strong>Password Input:</strong> Less secure fallback for browsers. Password is validated locally but transmitted over network.</p>
+                </div>
+                
+                <div class="commands-preview">
+                    <h4>Commands we'll run:</h4>
+                    <code>
+                        defaults write com.apple.screensaver idleTime 0<br>
+                        pmset -a displaysleep 0<br>
+                        launchctl load ~/Library/LaunchAgents/[your-app].plist
+                    </code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button id="grant-sudo-access" class="btn btn-primary">
+                Grant Access & Continue
+            </button>
+            <button id="deny-sudo-access" class="btn btn-secondary">
+                Continue with Limited Features
+            </button>
+            <button id="learn-more-sudo" class="btn btn-link">
+                Learn More About Security
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header h2 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.permission-explanation {
+    margin: 1.5rem 0;
+}
+
+.permission-explanation ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.permission-explanation li {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.security-note {
+    background: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.security-note h4 {
+    margin: 0 0 0.5rem 0;
+    color: #0066cc;
+}
+
+.commands-preview {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.commands-preview h4 {
+    margin: 0 0 0.5rem 0;
+    color: #495057;
+}
+
+.commands-preview code {
+    display: block;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.9rem;
+    color: #495057;
+    line-height: 1.4;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.btn-link {
+    background: transparent;
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.btn-link:hover {
+    color: #0056b3;
+}
+
+.auth-method-selection {
+    margin: 1.5rem 0;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.auth-method {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.auth-method:hover {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+
+.method-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.method-header input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.method-header label {
+    cursor: pointer;
+    margin: 0;
+}
+
+.method-description {
+    margin-left: 1.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.method-description p {
+    margin: 0.25rem 0;
+}
+
+.password-input-container {
+    margin-top: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+</style>
