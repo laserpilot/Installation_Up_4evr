@@ -31,39 +31,45 @@
                 <!-- Sidebar Navigation -->
                 <nav class="sidebar">
                     <div class="sidebar-header">
-                        <h3><i class="fas fa-tools"></i> Tools</h3>
+                        <h3><i class="fas fa-desktop"></i> Installation Up 4evr</h3>
                     </div>
                     
-                    <!-- Core System Section -->
+                    <!-- Primary Navigation -->
+                    <div class="sidebar-section">
+                        <button class="sidebar-button primary-nav active" data-tab="dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </button>
+                        <button class="sidebar-button primary-nav" data-tab="setup-wizard">
+                            <i class="fas fa-magic"></i> Setup Wizard
+                        </button>
+                    </div>
+                    
+                    <!-- Advanced Tools Section -->
                     <div class="sidebar-section">
                         <h4 class="sidebar-section-title">
-                            <i class="fas fa-cog"></i> System Setup
+                            <i class="fas fa-tools"></i> Advanced Tools
                         </h4>
-                        <button class="sidebar-button active" data-tab="system-prefs">
-                            <i class="fas fa-cog"></i> System Preferences
+                        <button class="sidebar-button" data-tab="system-prefs">
+                            <i class="fas fa-cog"></i> System Configuration
                         </button>
                         <button class="sidebar-button" data-tab="launch-agents">
                             <i class="fas fa-rocket"></i> Launch Agents
                         </button>
-                    </div>
-                    
-                    <!-- Monitoring Section -->
-                    <div class="sidebar-section">
-                        <h4 class="sidebar-section-title">
-                            <i class="fas fa-chart-line"></i> Monitoring
-                        </h4>
                         <button class="sidebar-button" data-tab="monitoring">
-                            <i class="fas fa-chart-line"></i> Dashboard
+                            <i class="fas fa-chart-line"></i> Monitoring Details
                         </button>
                         <button class="sidebar-button" data-tab="monitoring-config">
                             <i class="fas fa-chart-bar"></i> Alerts & Thresholds
                         </button>
+                        <button class="sidebar-button" data-tab="installation-settings">
+                            <i class="fas fa-microchip"></i> Installation Settings
+                        </button>
                     </div>
                     
-                    <!-- Control Section -->
+                    <!-- Settings Section -->
                     <div class="sidebar-section">
                         <h4 class="sidebar-section-title">
-                            <i class="fas fa-server"></i> Control
+                            <i class="fas fa-sliders-h"></i> Settings
                         </h4>
                         <button class="sidebar-button" data-tab="service-control">
                             <i class="fas fa-server"></i> Service Control
@@ -71,16 +77,6 @@
                         <button class="sidebar-button" data-tab="configuration">
                             <i class="fas fa-sliders-h"></i> Configuration
                         </button>
-                        <button class="sidebar-button" data-tab="installation-settings">
-                            <i class="fas fa-microchip"></i> Installation Settings
-                        </button>
-                    </div>
-                    
-                    <!-- Communication Section -->
-                    <div class="sidebar-section">
-                        <h4 class="sidebar-section-title">
-                            <i class="fas fa-bell"></i> Communication
-                        </h4>
                         <button class="sidebar-button" data-tab="notifications">
                             <i class="fas fa-bell"></i> Notifications
                         </button>
@@ -90,8 +86,341 @@
 
                 <!-- Main Content Area -->
                 <div class="content-area">
+                    <!-- Dashboard Tab (New Default) -->
+                    <div id="dashboard-tab" class="tab-pane active">
+                        <section class="card">
+                            <div class="dashboard-header">
+                                <h2><i class="fas fa-tachometer-alt"></i> Installation Dashboard</h2>
+                                <div class="dashboard-actions">
+                                    <button id="run-setup-wizard" class="btn btn-primary">
+                                        <i class="fas fa-magic"></i> Setup Wizard
+                                    </button>
+                                    <button id="dashboard-refresh" class="btn btn-secondary">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <p>Monitor your installation health and manage running applications</p>
+                            
+                            <!-- System Health Overview -->
+                            <div class="dashboard-section">
+                                <h3><i class="fas fa-heartbeat"></i> System Health</h3>
+                                <div class="health-grid">
+                                    <div class="health-card" id="dashboard-cpu">
+                                        <div class="health-icon">💻</div>
+                                        <div class="health-info">
+                                            <div class="health-label">CPU Usage</div>
+                                            <div class="health-value" id="dashboard-cpu-value">--</div>
+                                            <div class="health-status" id="dashboard-cpu-status">Checking...</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="health-card" id="dashboard-memory">
+                                        <div class="health-icon">🧠</div>
+                                        <div class="health-info">
+                                            <div class="health-label">Memory</div>
+                                            <div class="health-value" id="dashboard-memory-value">--</div>
+                                            <div class="health-status" id="dashboard-memory-status">Checking...</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="health-card" id="dashboard-disk">
+                                        <div class="health-icon">💾</div>
+                                        <div class="health-info">
+                                            <div class="health-label">Disk Space</div>
+                                            <div class="health-value" id="dashboard-disk-value">--</div>
+                                            <div class="health-status" id="dashboard-disk-status">Checking...</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="health-card" id="dashboard-uptime">
+                                        <div class="health-icon">⏱️</div>
+                                        <div class="health-info">
+                                            <div class="health-label">System Uptime</div>
+                                            <div class="health-value" id="dashboard-uptime-value">--</div>
+                                            <div class="health-status" id="dashboard-uptime-status">Active</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Applications Status -->
+                            <div class="dashboard-section">
+                                <h3><i class="fas fa-desktop"></i> Application Status</h3>
+                                <div id="dashboard-applications" class="applications-list">
+                                    <div class="no-apps-message">
+                                        <i class="fas fa-info-circle"></i>
+                                        <p>No applications are currently being monitored.</p>
+                                        <button class="btn btn-link" onclick="window.app.switchTab('launch-agents')">
+                                            <i class="fas fa-rocket"></i> Set up Launch Agents
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Recent Activity -->
+                            <div class="dashboard-section">
+                                <h3><i class="fas fa-bell"></i> Recent Activity</h3>
+                                <div id="dashboard-alerts" class="alerts-list">
+                                    <div class="no-alerts-message">
+                                        <i class="fas fa-check-circle"></i>
+                                        <p>No recent alerts. System running smoothly.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="dashboard-section">
+                                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                                <div class="quick-actions">
+                                    <button class="action-btn" id="dashboard-restart-apps">
+                                        <i class="fas fa-redo"></i>
+                                        <span>Restart Apps</span>
+                                    </button>
+                                    <button class="action-btn" id="dashboard-reboot">
+                                        <i class="fas fa-power-off"></i>
+                                        <span>Reboot System</span>
+                                    </button>
+                                    <button class="action-btn" onclick="window.app.switchTab('monitoring')">
+                                        <i class="fas fa-chart-line"></i>
+                                        <span>Detailed Monitoring</span>
+                                    </button>
+                                    <button class="action-btn" onclick="window.app.switchTab('system-prefs')">
+                                        <i class="fas fa-cog"></i>
+                                        <span>Advanced Tools</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Setup Wizard Tab -->
+                    <div id="setup-wizard-tab" class="tab-pane">
+                        <section class="card">
+                            <div class="wizard-header">
+                                <h2><i class="fas fa-magic"></i> Installation Setup Wizard</h2>
+                                <div class="wizard-actions">
+                                    <button id="skip-wizard" class="btn btn-outline">
+                                        <i class="fas fa-forward"></i> Skip Setup
+                                    </button>
+                                    <button id="advanced-mode" class="btn btn-outline">
+                                        <i class="fas fa-tools"></i> Advanced Mode
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Indicator -->
+                            <div class="wizard-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="wizard-progress-fill"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step active" data-step="1">
+                                        <div class="step-number">1</div>
+                                        <div class="step-label">Welcome</div>
+                                    </div>
+                                    <div class="step" data-step="2">
+                                        <div class="step-number">2</div>
+                                        <div class="step-label">System Check</div>
+                                    </div>
+                                    <div class="step" data-step="3">
+                                        <div class="step-number">3</div>
+                                        <div class="step-label">Essential Settings</div>
+                                    </div>
+                                    <div class="step" data-step="4">
+                                        <div class="step-number">4</div>
+                                        <div class="step-label">Application Setup</div>
+                                    </div>
+                                    <div class="step" data-step="5">
+                                        <div class="step-number">5</div>
+                                        <div class="step-label">Verification</div>
+                                    </div>
+                                    <div class="step" data-step="6">
+                                        <div class="step-number">6</div>
+                                        <div class="step-label">Complete</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Wizard Content -->
+                            <div class="wizard-content">
+                                <!-- Step 1: Welcome -->
+                                <div class="wizard-step active" id="wizard-step-1">
+                                    <div class="step-content">
+                                        <div class="welcome-icon">
+                                            <i class="fas fa-desktop"></i>
+                                        </div>
+                                        <h3>Welcome to Installation Up 4evr</h3>
+                                        <p>This wizard will guide you through setting up your Mac for 24/7 installation use. We'll configure system settings, set up monitoring, and ensure your installation runs reliably.</p>
+                                        
+                                        <div class="setup-options">
+                                            <div class="setup-card">
+                                                <h4><i class="fas fa-magic"></i> Guided Setup (Recommended)</h4>
+                                                <p>Step-by-step configuration with explanations</p>
+                                                <small>Perfect for first-time users</small>
+                                            </div>
+                                            <div class="setup-card">
+                                                <h4><i class="fas fa-tools"></i> Advanced Setup</h4>
+                                                <p>Direct access to all configuration tools</p>
+                                                <small>For experienced users</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="step-actions">
+                                            <button class="btn btn-primary" id="start-guided-setup">
+                                                <i class="fas fa-play"></i> Start Guided Setup
+                                            </button>
+                                            <button class="btn btn-secondary" id="go-advanced">
+                                                <i class="fas fa-tools"></i> Advanced Setup
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: System Check -->
+                                <div class="wizard-step" id="wizard-step-2">
+                                    <div class="step-content">
+                                        <h3><i class="fas fa-search"></i> System Check</h3>
+                                        <p>Let's check your current system configuration and identify what needs to be set up.</p>
+                                        
+                                        <div class="system-checks" id="wizard-system-checks">
+                                            <!-- Populated by JavaScript -->
+                                        </div>
+                                        
+                                        <div class="step-actions">
+                                            <button class="btn btn-secondary" id="wizard-back-1">
+                                                <i class="fas fa-arrow-left"></i> Back
+                                            </button>
+                                            <button class="btn btn-primary" id="wizard-next-2">
+                                                Continue <i class="fas fa-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3: Essential Settings -->
+                                <div class="wizard-step" id="wizard-step-3">
+                                    <div class="step-content">
+                                        <h3><i class="fas fa-cog"></i> Essential Settings</h3>
+                                        <p>Configure critical system settings for 24/7 operation.</p>
+                                        
+                                        <div class="essential-settings" id="wizard-essential-settings">
+                                            <!-- Populated by JavaScript -->
+                                        </div>
+                                        
+                                        <div class="step-actions">
+                                            <button class="btn btn-secondary" id="wizard-back-2">
+                                                <i class="fas fa-arrow-left"></i> Back
+                                            </button>
+                                            <button class="btn btn-primary" id="wizard-apply-settings">
+                                                <i class="fas fa-check"></i> Apply Settings
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 4: Application Setup -->
+                                <div class="wizard-step" id="wizard-step-4">
+                                    <div class="step-content">
+                                        <h3><i class="fas fa-rocket"></i> Application Setup</h3>
+                                        <p>Set up your installation application to start automatically.</p>
+                                        
+                                        <div class="app-setup-options">
+                                            <div class="setup-method active" id="app-method">
+                                                <h4><i class="fas fa-cube"></i> Desktop Application</h4>
+                                                <p>Drag your .app file here or browse to select it</p>
+                                                <div class="app-drop-zone" id="wizard-app-drop">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <p>Drop your .app file here</p>
+                                                    <button class="btn btn-outline">Browse Files</button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="setup-method" id="web-method">
+                                                <h4><i class="fas fa-globe"></i> Web Application</h4>
+                                                <p>Set up Chrome in kiosk mode</p>
+                                                <div class="web-config">
+                                                    <input type="url" placeholder="https://yoursite.com" class="form-input" id="wizard-web-url">
+                                                    <div class="checkbox-group">
+                                                        <label>
+                                                            <input type="checkbox" id="wizard-kiosk-mode" checked>
+                                                            Full-screen kiosk mode
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="step-actions">
+                                            <button class="btn btn-secondary" id="wizard-back-3">
+                                                <i class="fas fa-arrow-left"></i> Back
+                                            </button>
+                                            <button class="btn btn-primary" id="wizard-next-4">
+                                                Continue <i class="fas fa-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 5: Verification -->
+                                <div class="wizard-step" id="wizard-step-5">
+                                    <div class="step-content">
+                                        <h3><i class="fas fa-check-circle"></i> Verification</h3>
+                                        <p>Let's test your setup to make sure everything works correctly.</p>
+                                        
+                                        <div class="verification-tests" id="wizard-verification">
+                                            <!-- Populated by JavaScript -->
+                                        </div>
+                                        
+                                        <div class="step-actions">
+                                            <button class="btn btn-secondary" id="wizard-back-4">
+                                                <i class="fas fa-arrow-left"></i> Back
+                                            </button>
+                                            <button class="btn btn-primary" id="wizard-run-tests">
+                                                <i class="fas fa-play"></i> Run Tests
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 6: Complete -->
+                                <div class="wizard-step" id="wizard-step-6">
+                                    <div class="step-content">
+                                        <div class="completion-icon">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
+                                        <h3>Setup Complete!</h3>
+                                        <p>Your installation is now configured and ready for 24/7 operation.</p>
+                                        
+                                        <div class="setup-summary" id="wizard-summary">
+                                            <!-- Populated by JavaScript -->
+                                        </div>
+                                        
+                                        <div class="next-steps">
+                                            <h4>What's Next?</h4>
+                                            <ul>
+                                                <li>Monitor your installation from the Dashboard</li>
+                                                <li>Set up notifications and alerts</li>
+                                                <li>Test your installation thoroughly</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div class="step-actions">
+                                            <button class="btn btn-primary" id="wizard-go-dashboard">
+                                                <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                                            </button>
+                                            <button class="btn btn-secondary" id="wizard-advanced-config">
+                                                <i class="fas fa-tools"></i> Advanced Configuration
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
                     <!-- System Preferences Tab -->
-                    <div id="system-prefs-tab" class="tab-pane active">
+                    <div id="system-prefs-tab" class="tab-pane">
                         <section class="card">
                 <h2><i class="fas fa-cog"></i> System Preferences</h2>
                 <p>Configure macOS settings for 24/7 installation use</p>

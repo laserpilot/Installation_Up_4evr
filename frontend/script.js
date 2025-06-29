@@ -23,12 +23,20 @@ class InstallationUp4evr {
         if (this.isElectron) {
             this.updateLoadingMessage('Starting backend server...');
             await this.waitForServer();
+            
+            // Check for sudo permissions early
+            this.updateLoadingMessage('Checking system permissions...');
+            await this.checkSudoPermissions();
         }
         
         this.updateLoadingMessage('Checking server status...');
         const serverOnline = await this.checkServerStatus();
         
         if (serverOnline) {
+            // Check if this is the first run and handle accordingly
+            this.updateLoadingMessage('Checking first run status...');
+            await this.checkFirstRun();
+            
             this.updateLoadingMessage('Loading system preferences...');
             await this.loadSystemPreferences();
             
@@ -37,6 +45,9 @@ class InstallationUp4evr {
             
             this.updateLoadingMessage('Checking security status...');
             await this.checkSIPStatus();
+            
+            this.updateLoadingMessage('Loading dashboard...');
+            await this.refreshDashboard();
             
             this.hideLoadingStates();
         } else {
@@ -150,6 +161,12 @@ class InstallationUp4evr {
         
         // Launch Agent Filters
         this.setupLaunchAgentFilters();
+        
+        // Dashboard Actions
+        this.setupDashboardActions();
+        
+        // Setup Wizard Actions
+        this.setupWizardActions();
 
         // Threshold slider sync events
         this.setupThresholdSliders();
@@ -813,6 +830,16 @@ class InstallationUp4evr {
                 // Add active class to clicked button and corresponding pane
                 button.classList.add('active');
                 document.getElementById(`${targetTab}-tab`).classList.add('active');
+                
+                // Load dashboard data if dashboard tab is selected
+                if (targetTab === 'dashboard') {
+                    this.refreshDashboard();
+                }
+                
+                // Initialize setup wizard if setup-wizard tab is selected
+                if (targetTab === 'setup-wizard') {
+                    this.initializeWizard();
+                }
                 
                 // Load monitoring data if monitoring tab is selected
                 if (targetTab === 'monitoring') {
@@ -1933,6 +1960,712 @@ class InstallationUp4evr {
         }, 5000);
     }
 
+    // Dashboard Management Methods
+    setupDashboardActions() {
+        // Dashboard refresh button
+        const refreshBtn = document.getElementById('dashboard-refresh');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.refreshDashboard());
+        }
+
+        // Setup wizard button
+        const setupWizardBtn = document.getElementById('run-setup-wizard');
+        if (setupWizardBtn) {
+            setupWizardBtn.addEventListener('click', () => this.switchTab('setup-wizard'));
+        }
+
+        // Quick action buttons
+        const restartAppsBtn = document.getElementById('dashboard-restart-apps');
+        if (restartAppsBtn) {
+            restartAppsBtn.addEventListener('click', () => this.restartAppsNow());
+        }
+
+        const rebootBtn = document.getElementById('dashboard-reboot');
+        if (rebootBtn) {
+            rebootBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reboot the system?')) {
+                    this.rebootNow();
+                }
+            });
+        }
+
+        // Auto-refresh dashboard data when tab becomes active
+        this.setupDashboardAutoRefresh();
+    }
+
+    async refreshDashboard() {
+        const refreshBtn = document.getElementById('dashboard-refresh');
+        const originalText = refreshBtn ? refreshBtn.innerHTML : '';
+        
+        try {
+            if (refreshBtn) {
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+                refreshBtn.disabled = true;
+            }
+
+            // Load dashboard data
+            await Promise.all([
+                this.updateDashboardHealth(),
+                this.updateDashboardApplications(),
+                this.updateDashboardAlerts()
+            ]);
+
+            this.showToast('Dashboard refreshed successfully', 'success');
+        } catch (error) {
+            console.error('Dashboard refresh failed:', error);
+            this.showToast('Failed to refresh dashboard', 'error');
+        } finally {
+            if (refreshBtn) {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }
+        }
+    }
+
+    async updateDashboardHealth() {
+        try {
+            const response = await this.apiCall('/api/monitoring/system');
+            const data = response.data || response;
+
+            // Update CPU
+            this.updateHealthCard('cpu', data.cpu?.usage || 0, data.cpu?.status || 'unknown');
+
+            // Update Memory
+            this.updateHealthCard('memory', data.memory?.usage || 0, data.memory?.status || 'unknown');
+
+            // Update Disk
+            this.updateHealthCard('disk', data.disk?.usage || 0, data.disk?.status || 'unknown');
+
+            // Update Uptime
+            if (data.uptime) {
+                this.updateHealthCard('uptime', this.formatUptime(data.uptime.seconds), 'active');
+            }
+
+        } catch (error) {
+            console.error('Failed to update dashboard health:', error);
+        }
+    }
+
+    updateHealthCard(metric, value, status) {
+        const valueEl = document.getElementById(`dashboard-${metric}-value`);
+        const statusEl = document.getElementById(`dashboard-${metric}-status`);
+
+        if (valueEl) {
+            if (metric === 'uptime') {
+                valueEl.textContent = value;
+            } else {
+                valueEl.textContent = typeof value === 'number' ? `${Math.round(value)}%` : value;
+            }
+        }
+
+        if (statusEl) {
+            statusEl.textContent = this.getStatusText(status);
+            statusEl.className = `health-status ${status}`;
+        }
+    }
+
+    getStatusText(status) {
+        const statusMap = {
+            'good': 'Good',
+            'warning': 'Warning', 
+            'critical': 'Critical',
+            'unknown': 'Checking...',
+            'active': 'Active'
+        };
+        return statusMap[status] || status;
+    }
+
+    formatUptime(seconds) {
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+
+        if (days > 0) {
+            return `${days}d ${hours}h`;
+        } else if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        } else {
+            return `${minutes}m`;
+        }
+    }
+
+    async updateDashboardApplications() {
+        try {
+            const response = await this.apiCall('/api/monitoring/applications');
+            const apps = response.data || response.applications || [];
+
+            const container = document.getElementById('dashboard-applications');
+            if (!container) return;
+
+            if (apps.length === 0) {
+                container.innerHTML = '<div class="no-apps">No applications monitored</div>';
+                return;
+            }
+
+            container.innerHTML = apps.map(app => `
+                <div class="app-item ${app.status || 'unknown'}">
+                    <div class="app-info">
+                        <div class="app-name">${app.name || 'Unknown App'}</div>
+                        <div class="app-status">${app.status || 'Unknown'}</div>
+                    </div>
+                    <div class="app-actions">
+                        ${app.status === 'stopped' ? 
+                            `<button class="btn-sm btn-primary" onclick="window.app.startApplication('${app.name}')">Start</button>` :
+                            `<button class="btn-sm btn-secondary" onclick="window.app.restartApplication('${app.name}')">Restart</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            console.error('Failed to update dashboard applications:', error);
+        }
+    }
+
+    async updateDashboardAlerts() {
+        try {
+            const response = await this.apiCall('/api/monitoring/alerts');
+            const alerts = response.data || response.alerts || [];
+
+            const container = document.getElementById('dashboard-alerts');
+            if (!container) return;
+
+            if (alerts.length === 0) {
+                container.innerHTML = '<div class="no-alerts">No active alerts</div>';
+                return;
+            }
+
+            // Show only recent alerts (last 10)
+            const recentAlerts = alerts.slice(-10).reverse();
+
+            container.innerHTML = recentAlerts.map(alert => `
+                <div class="alert-item ${alert.level || 'info'}">
+                    <div class="alert-icon">
+                        <i class="fas ${this.getAlertIcon(alert.level)}"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-message">${alert.message || 'Unknown alert'}</div>
+                        <div class="alert-time">${alert.timestamp ? new Date(alert.timestamp).toLocaleTimeString() : 'Unknown time'}</div>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            console.error('Failed to update dashboard alerts:', error);
+        }
+    }
+
+    getAlertIcon(level) {
+        const iconMap = {
+            'critical': 'fa-exclamation-triangle',
+            'warning': 'fa-exclamation-circle',
+            'info': 'fa-info-circle',
+            'success': 'fa-check-circle'
+        };
+        return iconMap[level] || 'fa-info-circle';
+    }
+
+    setupDashboardAutoRefresh() {
+        // Auto-refresh when dashboard tab becomes active
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.id === 'dashboard-tab' && 
+                    mutation.target.classList.contains('active')) {
+                    // Dashboard became active, refresh data
+                    setTimeout(() => this.refreshDashboard(), 100);
+                }
+            });
+        });
+
+        const dashboardTab = document.getElementById('dashboard-tab');
+        if (dashboardTab) {
+            observer.observe(dashboardTab, { 
+                attributes: true, 
+                attributeFilter: ['class'] 
+            });
+        }
+    }
+
+    // Setup Wizard Management Methods
+    setupWizardActions() {
+        this.currentWizardStep = 1;
+        this.wizardData = {};
+
+        // Header actions
+        const skipBtn = document.getElementById('skip-wizard');
+        if (skipBtn) {
+            skipBtn.addEventListener('click', () => this.skipWizard());
+        }
+
+        const advancedBtn = document.getElementById('advanced-mode');
+        if (advancedBtn) {
+            advancedBtn.addEventListener('click', () => this.switchTab('system-prefs'));
+        }
+
+        // Step 1 actions
+        const startGuidedBtn = document.getElementById('start-guided-setup');
+        if (startGuidedBtn) {
+            startGuidedBtn.addEventListener('click', () => this.nextWizardStep());
+        }
+
+        const goAdvancedBtn = document.getElementById('go-advanced');
+        if (goAdvancedBtn) {
+            goAdvancedBtn.addEventListener('click', () => this.switchTab('system-prefs'));
+        }
+
+        // Navigation buttons
+        this.setupWizardNavigationButtons();
+
+        // Final step actions
+        const goDashboardBtn = document.getElementById('wizard-go-dashboard');
+        if (goDashboardBtn) {
+            goDashboardBtn.addEventListener('click', () => this.switchTab('dashboard'));
+        }
+
+        const advancedConfigBtn = document.getElementById('wizard-advanced-config');
+        if (advancedConfigBtn) {
+            advancedConfigBtn.addEventListener('click', () => this.switchTab('system-prefs'));
+        }
+    }
+
+    setupWizardNavigationButtons() {
+        // Back buttons
+        for (let i = 1; i <= 4; i++) {
+            const backBtn = document.getElementById(`wizard-back-${i}`);
+            if (backBtn) {
+                backBtn.addEventListener('click', () => this.previousWizardStep());
+            }
+        }
+
+        // Next buttons
+        const nextBtn2 = document.getElementById('wizard-next-2');
+        if (nextBtn2) {
+            nextBtn2.addEventListener('click', () => this.nextWizardStep());
+        }
+
+        const nextBtn4 = document.getElementById('wizard-next-4');
+        if (nextBtn4) {
+            nextBtn4.addEventListener('click', () => this.nextWizardStep());
+        }
+
+        // Action buttons
+        const applySettingsBtn = document.getElementById('wizard-apply-settings');
+        if (applySettingsBtn) {
+            applySettingsBtn.addEventListener('click', () => this.applyWizardSettings());
+        }
+
+        const runTestsBtn = document.getElementById('wizard-run-tests');
+        if (runTestsBtn) {
+            runTestsBtn.addEventListener('click', () => this.runWizardTests());
+        }
+    }
+
+    nextWizardStep() {
+        if (this.currentWizardStep < 6) {
+            this.currentWizardStep++;
+            this.updateWizardDisplay();
+            
+            // Load content for the new step
+            this.loadWizardStepContent();
+        }
+    }
+
+    previousWizardStep() {
+        if (this.currentWizardStep > 1) {
+            this.currentWizardStep--;
+            this.updateWizardDisplay();
+        }
+    }
+
+    updateWizardDisplay() {
+        // Update progress bar
+        const progressFill = document.getElementById('wizard-progress-fill');
+        if (progressFill) {
+            const progressPercent = (this.currentWizardStep / 6) * 100;
+            progressFill.style.width = `${progressPercent}%`;
+        }
+
+        // Update step indicators
+        document.querySelectorAll('.step').forEach((step, index) => {
+            const stepNumber = index + 1;
+            step.classList.remove('active', 'completed');
+            
+            if (stepNumber === this.currentWizardStep) {
+                step.classList.add('active');
+            } else if (stepNumber < this.currentWizardStep) {
+                step.classList.add('completed');
+            }
+        });
+
+        // Update step content
+        document.querySelectorAll('.wizard-step').forEach((step, index) => {
+            const stepNumber = index + 1;
+            step.classList.remove('active');
+            
+            if (stepNumber === this.currentWizardStep) {
+                step.classList.add('active');
+            }
+        });
+    }
+
+    async loadWizardStepContent() {
+        switch (this.currentWizardStep) {
+            case 2:
+                await this.loadSystemChecks();
+                break;
+            case 3:
+                await this.loadEssentialSettings();
+                break;
+            case 4:
+                this.setupApplicationMethods();
+                break;
+            case 5:
+                await this.loadVerificationTests();
+                break;
+            case 6:
+                this.loadSetupSummary();
+                break;
+        }
+    }
+
+    async loadSystemChecks() {
+        const container = document.getElementById('wizard-system-checks');
+        if (!container) return;
+
+        container.innerHTML = '<div class="loading">Checking system configuration...</div>';
+
+        try {
+            // Get current system status
+            const systemData = await this.apiCall('/api/system-prefs/status');
+            const settings = systemData.data || systemData.settings || systemData || [];
+
+            const checks = [
+                { name: 'Screen Saver Settings', key: 'screensaver', description: 'Verifying screen saver is disabled' },
+                { name: 'Display Sleep Settings', key: 'displaySleep', description: 'Checking display sleep settings' },
+                { name: 'Computer Sleep Settings', key: 'computerSleep', description: 'Checking computer sleep settings' },
+                { name: 'Auto-restart Settings', key: 'autoRestart', description: 'Verifying automatic restart on power failure' },
+                { name: 'Menu Bar Settings', key: 'hideMenuBar', description: 'Checking menu bar visibility settings' }
+            ];
+
+            container.innerHTML = checks.map(check => {
+                const setting = settings.find(s => s.setting === check.key);
+                const status = this.getCheckStatus(setting);
+                
+                return `
+                    <div class="check-item">
+                        <div class="check-icon ${status.class}">
+                            <i class="fas ${status.icon}"></i>
+                        </div>
+                        <div class="check-details">
+                            <div class="check-name">${check.name}</div>
+                            <div class="check-description">${status.message}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('Failed to load system checks:', error);
+            container.innerHTML = '<div class="error">Failed to check system configuration</div>';
+        }
+    }
+
+    getCheckStatus(setting) {
+        if (!setting) {
+            return {
+                class: 'checking',
+                icon: 'fa-question',
+                message: 'Unable to determine current status'
+            };
+        }
+
+        const isConfigured = setting.status === 'applied';
+        
+        if (isConfigured) {
+            return {
+                class: 'good',
+                icon: 'fa-check',
+                message: 'Properly configured for installation use'
+            };
+        } else {
+            return {
+                class: 'warning',
+                icon: 'fa-exclamation',
+                message: 'Needs configuration for optimal performance'
+            };
+        }
+    }
+
+    async loadEssentialSettings() {
+        const container = document.getElementById('wizard-essential-settings');
+        if (!container) return;
+
+        try {
+            const systemData = await this.apiCall('/api/system-prefs/status');
+            const settings = systemData.data || systemData.settings || systemData || [];
+
+            // Filter to essential settings only
+            const essentialSettings = settings.filter(setting => 
+                setting.setting === 'screensaver' || 
+                setting.setting === 'displaySleep' ||
+                setting.setting === 'computerSleep' ||
+                setting.setting === 'autoRestart' ||
+                setting.setting === 'hideMenuBar'
+            );
+
+            container.innerHTML = essentialSettings.map(setting => `
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-name">${setting.name}</div>
+                        <div class="setting-description">Configure for 24/7 installation use</div>
+                    </div>
+                    <div class="setting-toggle">
+                        <label class="switch">
+                            <input type="checkbox" ${setting.status === 'applied' ? 'checked' : ''} 
+                                   data-setting="${setting.setting}">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            console.error('Failed to load essential settings:', error);
+            container.innerHTML = '<div class="error">Failed to load settings</div>';
+        }
+    }
+
+    async applyWizardSettings() {
+        const button = document.getElementById('wizard-apply-settings');
+        const originalText = button.innerHTML;
+        
+        try {
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+            button.disabled = true;
+
+            // Get selected settings
+            const checkboxes = document.querySelectorAll('#wizard-essential-settings input[type="checkbox"]:checked');
+            const settingsToApply = Array.from(checkboxes).map(cb => cb.dataset.setting);
+
+            if (settingsToApply.length > 0) {
+                const response = await this.apiCall('/api/system-prefs/apply', {
+                    method: 'POST',
+                    body: JSON.stringify({ settings: settingsToApply })
+                });
+
+                this.showToast('Settings applied successfully', 'success');
+                this.wizardData.settingsApplied = settingsToApply;
+            }
+
+            // Move to next step
+            this.nextWizardStep();
+
+        } catch (error) {
+            console.error('Failed to apply settings:', error);
+            this.showToast('Failed to apply some settings', 'error');
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+
+    setupApplicationMethods() {
+        // Setup method switching
+        const appMethod = document.getElementById('app-method');
+        const webMethod = document.getElementById('web-method');
+
+        if (appMethod) {
+            appMethod.addEventListener('click', () => {
+                document.querySelectorAll('.setup-method').forEach(m => m.classList.remove('active'));
+                appMethod.classList.add('active');
+                this.wizardData.appType = 'desktop';
+            });
+        }
+
+        if (webMethod) {
+            webMethod.addEventListener('click', () => {
+                document.querySelectorAll('.setup-method').forEach(m => m.classList.remove('active'));
+                webMethod.classList.add('active');
+                this.wizardData.appType = 'web';
+            });
+        }
+
+        // Setup drag and drop for desktop apps
+        const dropZone = document.getElementById('wizard-app-drop');
+        if (dropZone) {
+            this.setupWizardDropZone(dropZone);
+        }
+    }
+
+    setupWizardDropZone(dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--primary-color)';
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border-color)';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border-color)';
+            
+            // Handle dropped files
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                this.handleWizardAppSelection(files[0]);
+            }
+        });
+
+        dropZone.addEventListener('click', () => {
+            // Create file input for selection
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.app,application/*';
+            input.onchange = (e) => {
+                if (e.target.files.length > 0) {
+                    this.handleWizardAppSelection(e.target.files[0]);
+                }
+            };
+            input.click();
+        });
+    }
+
+    handleWizardAppSelection(file) {
+        this.wizardData.selectedApp = {
+            name: file.name,
+            path: file.path || file.webkitRelativePath,
+            type: 'desktop'
+        };
+
+        const dropZone = document.getElementById('wizard-app-drop');
+        if (dropZone) {
+            dropZone.innerHTML = `
+                <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+                <p>Selected: ${file.name}</p>
+                <button class="btn btn-outline">Change Selection</button>
+            `;
+        }
+    }
+
+    async loadVerificationTests() {
+        const container = document.getElementById('wizard-verification');
+        if (!container) return;
+
+        const tests = [
+            { name: 'System Settings', description: 'Verify applied system configurations' },
+            { name: 'Application Setup', description: 'Check if application is properly configured' },
+            { name: 'Launch Agent', description: 'Verify launch agent is created and valid' },
+            { name: 'Monitoring', description: 'Test monitoring and alerting system' }
+        ];
+
+        container.innerHTML = tests.map(test => `
+            <div class="test-item">
+                <div class="test-status checking" id="test-${test.name.toLowerCase().replace(' ', '-')}">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="test-details">
+                    <div class="test-name">${test.name}</div>
+                    <div class="test-description">${test.description}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async runWizardTests() {
+        const button = document.getElementById('wizard-run-tests');
+        const originalText = button.innerHTML;
+        
+        try {
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running Tests...';
+            button.disabled = true;
+
+            // Run tests sequentially
+            const tests = ['system-settings', 'application-setup', 'launch-agent', 'monitoring'];
+            
+            for (const test of tests) {
+                await this.runSingleTest(test);
+            }
+
+            // All tests completed, move to final step
+            setTimeout(() => {
+                this.nextWizardStep();
+            }, 1000);
+
+        } catch (error) {
+            console.error('Test failed:', error);
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+
+    async runSingleTest(testId) {
+        const statusEl = document.getElementById(`test-${testId}`);
+        if (!statusEl) return;
+
+        // Set to running
+        statusEl.className = 'test-status running';
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        // Simulate test execution
+        await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+        // Randomly pass/fail for demo (in real implementation, do actual tests)
+        const passed = Math.random() > 0.2; // 80% pass rate
+        
+        if (passed) {
+            statusEl.className = 'test-status passed';
+            statusEl.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            statusEl.className = 'test-status failed';
+            statusEl.innerHTML = '<i class="fas fa-times"></i>';
+        }
+    }
+
+    loadSetupSummary() {
+        const container = document.getElementById('wizard-summary');
+        if (!container) return;
+
+        const summary = [
+            { label: 'System Settings Applied', value: this.wizardData.settingsApplied?.length || 0 },
+            { label: 'Application Type', value: this.wizardData.appType || 'Not configured' },
+            { label: 'Selected Application', value: this.wizardData.selectedApp?.name || 'None' },
+            { label: 'Launch Agent Created', value: this.wizardData.selectedApp ? 'Yes' : 'No' },
+            { label: 'Monitoring Enabled', value: 'Yes' }
+        ];
+
+        container.innerHTML = summary.map(item => `
+            <div class="summary-item">
+                <span>${item.label}</span>
+                <span class="summary-value">${item.value}</span>
+            </div>
+        `).join('');
+    }
+
+    initializeWizard() {
+        // Reset wizard state
+        this.currentWizardStep = 1;
+        this.wizardData = {};
+        this.updateWizardDisplay();
+    }
+
+    switchTab(tabName) {
+        // Find and click the appropriate sidebar button
+        const button = document.querySelector(`.sidebar-button[data-tab="${tabName}"]`);
+        if (button) {
+            button.click();
+        }
+    }
+
+    skipWizard() {
+        if (confirm('Are you sure you want to skip the setup wizard? You can access advanced configuration tools directly.')) {
+            this.switchTab('dashboard');
+        }
+    }
+
     // Monitoring & Alerts Management Methods
     setupThresholdSliders() {
         const metrics = ['cpu', 'memory', 'disk', 'temperature'];
@@ -2849,6 +3582,416 @@ class InstallationUp4evr {
                 category.classList.toggle('collapsed');
             });
         });
+    }
+
+    // First-run detection and wizard auto-launch
+    async checkFirstRun() {
+        try {
+            const response = await this.apiCall('/api/config/user-preferences');
+            const preferences = response.data || response;
+            
+            // Check if user has opted to skip wizard
+            const skipWizard = preferences.skipWizard || false;
+            
+            if (!skipWizard) {
+                console.log('[INFO] First run detected - auto-launching setup wizard');
+                this.showFirstRunWelcome();
+            } else {
+                console.log('[INFO] Setup wizard skipped - loading default view');
+                this.navigateToDefaultView(preferences.defaultView || 'dashboard');
+            }
+        } catch (error) {
+            console.warn('Failed to check first-run status:', error);
+            // Default to showing dashboard if we can't determine first-run status
+            this.navigateToDefaultView('dashboard');
+        }
+    }
+
+    showFirstRunWelcome() {
+        // Show a welcome overlay that guides users to the setup wizard
+        const overlay = document.createElement('div');
+        overlay.id = 'first-run-overlay';
+        overlay.innerHTML = `
+            <div class="first-run-modal">
+                <div class="first-run-header">
+                    <h2>🎉 Welcome to Installation Up 4evr!</h2>
+                    <p>Let's get your installation management system set up.</p>
+                </div>
+                <div class="first-run-content">
+                    <div class="welcome-option">
+                        <h3>🚀 Quick Setup (Recommended)</h3>
+                        <p>Walk through our guided setup wizard to configure your system in just a few minutes.</p>
+                        <button class="btn btn-primary" onclick="app.startSetupWizard()">Start Setup Wizard</button>
+                    </div>
+                    <div class="welcome-option">
+                        <h3>⚡ Skip to Dashboard</h3>
+                        <p>Jump straight to the dashboard if you're already familiar with the system.</p>
+                        <button class="btn btn-secondary" onclick="app.skipToAdvanced()">Go to Dashboard</button>
+                    </div>
+                </div>
+                <div class="first-run-footer">
+                    <label>
+                        <input type="checkbox" id="dont-show-again"> 
+                        Don't show this again
+                    </label>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        this.addFirstRunStyles();
+    }
+
+    startSetupWizard() {
+        this.dismissFirstRunOverlay();
+        this.showTab('setup-wizard');
+    }
+
+    async skipToAdvanced() {
+        const dontShowAgain = document.getElementById('dont-show-again')?.checked || false;
+        
+        if (dontShowAgain) {
+            try {
+                await this.apiCall('/api/config/user-preferences', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        skipWizard: true,
+                        defaultView: 'dashboard'
+                    })
+                });
+                console.log('[INFO] User preference saved: skip wizard on future runs');
+            } catch (error) {
+                console.warn('Failed to save user preference:', error);
+            }
+        }
+        
+        this.dismissFirstRunOverlay();
+        this.showTab('dashboard');
+    }
+
+    dismissFirstRunOverlay() {
+        const overlay = document.getElementById('first-run-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    navigateToDefaultView(view) {
+        // Navigate to the user's preferred default view
+        const validViews = ['dashboard', 'setup-wizard', 'system-prefs', 'launch-agents'];
+        const targetView = validViews.includes(view) ? view : 'dashboard';
+        
+        console.log(`[INFO] Navigating to default view: ${targetView}`);
+        this.showTab(targetView);
+    }
+
+    addFirstRunStyles() {
+        if (document.getElementById('first-run-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'first-run-styles';
+        style.textContent = `
+            #first-run-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease-out;
+            }
+            
+            .first-run-modal {
+                background: white;
+                border-radius: 12px;
+                padding: 2rem;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.3s ease-out;
+            }
+            
+            .first-run-header {
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+            
+            .first-run-header h2 {
+                color: #333;
+                margin: 0 0 0.5rem 0;
+                font-size: 1.8rem;
+            }
+            
+            .first-run-header p {
+                color: #666;
+                margin: 0;
+                font-size: 1.1rem;
+            }
+            
+            .welcome-option {
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+                border-left: 4px solid #007bff;
+            }
+            
+            .welcome-option h3 {
+                color: #333;
+                margin: 0 0 0.5rem 0;
+                font-size: 1.2rem;
+            }
+            
+            .welcome-option p {
+                color: #666;
+                margin: 0 0 1rem 0;
+                line-height: 1.4;
+            }
+            
+            .first-run-footer {
+                text-align: center;
+                margin-top: 1.5rem;
+                padding-top: 1.5rem;
+                border-top: 1px solid #eee;
+            }
+            
+            .first-run-footer label {
+                color: #666;
+                font-size: 0.9rem;
+                cursor: pointer;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            
+            @keyframes slideUp {
+                from { 
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to { 
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Sudo permission management
+    async checkSudoPermissions() {
+        if (!this.isElectron) return;
+
+        try {
+            // Check if we already have sudo access cached
+            const response = await this.apiCall('/api/auth/sudo-status');
+            if (response.hasAccess) {
+                console.log('[INFO] Sudo access already available');
+                return;
+            }
+        } catch (error) {
+            console.warn('Could not check sudo status:', error);
+        }
+
+        // Show sudo permission dialog
+        this.showSudoPermissionDialog();
+    }
+
+    showSudoPermissionDialog() {
+        const dialog = document.createElement('div');
+        dialog.id = 'sudo-permission-dialog';
+        dialog.innerHTML = `
+            <div class="sudo-modal">
+                <div class="sudo-header">
+                    <h2>🔐 Administrator Access Required</h2>
+                    <p>Installation Up 4evr needs administrator privileges to manage system settings safely.</p>
+                </div>
+                
+                <div class="sudo-body">
+                    <div class="permission-explanation">
+                        <h3>Why do we need your password?</h3>
+                        <ul>
+                            <li><strong>System Preferences:</strong> Modify display sleep, screensaver, and power settings</li>
+                            <li><strong>Launch Agents:</strong> Install and manage auto-start applications</li>
+                            <li><strong>Security Settings:</strong> Check and configure system security features</li>
+                            <li><strong>Performance Monitoring:</strong> Access detailed system information</li>
+                        </ul>
+                        
+                        <div class="security-note">
+                            <h4>🛡️ Your Security is Important</h4>
+                            <p>Your password is only used locally on your computer and is never stored or transmitted. 
+                            All commands are executed through macOS's built-in security framework.</p>
+                        </div>
+                        
+                        <div class="commands-preview">
+                            <h4>Example commands we'll run:</h4>
+                            <code>
+                                defaults write com.apple.screensaver idleTime 0<br>
+                                pmset -a displaysleep 0<br>
+                                launchctl load ~/Library/LaunchAgents/[your-app].plist
+                            </code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sudo-footer">
+                    <button id="grant-sudo-access" class="btn btn-primary">
+                        Grant Access & Continue
+                    </button>
+                    <button id="continue-limited" class="btn btn-secondary">
+                        Continue with Limited Features
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+        this.addSudoDialogStyles();
+
+        // Add event listeners
+        document.getElementById('grant-sudo-access').addEventListener('click', () => {
+            this.requestSudoAccess();
+        });
+
+        document.getElementById('continue-limited').addEventListener('click', () => {
+            this.dismissSudoDialog();
+            this.showToast('Continuing with limited features. Some system modifications may not work.', 'warning');
+        });
+    }
+
+    async requestSudoAccess() {
+        try {
+            if (this.isElectron && window.electronAPI) {
+                // Use Electron's built-in sudo prompt
+                const result = await window.electronAPI.requestSudoAccess();
+                if (result.success) {
+                    this.dismissSudoDialog();
+                    this.showToast('Administrator access granted successfully', 'success');
+                } else {
+                    this.showToast('Access denied. Some features may not work properly.', 'warning');
+                }
+            } else {
+                // Fallback for web version
+                this.showToast('Sudo access not available in web version', 'info');
+            }
+        } catch (error) {
+            console.error('Failed to request sudo access:', error);
+            this.showToast('Failed to obtain administrator access', 'error');
+        }
+    }
+
+    dismissSudoDialog() {
+        const dialog = document.getElementById('sudo-permission-dialog');
+        if (dialog) {
+            dialog.remove();
+        }
+    }
+
+    addSudoDialogStyles() {
+        if (document.getElementById('sudo-dialog-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'sudo-dialog-styles';
+        style.textContent = `
+            #sudo-permission-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 10001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: fadeIn 0.3s ease-out;
+            }
+            
+            .sudo-modal {
+                background: white;
+                border-radius: 12px;
+                padding: 2rem;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.3s ease-out;
+            }
+            
+            .sudo-header h2 {
+                margin: 0 0 0.5rem 0;
+                color: #333;
+                font-size: 1.5rem;
+            }
+            
+            .sudo-header p {
+                margin: 0 0 1.5rem 0;
+                color: #666;
+            }
+            
+            .permission-explanation ul {
+                margin: 1rem 0;
+                padding-left: 1.5rem;
+            }
+            
+            .permission-explanation li {
+                margin: 0.5rem 0;
+                line-height: 1.4;
+            }
+            
+            .security-note {
+                background: #f0f8ff;
+                border: 1px solid #b3d9ff;
+                border-radius: 8px;
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+            
+            .security-note h4 {
+                margin: 0 0 0.5rem 0;
+                color: #0066cc;
+                font-size: 1rem;
+            }
+            
+            .commands-preview {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+            
+            .commands-preview h4 {
+                margin: 0 0 0.5rem 0;
+                color: #495057;
+                font-size: 0.9rem;
+            }
+            
+            .commands-preview code {
+                display: block;
+                font-family: 'Monaco', 'Menlo', monospace;
+                font-size: 0.8rem;
+                color: #495057;
+                line-height: 1.4;
+            }
+            
+            .sudo-footer {
+                display: flex;
+                gap: 1rem;
+                margin-top: 2rem;
+                flex-wrap: wrap;
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
 

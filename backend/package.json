@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "legacy": "node server-legacy.js",
+    "dev:legacy": "nodemon server-legacy.js",
     "test": "node test-system-prefs.js && node test-launch-agents.js && node test-profiles.js && node test-monitoring.js",
     "test:system-prefs": "node test-system-prefs.js",
     "test:launch-agents": "node test-launch-agents.js",
