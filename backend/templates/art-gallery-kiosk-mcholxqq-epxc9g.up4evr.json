@@ -1,0 +1,80 @@
+{
+  "id": "art-gallery-kiosk-mcholxqq-epxc9g",
+  "name": "Art Gallery Kiosk",
+  "description": "Gallery information kiosk or interactive art piece",
+  "category": "gallery",
+  "author": "Installation Up 4evr",
+  "version": "1.0.0",
+  "created": "2025-06-29T13:04:17.426Z",
+  "updated": "2025-06-29T13:04:17.426Z",
+  "tags": [
+    "gallery",
+    "kiosk",
+    "art",
+    "interactive"
+  ],
+  "systemSettings": [
+    {
+      "id": "screensaver",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "displaySleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "computerSleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "autoRestart",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "restartFreeze",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "desktopBackground",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "softwareUpdate",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "hideMenuBar",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "disableAppNap",
+      "enabled": true,
+      "priority": "normal"
+    }
+  ],
+  "launchAgents": [],
+  "additionalScripts": [],
+  "compatibility": {
+    "minMacOS": "10.14",
+    "maxMacOS": null,
+    "architecture": [
+      "x64",
+      "arm64"
+    ],
+    "sipRequired": false
+  },
+  "installation": {
+    "preInstall": [],
+    "postInstall": [],
+    "testing": [],
+    "troubleshooting": []
+  }
+}
