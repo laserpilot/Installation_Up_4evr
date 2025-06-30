@@ -196,56 +196,51 @@ app.post('/api/auth/sudo-grant', async (req, res) => {
 
 // Platform manager route handler (priority routing for new features)
 app.all('/api/*', async (req, res, next) => {
-    if (compatibility.isUsingPlatformManager()) {
-        try {
-            const apiPath = req.path.replace('/api', '');
-            const method = req.method;
-            const data = method === 'GET' ? req.query : req.body;
-            
-            console.log(`[API] ${method} ${req.path} (platform mode)`);
-            const result = await compatibility.platformManager.handleAPIRequest(apiPath, method, data);
-            
-            if (result.success) {
-                res.json(result);
-                return; // Don't fall through to legacy routes
-            } else if (result.error?.code === 'ROUTE_NOT_FOUND') {
-                // Route not found in platform manager, try legacy routes
-                next();
-            } else {
-                // Other errors should be returned immediately
-                res.status(result.error?.status || 500).json(result);
-                return;
-            }
-        } catch (error) {
-            console.warn(`[API] Platform manager error for ${method} ${req.path}:`, error.message);
-            // Fall through to legacy routes on error
+    try {
+        const apiPath = req.path.replace('/api', '');
+        const method = req.method;
+        const data = method === 'GET' ? req.query : req.body;
+        
+        console.log(`[API] ${method} ${req.path} (platform mode)`);
+        const result = await platformManager.handleAPIRequest(apiPath, method, data);
+        
+        if (result.success) {
+            res.json(result);
+            return; // Don't fall through to legacy routes
+        } else if (result.error?.code === 'ROUTE_NOT_FOUND') {
+            // Route not found in platform manager, try legacy routes
             next();
+        } else {
+            // Other errors should be returned immediately
+            res.status(result.error?.status || 500).json(result);
+            return;
         }
-    } else {
+    } catch (error) {
+        console.warn(`[API] Platform manager error for ${method} ${req.path}:`, error.message);
+        // Fall through to legacy routes on error
         next();
     }
 });
 
-// Health check with compatibility info
+// Health check route
 app.get('/api/health', async (req, res) => {
     try {
-        const health = await compatibility.healthCheck();
-        const platformInfo = compatibility.getPlatformInfo();
-        
-        res.json({
-            ...health,
-            platform: platformInfo,
+        const result = await platformManager.handleAPIRequest('/health', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            error: error.message,
             timestamp: new Date().toISOString()
         });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
     }
 });
 
 // System Preferences API Routes with platform manager integration
 app.get('/api/system-prefs/settings', async (req, res) => {
     try {
-        const settings = await compatibility.getSystemPrefsSettings(systemPrefs);
+        const result = await platformManager.handleAPIRequest('/system/settings', 'GET');
+        const settings = result.data;
         res.json(settings);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -462,7 +457,8 @@ app.put('/api/config', async (req, res) => {
 // Platform information endpoint
 app.get('/api/platform', async (req, res) => {
     try {
-        const platformInfo = compatibility.getPlatformInfo();
+        const result = await platformManager.handleAPIRequest('/platform', 'GET');
+        const platformInfo = result.data;
         res.json(platformInfo);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -684,16 +680,23 @@ async function startServer() {
         });
 
 
+        // Get platform info for startup message
+        let platformInfo = { platform: 'macos', mode: 'platform', version: '1.0.0-alpha.1', features: {} };
+        try {
+            const platformResult = await platformManager.handleAPIRequest('/platform', 'GET');
+            platformInfo = platformResult.data;
+        } catch (error) {
+            console.warn('Could not get platform info:', error.message);
+        }
+
         // Start Express server
         app.listen(PORT, () => {
-            const platformInfo = platformManager.getPlatformInfo();
-            
             console.log(`🚀 Installation Up 4evr server running on http://localhost:${PORT}`);
             console.log(`Frontend available at: http://localhost:${PORT}`);
             console.log(`API endpoints available at: http://localhost:${PORT}/api/*`);
             console.log(`📊 Mode: ${platformInfo.mode} (v${platformInfo.version})`);
             console.log(`🖥️  Platform: ${platformInfo.platform}`);
-            console.log('🔧 Features:', Object.keys(platformInfo.features).filter(k => platformInfo.features[k]).join(', '));
+            console.log('🔧 Features:', Object.keys(platformInfo.features || {}).filter(k => platformInfo.features[k]).join(', '));
             
             if (platformInfo.mode === 'platform') {
                 console.log('✨ Platform abstraction active - ready for cross-platform expansion');

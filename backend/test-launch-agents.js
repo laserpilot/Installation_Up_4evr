@@ -1,34 +1,36 @@
 #!/usr/bin/env node
 
 /**
- * Test script for Launch Agent Manager
+ * Test script for Launch Agent Manager (Platform Architecture)
  * Run with: node backend/test-launch-agents.js
  */
 
-const LaunchAgentManager = require('./modules/launch-agents');
+const PlatformManager = require('./src/core/platform-manager');
 const path = require('path');
 
 async function testLaunchAgents() {
-    console.log('🚀 Testing Launch Agent Manager\n');
+    console.log('🚀 Testing Launch Agent Manager (Platform Architecture)\n');
     
-    const manager = new LaunchAgentManager();
+    const platform = new PlatformManager();
+    await platform.initialize();
+    const manager = platform.getProcessManager();
     
     try {
         // Test with TextEdit (should be available on all Macs)
         const testAppPath = '/Applications/TextEdit.app';
         
-        console.log('📱 Testing App Info Extraction...');
+        console.log('📱 Testing Running Applications...');
         try {
-            const appInfo = await manager.getAppInfo(testAppPath);
-            console.log('✅ App Info Retrieved:');
-            console.log(`   App Name: ${appInfo.appName}`);
-            console.log(`   Display Name: ${appInfo.displayName}`);
-            console.log(`   Bundle ID: ${appInfo.bundleIdentifier}`);
-            console.log(`   Version: ${appInfo.version}`);
-            console.log(`   Executable: ${appInfo.executablePath}`);
+            const runningApps = await manager.getRunningApplications();
+            console.log(`✅ Found ${runningApps.length} running applications:`);
+            runningApps.slice(0, 5).forEach(app => {
+                console.log(`   ${app.name} (PID: ${app.pid})`);
+            });
+            if (runningApps.length > 5) {
+                console.log(`   ... and ${runningApps.length - 5} more`);
+            }
         } catch (error) {
-            console.log(`❌ Could not get app info for ${testAppPath}: ${error.message}`);
-            console.log('💡 Try changing testAppPath to an app that exists on your system');
+            console.log(`❌ Could not get running applications: ${error.message}`);
         }
         console.log('');
 
@@ -36,91 +38,88 @@ async function testLaunchAgents() {
         console.log('📝 Testing Plist Generation...');
         const testOptions = {
             label: 'com.test.textedit.up4evr',
-            executablePath: '/Applications/TextEdit.app/Contents/MacOS/TextEdit',
+            program: '/Applications/TextEdit.app',
+            description: 'Test launch agent for TextEdit',
             keepAlive: true,
-            successfulExit: true,
-            processType: 'Interactive',
             runAtLoad: true
         };
         
-        const plistContent = manager.generatePlist(testOptions);
+        const plistContent = manager.generateLaunchAgentPlist(testOptions);
         console.log('✅ Sample Plist Generated:');
         console.log('---');
         console.log(plistContent);
         console.log('---');
         console.log('');
 
-        // List existing launch agents
-        console.log('📋 Listing Existing Launch Agents...');
+        // List existing auto-start entries  
+        console.log('📋 Listing Existing Auto-Start Entries...');
         try {
-            const existingAgents = await manager.listLaunchAgents();
-            console.log(`Found ${existingAgents.length} launch agents:`);
+            const autoStartEntries = await manager.getAutoStartEntries();
+            console.log(`Found ${autoStartEntries.length} Up4evr auto-start entries:`);
             
-            if (existingAgents.length > 0) {
-                existingAgents.forEach(agent => {
-                    if (agent.error) {
-                        console.log(`❌ ${agent.filename} - Error: ${agent.error}`);
-                    } else {
-                        console.log(`📄 ${agent.filename} (${agent.label})`);
-                        console.log(`   Modified: ${agent.modified.toLocaleDateString()}`);
-                        console.log(`   Size: ${agent.size} bytes`);
-                    }
+            if (autoStartEntries.length > 0) {
+                autoStartEntries.forEach(entry => {
+                    const status = entry.loaded ? '🟢 Loaded' : '🟡 Not loaded';
+                    console.log(`📄 ${entry.name} - ${status}`);
+                    console.log(`   Label: ${entry.label}`);
+                    console.log(`   Program: ${entry.program}`);
+                    console.log(`   Plist: ${entry.plistPath}`);
                 });
             } else {
-                console.log('   No custom launch agents found');
+                console.log('   No Up4evr auto-start entries found');
             }
         } catch (error) {
-            console.log(`❌ Could not list launch agents: ${error.message}`);
+            console.log(`❌ Could not list auto-start entries: ${error.message}`);
         }
         console.log('');
 
-        // Check status of running launch agents
-        console.log('⚡ Checking Launch Agent Status...');
+        // Test application start/stop functionality  
+        console.log('⚡ Testing Application Control...');
         try {
-            const runningAgents = await manager.getLaunchAgentStatus();
-            console.log(`Found ${runningAgents.length} loaded launch agents:`);
+            // Test starting an application
+            console.log('Testing application start (dry run - not actually starting)...');
+            console.log(`✅ Would start application: ${testAppPath}`);
             
-            const relevantAgents = runningAgents.filter(agent => 
-                agent.label.includes('up4evr') || 
-                agent.label.includes('TextEdit') ||
-                !agent.label.startsWith('com.apple.')
-            ).slice(0, 5); // Show first 5 non-Apple agents
+            // Show what the start command would look like
+            console.log(`   Command would be: open "${testAppPath}"`);
             
-            if (relevantAgents.length > 0) {
-                relevantAgents.forEach(agent => {
-                    const status = agent.pid ? `Running (PID: ${agent.pid})` : 'Loaded but not running';
-                    console.log(`🔄 ${agent.label} - ${status}`);
-                });
+            // Test the application running detection
+            const runningApps = await manager.getRunningApplications();
+            const textEditRunning = runningApps.find(app => app.name === 'TextEdit');
+            
+            if (textEditRunning) {
+                console.log(`🟢 TextEdit is currently running (PID: ${textEditRunning.pid})`);
             } else {
-                console.log('   No custom launch agents currently loaded');
+                console.log(`🟡 TextEdit is not currently running`);
             }
             
-            if (runningAgents.length > 10) {
-                console.log(`   ... and ${runningAgents.length - 5} more system agents`);
-            }
         } catch (error) {
-            console.log(`❌ Could not check launch agent status: ${error.message}`);
+            console.log(`❌ Could not test application control: ${error.message}`);
         }
         console.log('');
 
-        console.log('✅ Launch Agent Manager test completed successfully!');
+        console.log('✅ Process Manager test completed successfully!');
         console.log('');
-        console.log('💡 To create a launch agent for real, you can run:');
-        console.log('   const result = await manager.installLaunchAgent("/path/to/your/app.app");');
+        console.log('💡 To create an auto-start entry for real, you can run:');
+        console.log('   const result = await manager.createAutoStartEntry("/path/to/your/app.app");');
         console.log('   console.log(result);');
         console.log('');
         console.log('🔧 Available methods:');
-        console.log('   - createLaunchAgent() - Generate plist file');
-        console.log('   - installLaunchAgent() - Create and load launch agent');
-        console.log('   - loadLaunchAgent() - Load existing plist');
-        console.log('   - unloadLaunchAgent() - Unload running agent');
-        console.log('   - deleteLaunchAgent() - Remove plist file');
-        console.log('   - listLaunchAgents() - Show all user agents');
-        console.log('   - getLaunchAgentStatus() - Check running status');
+        console.log('   - startApplication() - Start an application');
+        console.log('   - stopApplication() - Stop a running application');
+        console.log('   - restartApplication() - Restart an application');
+        console.log('   - getRunningApplications() - List running applications');
+        console.log('   - createAutoStartEntry() - Create launch agent for auto-start');
+        console.log('   - removeAutoStartEntry() - Remove auto-start launch agent');
+        console.log('   - getAutoStartEntries() - List all Up4evr auto-start entries');
+        console.log('   - generateLaunchAgentPlist() - Generate plist content');
 
     } catch (error) {
         console.error('❌ Test failed:', error.message);
         process.exit(1);
+    } finally {
+        // Clean shutdown
+        await platform.shutdown();
     }
 }
 
