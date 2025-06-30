@@ -1,9 +1,9 @@
 /**
  * Installation Up 4evr - Backend Server
- * Enhanced server with platform abstraction support and legacy compatibility
+ * Modern platform abstraction architecture - Alpha v1.0.0
  * 
- * This is the main server with modern platform abstraction architecture.
- * For legacy compatibility, see server-legacy.js
+ * This server uses the new platform abstraction layer for cross-platform compatibility.
+ * Legacy modules have been moved to backend/legacy/ for reference.
  */
 
 console.log('SERVER: Starting server execution...');
@@ -22,45 +22,18 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-// Import compatibility layer for gradual migration
-const CompatibilityLayer = require('./src/compatibility-layer');
-
-// Legacy modules (fallback)
-console.log('SERVER: Loading legacy modules...');
-const SystemPreferencesManager = require('./modules/system-prefs');
-console.log('SERVER: system-prefs loaded');
-const LaunchAgentManager = require('./modules/launch-agents');
-console.log('SERVER: launch-agents loaded');
-const ProfilesManager = require('./modules/profiles');
-console.log('SERVER: profiles loaded');
-const MonitoringSystem = require('./modules/monitoring');
-console.log('SERVER: monitoring loaded');
-const RemoteControlSystem = require('./modules/remote-control');
-console.log('SERVER: remote-control loaded');
-const NotificationSystem = require('./modules/notifications');
-console.log('SERVER: notifications loaded');
-const ServiceControlManager = require('./modules/service-control');
-console.log('SERVER: service-control loaded');
-const InstallationSettingsManager = require('./modules/installation-settings');
-console.log('SERVER: installation-settings loaded');
+// Import modern platform architecture
+console.log('SERVER: Loading platform management system...');
+const PlatformManager = require('./src/core/platform-manager');
+console.log('SERVER: Platform manager loaded');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Initialize compatibility layer
-const compatibility = new CompatibilityLayer();
-
-// Initialize legacy managers (as fallback)
-console.log('SERVER: Initializing legacy managers...');
-const systemPrefs = new SystemPreferencesManager();
-const launchAgents = new LaunchAgentManager();
-const profiles = new ProfilesManager();
-const monitoring = new MonitoringSystem();
-const remoteControl = new RemoteControlSystem(monitoring);
-const notifications = new NotificationSystem(monitoring);
-const serviceControl = new ServiceControlManager();
-const installationSettings = new InstallationSettingsManager();
-console.log('SERVER: Legacy managers initialized.');
+// Initialize platform manager
+console.log('SERVER: Initializing platform manager...');
+const platformManager = new PlatformManager();
+console.log('SERVER: Platform manager initialized.');
 
 // Middleware
 app.use(cors());
@@ -70,12 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Add compatibility middleware
-app.use(compatibility.createAPIMiddleware());
-
 // Request logging
 app.use((req, res, next) => {
-    console.log(`[API] ${req.method} ${req.path} (${req.compatibility?.mode || 'unknown'} mode)`);
+    console.log(`[API] ${req.method} ${req.path} (platform mode)`);
     next();
 });
 
@@ -339,8 +309,8 @@ app.get('/api/system-prefs/verify', async (req, res) => {
 
 app.get('/api/system-prefs/sip-status', async (req, res) => {
     try {
-        const status = await systemPrefs.checkSIPStatus();
-        res.json(status);
+        const result = await platformManager.handleAPIRequest('/system/sip-status', 'GET');
+        res.json(result.data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -358,8 +328,8 @@ app.get('/api/monitoring/status', async (req, res) => {
 
 app.get('/api/monitoring/system', async (req, res) => {
     try {
-        const status = await compatibility.getMonitoringStatus(monitoring);
-        res.json(status);
+        const result = await platformManager.handleAPIRequest('/monitoring/system', 'GET');
+        res.json(result.data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -367,8 +337,8 @@ app.get('/api/monitoring/system', async (req, res) => {
 
 app.get('/api/monitoring/applications', async (req, res) => {
     try {
-        const apps = await compatibility.getMonitoringApplications(monitoring);
-        res.json(apps);
+        const result = await platformManager.handleAPIRequest('/monitoring/applications', 'GET');
+        res.json(result.data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -377,8 +347,8 @@ app.get('/api/monitoring/applications', async (req, res) => {
 // Missing Monitoring endpoints
 app.get('/api/monitoring/alerts', async (req, res) => {
     try {
-        const alerts = monitoring.notifications || [];
-        res.json({ success: true, alerts });
+        const result = await platformManager.handleAPIRequest('/monitoring/alerts', 'GET');
+        res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -386,8 +356,8 @@ app.get('/api/monitoring/alerts', async (req, res) => {
 
 app.get('/api/monitoring/app-health', async (req, res) => {
     try {
-        const health = await monitoring.getApplicationInfo();
-        res.json(health);
+        const result = await platformManager.handleAPIRequest('/monitoring/app-health', 'GET');
+        res.json(result.data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -674,28 +644,26 @@ app.use((req, res) => {
 // Server startup
 async function startServer() {
     try {
-        // Initialize compatibility layer (try platform manager first)
-        const usePlatformManager = process.env.USE_PLATFORM_MANAGER !== 'false';
-        await compatibility.initialize(usePlatformManager);
+        // Initialize platform manager
+        console.log('[PLATFORM] Initializing platform manager...');
+        await platformManager.initialize();
+        console.log('[PLATFORM] Platform manager ready');
 
-        // Start monitoring with appropriate system
+        // Start monitoring system
         console.log('[INFO] Starting monitoring system...');
         try {
-            await compatibility.startMonitoring(monitoring);
+            const monitoring = platformManager.getMonitoring();
+            await monitoring.startMonitoring();
             console.log('📊 Monitoring system started');
         } catch (error) {
             console.warn('Failed to start monitoring:', error.message);
         }
 
-        // Test health scoring route
+        // Health scoring route
         app.get('/api/health-score', async (req, res) => {
             try {
-                if (compatibility.isUsingPlatformManager()) {
-                    const result = await compatibility.platformManager.handleAPIRequest('/health/score', 'GET');
-                    res.json(result);
-                } else {
-                    res.status(501).json({ error: 'Health scoring requires platform manager mode' });
-                }
+                const result = await platformManager.handleAPIRequest('/health/score', 'GET');
+                res.json(result);
             } catch (error) {
                 res.status(500).json({ error: error.message });
             }
@@ -718,7 +686,7 @@ async function startServer() {
 
         // Start Express server
         app.listen(PORT, () => {
-            const platformInfo = compatibility.getPlatformInfo();
+            const platformInfo = platformManager.getPlatformInfo();
             
             console.log(`🚀 Installation Up 4evr server running on http://localhost:${PORT}`);
             console.log(`Frontend available at: http://localhost:${PORT}`);
@@ -743,7 +711,8 @@ async function startServer() {
 // Graceful shutdown
 async function shutdown() {
     console.log('[SERVER] Shutting down...');
-    await compatibility.shutdown();
+    // Platform manager cleanup if needed
+    console.log('[SERVER] Shutdown complete');
     process.exit(0);
 }
 
