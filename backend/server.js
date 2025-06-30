@@ -134,6 +134,10 @@ app.post('/api/auth/sudo-grant', async (req, res) => {
         
         if (method === 'native' || (isElectron && !password)) {
             // Method 1: Use native @expo/sudo-prompt (Electron/Native)
+            console.log('[AUTH] Using native authentication method');
+            console.log('[AUTH] Is Electron detected:', isElectron);
+            console.log('[AUTH] Method requested:', method);
+            
             const options = {
                 name: 'Installation Up 4evr',
                 icns: '/Applications/Utilities/Terminal.app/Contents/Resources/Terminal.icns'
@@ -141,7 +145,11 @@ app.post('/api/auth/sudo-grant', async (req, res) => {
             
             const command = 'true'; // Simple command that just returns success
             
+            console.log('[AUTH] Calling sudo.exec with options:', options);
             sudo.exec(command, options, (error, stdout, stderr) => {
+                console.log('[AUTH] sudo.exec callback - error:', error);
+                console.log('[AUTH] sudo.exec callback - stdout:', stdout);
+                console.log('[AUTH] sudo.exec callback - stderr:', stderr);
                 if (error) {
                     if (error.message.includes('User did not grant permission') || 
                         error.message.includes('cancelled')) {
