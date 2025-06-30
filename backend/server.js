@@ -366,6 +366,95 @@ app.get('/api/monitoring/applications', async (req, res) => {
     }
 });
 
+// Missing Monitoring endpoints
+app.get('/api/monitoring/alerts', async (req, res) => {
+    try {
+        const alerts = monitoring.notifications || [];
+        res.json({ success: true, alerts });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/monitoring/app-health', async (req, res) => {
+    try {
+        const health = await monitoring.getApplicationInfo();
+        res.json(health);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/monitoring/config', async (req, res) => {
+    try {
+        const config = monitoring.config;
+        res.json({ success: true, config });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/monitoring/config', async (req, res) => {
+    try {
+        const { config } = req.body;
+        // Update monitoring configuration
+        Object.assign(monitoring.config, config);
+        res.json({ success: true, message: 'Configuration updated' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/monitoring/defaults', async (req, res) => {
+    try {
+        const defaults = {
+            interval: 30000,
+            alertThreshold: 85,
+            retainLogs: 7,
+            enableNotifications: true
+        };
+        res.json({ success: true, defaults });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/monitoring/simulate-load', async (req, res) => {
+    try {
+        const { type, duration = 5000 } = req.body;
+        res.json({ 
+            success: true, 
+            message: `Simulating ${type} load for ${duration}ms`,
+            note: 'Load simulation not implemented in this demo'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/monitoring/test-app', async (req, res) => {
+    try {
+        const { appName } = req.body;
+        const status = await monitoring.getAppStatus(appName);
+        res.json({ success: true, status });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/monitoring/test-alert/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        res.json({ 
+            success: true, 
+            message: `Test alert of type ${type} sent`,
+            note: 'Alert testing not fully implemented in this demo'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Configuration API Routes (new platform manager features)
 app.get('/api/config', async (req, res) => {
     try {
@@ -486,6 +575,35 @@ app.post('/api/launch-agents/install', async (req, res) => {
         const { plistPath } = req.body;
         const result = await launchAgents.installLaunchAgent(plistPath);
         res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Missing Launch Agents endpoints
+app.get('/api/launch-agents/list', async (req, res) => {
+    try {
+        const agents = await launchAgents.listLaunchAgents();
+        res.json(agents);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/launch-agents/status', async (req, res) => {
+    try {
+        const status = await launchAgents.getLaunchAgentStatus();
+        res.json(status);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/app-info', async (req, res) => {
+    try {
+        const { appPath } = req.body;
+        const appInfo = await launchAgents.getAppInfo(appPath);
+        res.json(appInfo);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
