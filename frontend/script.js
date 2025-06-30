@@ -14,19 +14,38 @@ class InstallationUp4evr {
     }
 
     async init() {
+        console.log('[INIT] Initializing Installation Up 4evr...');
+        console.log('[INIT] Is Electron:', this.isElectron);
+        console.log('[INIT] Has window.electronAPI:', !!window.electronAPI);
+        
+        // Safe process check for browsers
+        let hasProcessElectron = false;
+        try {
+            hasProcessElectron = typeof process !== 'undefined' && !!process?.versions?.electron;
+        } catch (e) {
+            // process doesn't exist in browsers
+        }
+        console.log('[INIT] Has process.versions.electron:', hasProcessElectron);
+        
+        console.log('[INIT] Setting up event listeners...');
         this.setupEventListeners();
         
         // Show initial loading states
+        console.log('[INIT] Showing initial loading states...');
         this.showInitialLoadingStates();
         
         // If running in Electron, wait for server to be ready
         if (this.isElectron) {
+            console.log('[INIT] Electron mode - starting backend server...');
             this.updateLoadingMessage('Starting backend server...');
             await this.waitForServer();
             
             // Check for sudo permissions early
+            console.log('[INIT] Checking sudo permissions...');
             this.updateLoadingMessage('Checking system permissions...');
             await this.checkSudoPermissions();
+        } else {
+            console.log('[INIT] Browser mode - skipping Electron-specific setup');
         }
         
         this.updateLoadingMessage('Checking server status...');
@@ -84,9 +103,26 @@ class InstallationUp4evr {
         this.setupTabNavigation();
         
         // System Preferences
-        document.getElementById('verify-settings').addEventListener('click', () => this.verifySettings());
-        document.getElementById('apply-required').addEventListener('click', () => this.applyRequiredSettings());
-        document.getElementById('apply-selected').addEventListener('click', () => this.applySelectedSettings());
+        const verifyBtn = document.getElementById('verify-settings');
+        const applyRequiredBtn = document.getElementById('apply-required');
+        const applySelectedBtn = document.getElementById('apply-selected');
+        
+        console.log('[SETUP] Verify button found:', !!verifyBtn);
+        console.log('[SETUP] Apply required button found:', !!applyRequiredBtn);
+        console.log('[SETUP] Apply selected button found:', !!applySelectedBtn);
+        
+        if (verifyBtn) {
+            verifyBtn.addEventListener('click', () => this.verifySettings());
+        }
+        if (applyRequiredBtn) {
+            applyRequiredBtn.addEventListener('click', () => this.applyRequiredSettings());
+        }
+        if (applySelectedBtn) {
+            applySelectedBtn.addEventListener('click', () => {
+                console.log('[SETUP] Apply selected button clicked!');
+                this.applySelectedSettings();
+            });
+        }
 
         // Launch Agents - Drag and Drop
         const dropZone = document.getElementById('app-drop-zone');
@@ -181,21 +217,51 @@ class InstallationUp4evr {
             },
         };
 
+        // DIAGNOSTIC: Log all API calls with full details
+        const method = options.method || 'GET';
+        const hasBody = !!options.body;
+        const isAuthCall = endpoint.includes('/auth/');
+        
+        console.log(`[API] ${method} ${endpoint}`);
+        console.log(`[API] URL: ${url}`);
+        console.log(`[API] Has body: ${hasBody}`);
+        if (hasBody && !isAuthCall) {
+            console.log(`[API] Body:`, options.body);
+        } else if (hasBody && isAuthCall) {
+            console.log(`[API] Body: [REDACTED - AUTH CALL]`);
+        }
+        console.log(`[API] Options:`, { ...options, body: isAuthCall ? '[REDACTED]' : options.body });
+
         try {
+            const startTime = Date.now();
             const response = await fetch(url, { ...defaultOptions, ...options });
+            const duration = Date.now() - startTime;
+            
+            console.log(`[API] Response status: ${response.status} (${duration}ms)`);
+            console.log(`[API] Response headers:`, Object.fromEntries(response.headers.entries()));
             
             if (!response.ok) {
+                console.error(`[API] HTTP Error: ${response.status}: ${response.statusText}`);
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
-            return await response.json();
+            const responseData = await response.json();
+            console.log(`[API] Response data:`, isAuthCall ? { ...responseData, password: '[REDACTED]' } : responseData);
+            
+            return responseData;
         } catch (error) {
-            console.error('API call failed:', error);
+            console.error(`[API] Call failed for ${method} ${endpoint}:`, error);
+            console.error(`[API] Error details:`, {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             
             // Only show toast for non-health check calls
             if (!endpoint.includes('/health')) {
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
                     this.showToast('Cannot connect to server - is it running?', 'error');
+                    console.error('[API] Network error - server may be offline');
                 } else {
                     this.showToast(`API Error: ${error.message}`, 'error');
                 }
@@ -206,14 +272,35 @@ class InstallationUp4evr {
 
     // Server Status
     async checkServerStatus() {
+        console.log('[SERVER] Checking server status...');
+        
         try {
-            await this.apiCall('/api/health');
-            this.updateStatus('server-status', 'online', 'Server Online');
-            return true;
+            // Test basic health endpoint
+            console.log('[SERVER] Testing /api/health...');
+            const healthResponse = await this.apiCall('/api/health');
+            console.log('[SERVER] Health check passed:', healthResponse);
+            
+            // Test critical auth endpoints
+            console.log('[SERVER] Testing /api/auth/sudo-status...');
+            try {
+                const authResponse = await this.apiCall('/api/auth/sudo-status');
+                console.log('[SERVER] Auth endpoint accessible:', authResponse);
+                this.updateStatus('server-status', 'online', 'Server Online');
+                return true;
+            } catch (authError) {
+                console.warn('[SERVER] Auth endpoint failed:', authError);
+                this.updateStatus('server-status', 'warning', 'Server Partial');
+                this.showToast('Server online but authentication may not work', 'warning');
+                return false; // Consider this a failure since auth is critical
+            }
+            
         } catch (error) {
+            console.error('[SERVER] Health check failed:', error);
             this.updateStatus('server-status', 'offline', 'Server Offline');
             if (this.isElectron) {
                 this.showToast('Backend server is starting up...', 'info');
+            } else {
+                this.showToast('Cannot connect to server - is it running on port 3001?', 'error');
             }
             return false;
         }
@@ -325,18 +412,53 @@ class InstallationUp4evr {
     }
 
     async applyRequiredSettings() {
+        console.log('[REQUIRED] Starting apply required settings...');
+        
         if (!confirm('This will apply all required system settings. Some changes require admin privileges. Continue?')) {
             return;
         }
 
+        // In browser mode, check for authentication first
+        if (!this.isElectron) {
+            console.log('[REQUIRED] Browser mode - checking authentication first...');
+            
+            try {
+                // Check if we have sudo access
+                const sudoStatus = await this.apiCall('/api/auth/sudo-status');
+                console.log('[REQUIRED] Sudo status:', sudoStatus);
+                
+                if (!sudoStatus.hasSudoAccess) {
+                    console.log('[REQUIRED] No sudo access - showing auth dialog...');
+                    
+                    // Show the authentication dialog and wait for completion
+                    await this.requireAuthentication();
+                    
+                    // Verify authentication worked
+                    const newSudoStatus = await this.apiCall('/api/auth/sudo-status');
+                    if (!newSudoStatus.hasSudoAccess) {
+                        this.showToast('Administrator access required to apply system settings', 'error');
+                        return;
+                    }
+                    console.log('[REQUIRED] Authentication successful, proceeding...');
+                }
+            } catch (error) {
+                console.error('[REQUIRED] Authentication check failed:', error);
+                this.showToast('Failed to verify administrator access', 'error');
+                return;
+            }
+        }
+
         this.showLoading();
         try {
+            console.log('[REQUIRED] Applying required settings via API...');
             const results = await this.apiCall('/api/system-prefs/apply-required', {
                 method: 'POST'
             });
+            console.log('[REQUIRED] Required settings application result:', results);
             this.displayResults('Applied Required Settings', results);
             this.showToast('Required settings applied successfully!', 'success');
         } catch (error) {
+            console.error('[REQUIRED] Failed to apply required settings:', error);
             this.showToast('Failed to apply required settings', 'error');
         } finally {
             this.hideLoading();
@@ -344,13 +466,47 @@ class InstallationUp4evr {
     }
 
     async applySelectedSettings() {
+        console.log('[APPLY] Starting apply selected settings...');
+        
         if (this.selectedSettings.size === 0) {
             this.showToast('Please select settings to apply', 'warning');
             return;
         }
 
+        console.log('[APPLY] Selected settings:', Array.from(this.selectedSettings));
+
         if (!confirm(`This will apply ${this.selectedSettings.size} selected settings. Some changes require admin privileges. Continue?`)) {
             return;
+        }
+
+        // In browser mode, check for authentication first
+        if (!this.isElectron) {
+            console.log('[APPLY] Browser mode - checking authentication first...');
+            
+            try {
+                // Check if we have sudo access
+                const sudoStatus = await this.apiCall('/api/auth/sudo-status');
+                console.log('[APPLY] Sudo status:', sudoStatus);
+                
+                if (!sudoStatus.hasSudoAccess) {
+                    console.log('[APPLY] No sudo access - showing auth dialog...');
+                    
+                    // Show the authentication dialog and wait for completion
+                    await this.requireAuthentication();
+                    
+                    // Verify authentication worked
+                    const newSudoStatus = await this.apiCall('/api/auth/sudo-status');
+                    if (!newSudoStatus.hasSudoAccess) {
+                        this.showToast('Administrator access required to apply system settings', 'error');
+                        return;
+                    }
+                    console.log('[APPLY] Authentication successful, proceeding...');
+                }
+            } catch (error) {
+                console.error('[APPLY] Authentication check failed:', error);
+                this.showToast('Failed to verify administrator access', 'error');
+                return;
+            }
         }
 
         this.showLoading();
@@ -361,18 +517,74 @@ class InstallationUp4evr {
                 results = await window.electronAPI.applySystemSettings(Array.from(this.selectedSettings));
             } else {
                 // Fallback to web API
+                console.log('[APPLY] Applying settings via web API...');
                 results = await this.apiCall('/api/system-prefs/apply', {
                     method: 'POST',
                     body: JSON.stringify({ settings: Array.from(this.selectedSettings) })
                 });
+                console.log('[APPLY] Settings application result:', results);
             }
             this.displayResults('Applied Selected Settings', results);
             this.showToast(`Applied ${this.selectedSettings.size} settings successfully!`, 'success');
         } catch (error) {
+            console.error('[APPLY] Failed to apply settings:', error);
             this.showToast('Failed to apply selected settings', 'error');
         } finally {
             this.hideLoading();
         }
+    }
+
+    async requireAuthentication() {
+        console.log('[AUTH] Requiring authentication...');
+        
+        return new Promise((resolve, reject) => {
+            // Show the sudo dialog
+            this.showSudoPermissionDialog();
+            
+            // Override the original requestSudoAccess to handle the promise
+            const originalRequestSudoAccess = this.requestSudoAccess;
+            
+            this.requestSudoAccess = async function() {
+                try {
+                    const authResult = await originalRequestSudoAccess.call(this);
+                    
+                    // Check if this was successful password authentication
+                    const selectedMethod = document.querySelector('input[name="auth-method"]:checked')?.value || 'native';
+                    
+                    if (selectedMethod === 'password' && authResult && authResult.success) {
+                        // Password authentication succeeded - don't need to check sudo status
+                        console.log('[AUTH] Password authentication requirement satisfied');
+                        resolve();
+                        return;
+                    }
+                    
+                    // For native authentication, check if sudo access is available
+                    const status = await this.apiCall('/api/auth/sudo-status');
+                    if (status.hasSudoAccess) {
+                        console.log('[AUTH] Native authentication requirement satisfied');
+                        resolve();
+                    } else {
+                        console.log('[AUTH] Authentication requirement not satisfied');
+                        reject(new Error('Authentication failed'));
+                    }
+                } catch (error) {
+                    console.error('[AUTH] Authentication requirement error:', error);
+                    reject(error);
+                } finally {
+                    // Restore original function
+                    this.requestSudoAccess = originalRequestSudoAccess;
+                }
+            }.bind(this);
+            
+            // Also handle the "Continue with Limited Features" case
+            const originalDismiss = this.dismissSudoDialog;
+            this.dismissSudoDialog = function() {
+                console.log('[AUTH] Authentication dialog dismissed');
+                originalDismiss.call(this);
+                this.requestSudoAccess = originalRequestSudoAccess;
+                reject(new Error('Authentication cancelled by user'));
+            }.bind(this);
+        });
     }
 
     // Drag and Drop
@@ -1970,8 +2182,15 @@ class InstallationUp4evr {
 
         // Setup wizard button
         const setupWizardBtn = document.getElementById('run-setup-wizard');
+        console.log('[SETUP] Setup wizard button found:', !!setupWizardBtn);
+        
         if (setupWizardBtn) {
-            setupWizardBtn.addEventListener('click', () => this.switchTab('setup-wizard'));
+            setupWizardBtn.addEventListener('click', () => {
+                console.log('[SETUP] Setup wizard button clicked');
+                this.switchTab('setup-wizard');
+            });
+        } else {
+            console.error('[SETUP] Setup wizard button not found!');
         }
 
         // Quick action buttons
@@ -2436,6 +2655,8 @@ class InstallationUp4evr {
     }
 
     async applyWizardSettings() {
+        console.log('[WIZARD] Starting apply wizard settings...');
+        
         const button = document.getElementById('wizard-apply-settings');
         const originalText = button.innerHTML;
         
@@ -2447,21 +2668,59 @@ class InstallationUp4evr {
             const checkboxes = document.querySelectorAll('#wizard-essential-settings input[type="checkbox"]:checked');
             const settingsToApply = Array.from(checkboxes).map(cb => cb.dataset.setting);
 
-            if (settingsToApply.length > 0) {
-                const response = await this.apiCall('/api/system-prefs/apply', {
-                    method: 'POST',
-                    body: JSON.stringify({ settings: settingsToApply })
-                });
+            console.log('[WIZARD] Selected settings:', settingsToApply);
 
-                this.showToast('Settings applied successfully', 'success');
-                this.wizardData.settingsApplied = settingsToApply;
+            if (settingsToApply.length === 0) {
+                this.showToast('No settings selected', 'warning');
+                this.nextWizardStep();
+                return;
             }
+
+            // In browser mode, check for authentication first
+            if (!this.isElectron) {
+                console.log('[WIZARD] Browser mode - checking authentication first...');
+                
+                try {
+                    // Check if we have sudo access
+                    const sudoStatus = await this.apiCall('/api/auth/sudo-status');
+                    console.log('[WIZARD] Sudo status:', sudoStatus);
+                    
+                    if (!sudoStatus.hasSudoAccess) {
+                        console.log('[WIZARD] No sudo access - showing auth dialog...');
+                        
+                        // Show the authentication dialog and wait for completion
+                        await this.requireAuthentication();
+                        
+                        // Verify authentication worked
+                        const newSudoStatus = await this.apiCall('/api/auth/sudo-status');
+                        if (!newSudoStatus.hasSudoAccess) {
+                            this.showToast('Administrator access required to apply system settings', 'error');
+                            return;
+                        }
+                        console.log('[WIZARD] Authentication successful, proceeding...');
+                    }
+                } catch (error) {
+                    console.error('[WIZARD] Authentication check failed:', error);
+                    this.showToast('Failed to verify administrator access', 'error');
+                    return;
+                }
+            }
+
+            console.log('[WIZARD] Applying settings via API...');
+            const response = await this.apiCall('/api/system-prefs/apply', {
+                method: 'POST',
+                body: JSON.stringify({ settings: settingsToApply })
+            });
+            console.log('[WIZARD] Settings application result:', response);
+
+            this.showToast('Settings applied successfully', 'success');
+            this.wizardData.settingsApplied = settingsToApply;
 
             // Move to next step
             this.nextWizardStep();
 
         } catch (error) {
-            console.error('Failed to apply settings:', error);
+            console.error('[WIZARD] Failed to apply settings:', error);
             this.showToast('Failed to apply some settings', 'error');
         } finally {
             button.innerHTML = originalText;
@@ -2653,10 +2912,27 @@ class InstallationUp4evr {
     }
 
     switchTab(tabName) {
+        console.log('[TAB] Switching to tab:', tabName);
+        
         // Find and click the appropriate sidebar button
         const button = document.querySelector(`.sidebar-button[data-tab="${tabName}"]`);
+        console.log('[TAB] Button found:', !!button);
+        
         if (button) {
+            console.log('[TAB] Clicking button for tab:', tabName);
             button.click();
+            
+            // Verify the tab actually switched
+            setTimeout(() => {
+                const activeTab = document.querySelector('.tab-pane.active');
+                const expectedTab = document.getElementById(`${tabName}-tab`);
+                console.log('[TAB] Active tab after switch:', activeTab?.id);
+                console.log('[TAB] Expected tab:', expectedTab?.id);
+                console.log('[TAB] Tab switch successful:', activeTab === expectedTab);
+            }, 100);
+        } else {
+            console.error('[TAB] Button not found for tab:', tabName);
+            console.log('[TAB] Available buttons:', document.querySelectorAll('.sidebar-button[data-tab]'));
         }
     }
 
@@ -3644,7 +3920,7 @@ class InstallationUp4evr {
 
     startSetupWizard() {
         this.dismissFirstRunOverlay();
-        this.showTab('setup-wizard');
+        this.switchTab('setup-wizard');
     }
 
     async skipToAdvanced() {
@@ -3666,7 +3942,7 @@ class InstallationUp4evr {
         }
         
         this.dismissFirstRunOverlay();
-        this.showTab('dashboard');
+        this.switchTab('dashboard');
     }
 
     dismissFirstRunOverlay() {
@@ -3682,7 +3958,7 @@ class InstallationUp4evr {
         const targetView = validViews.includes(view) ? view : 'dashboard';
         
         console.log(`[INFO] Navigating to default view: ${targetView}`);
-        this.showTab(targetView);
+        this.switchTab(targetView);
     }
 
     addFirstRunStyles() {
@@ -3788,24 +4064,55 @@ class InstallationUp4evr {
 
     // Sudo permission management
     async checkSudoPermissions() {
-        if (!this.isElectron) return;
+        console.log('[SUDO] Checking sudo permissions...');
+        console.log('[SUDO] Is Electron:', this.isElectron);
+        
+        if (!this.isElectron) {
+            console.log('[SUDO] Not in Electron, skipping sudo check');
+            return;
+        }
 
         try {
+            console.log('[SUDO] Checking sudo status via API...');
             // Check if we already have sudo access cached
             const response = await this.apiCall('/api/auth/sudo-status');
+            console.log('[SUDO] Sudo status response:', response);
+            
             if (response.hasAccess) {
-                console.log('[INFO] Sudo access already available');
+                console.log('[SUDO] Sudo access already available');
                 return;
             }
         } catch (error) {
-            console.warn('Could not check sudo status:', error);
+            console.warn('[SUDO] Could not check sudo status:', error);
         }
 
+        console.log('[SUDO] Showing sudo permission dialog...');
         // Show sudo permission dialog
         this.showSudoPermissionDialog();
     }
 
     showSudoPermissionDialog() {
+        console.log('[DIALOG] Creating sudo permission dialog...');
+        
+        // Check if dialog already exists
+        const existingDialog = document.getElementById('sudo-permission-dialog');
+        const existingSudoModal = document.getElementById('sudo-permission-modal');
+        
+        console.log('[DIALOG] Existing dialog found:', !!existingDialog);
+        console.log('[DIALOG] Existing sudo modal found:', !!existingSudoModal);
+        
+        if (existingDialog) {
+            console.log('[DIALOG] Removing existing dialog');
+            existingDialog.remove();
+        }
+        
+        if (existingSudoModal) {
+            console.log('[DIALOG] Showing existing sudo modal');
+            existingSudoModal.style.display = 'flex';
+            return;
+        }
+        
+        console.log('[DIALOG] Creating new inline dialog...');
         const dialog = document.createElement('div');
         dialog.id = 'sudo-permission-dialog';
         dialog.innerHTML = `
@@ -3817,7 +4124,7 @@ class InstallationUp4evr {
                 
                 <div class="sudo-body">
                     <div class="permission-explanation">
-                        <h3>Why do we need your password?</h3>
+                        <h3>Why do we need administrator access?</h3>
                         <ul>
                             <li><strong>System Preferences:</strong> Modify display sleep, screensaver, and power settings</li>
                             <li><strong>Launch Agents:</strong> Install and manage auto-start applications</li>
@@ -3825,17 +4132,51 @@ class InstallationUp4evr {
                             <li><strong>Performance Monitoring:</strong> Access detailed system information</li>
                         </ul>
                         
+                        <!-- Authentication Method Selection -->
+                        <div class="auth-method-selection">
+                            <h4>🔐 Choose Authentication Method:</h4>
+                            
+                            <div class="auth-method" id="native-auth-method">
+                                <div class="method-header">
+                                    <input type="radio" id="use-native-auth" name="auth-method" value="native" checked>
+                                    <label for="use-native-auth">
+                                        <strong>🔒 Native macOS Dialog (Recommended)</strong>
+                                    </label>
+                                </div>
+                                <div class="method-description">
+                                    <p>✅ Most secure - uses system authentication dialog</p>
+                                    <p>⚠️ Only works in Electron app, not web browser</p>
+                                </div>
+                            </div>
+                            
+                            <div class="auth-method" id="password-auth-method">
+                                <div class="method-header">
+                                    <input type="radio" id="use-password-auth" name="auth-method" value="password">
+                                    <label for="use-password-auth">
+                                        <strong>⚠️ Password Input (Browser Fallback)</strong>
+                                    </label>
+                                </div>
+                                <div class="method-description">
+                                    <p>⚠️ Less secure - password sent over network</p>
+                                    <p>✅ Works in web browsers</p>
+                                    <div class="password-input-container" style="display: none;">
+                                        <input type="password" id="sudo-password-input" placeholder="Enter administrator password" class="form-input">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="security-note">
-                            <h4>🛡️ Your Security is Important</h4>
-                            <p>Your password is only used locally on your computer and is never stored or transmitted. 
-                            All commands are executed through macOS's built-in security framework.</p>
+                            <h4>🛡️ Security Information</h4>
+                            <p><strong>Native Dialog:</strong> Most secure, uses macOS built-in authentication.</p>
+                            <p><strong>Password Input:</strong> Less secure fallback for browsers. Password is validated locally but transmitted over network.</p>
                         </div>
                         
                         <div class="commands-preview">
-                            <h4>Example commands we'll run:</h4>
+                            <h4>Commands we'll run:</h4>
                             <code>
                                 defaults write com.apple.screensaver idleTime 0<br>
-                                pmset -a displaysleep 0<br>
+                                pmset -c displaysleep 0<br>
                                 launchctl load ~/Library/LaunchAgents/[your-app].plist
                             </code>
                         </div>
@@ -3849,6 +4190,9 @@ class InstallationUp4evr {
                     <button id="continue-limited" class="btn btn-secondary">
                         Continue with Limited Features
                     </button>
+                    <button id="learn-more-sudo" class="btn btn-link">
+                        Learn More About Security
+                    </button>
                 </div>
             </div>
         `;
@@ -3856,82 +4200,161 @@ class InstallationUp4evr {
         document.body.appendChild(dialog);
         this.addSudoDialogStyles();
 
-        // Add event listeners
-        document.getElementById('grant-sudo-access').addEventListener('click', () => {
-            this.requestSudoAccess();
-        });
-
-        document.getElementById('continue-limited').addEventListener('click', () => {
-            this.dismissSudoDialog();
-            this.showToast('Continuing with limited features. Some system modifications may not work.', 'warning');
-        });
-
-        // Handle authentication method selection
+        console.log('[DIALOG] Setting up event listeners...');
+        
+        // Handle authentication method selection - auto-select appropriate method for browser
         const authMethodRadios = document.querySelectorAll('input[name="auth-method"]');
         const passwordContainer = document.querySelector('.password-input-container');
+        const nativeRadio = document.getElementById('use-native-auth');
+        const passwordRadio = document.getElementById('use-password-auth');
         
+        console.log('[DIALOG] Auth method radios found:', authMethodRadios.length);
+        console.log('[DIALOG] Password container found:', !!passwordContainer);
+        console.log('[DIALOG] Is in browser:', !this.isElectron);
+        
+        // If in browser, automatically select password method and show warning
+        if (!this.isElectron && passwordRadio) {
+            console.log('[DIALOG] Browser detected - auto-selecting password method');
+            passwordRadio.checked = true;
+            if (nativeRadio) nativeRadio.checked = false;
+            if (passwordContainer) passwordContainer.style.display = 'block';
+        }
+        
+        // Set up radio button change handlers
         authMethodRadios.forEach(radio => {
             radio.addEventListener('change', () => {
+                console.log('[DIALOG] Auth method changed to:', radio.value);
                 if (radio.value === 'password' && radio.checked) {
-                    passwordContainer.style.display = 'block';
+                    if (passwordContainer) passwordContainer.style.display = 'block';
                 } else {
-                    passwordContainer.style.display = 'none';
+                    if (passwordContainer) passwordContainer.style.display = 'none';
                 }
             });
         });
+        
+        // Add event listeners
+        const grantButton = document.getElementById('grant-sudo-access');
+        const continueButton = document.getElementById('continue-limited');
+        
+        console.log('[DIALOG] Grant button found:', !!grantButton);
+        console.log('[DIALOG] Continue button found:', !!continueButton);
+        
+        if (grantButton) {
+            grantButton.addEventListener('click', () => {
+                console.log('[DIALOG] Grant button clicked');
+                this.requestSudoAccess();
+            });
+        } else {
+            console.error('[DIALOG] Grant button not found!');
+        }
 
-        // Detect if we're in a browser and suggest password method
-        const isInBrowser = !window.electronAPI && !process?.versions?.electron;
-        if (isInBrowser) {
-            document.getElementById('use-password-auth').checked = true;
-            passwordContainer.style.display = 'block';
+        if (continueButton) {
+            continueButton.addEventListener('click', () => {
+                console.log('[DIALOG] Continue button clicked');
+                this.dismissSudoDialog();
+                this.showToast('Continuing with limited features. Some system modifications may not work.', 'warning');
+            });
+        } else {
+            console.error('[DIALOG] Continue button not found!');
         }
     }
 
     async requestSudoAccess() {
+        console.log('[AUTH] Starting sudo access request...');
+        
         try {
             // Get selected authentication method
             const selectedMethod = document.querySelector('input[name="auth-method"]:checked')?.value || 'native';
+            console.log('[AUTH] Selected method:', selectedMethod);
+            
+            // Add loading state to button
+            const grantButton = document.getElementById('grant-sudo-access');
+            if (grantButton) {
+                grantButton.disabled = true;
+                grantButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+                console.log('[AUTH] Button disabled, showing loading state');
+            }
             
             if (selectedMethod === 'native') {
-                // Try native authentication first
-                const result = await this.apiCall('/api/auth/sudo-grant', 'POST', { method: 'native' });
+                console.log('[AUTH] Attempting native authentication...');
+                
+                // DIAGNOSTIC: Check the API call parameters
+                const requestData = { method: 'native' };
+                console.log('[AUTH] Native request data:', requestData);
+                
+                // Try native authentication first - FIXED API CALL
+                const result = await this.apiCall('/api/auth/sudo-grant', {
+                    method: 'POST',
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('[AUTH] Native authentication result:', result);
                 
                 if (result.success) {
+                    console.log('[AUTH] Native authentication successful');
                     this.dismissSudoDialog();
                     this.showToast('Administrator access granted via native dialog', 'success');
+                    return result; // Return success result
                 } else {
+                    console.warn('[AUTH] Native authentication failed:', result.error);
                     this.showToast('Native authentication failed. Try password method instead.', 'warning');
+                    return result; // Return failure result
                 }
             } else if (selectedMethod === 'password') {
+                console.log('[AUTH] Attempting password authentication...');
+                
                 // Use password authentication
                 const passwordInput = document.getElementById('sudo-password-input');
                 const password = passwordInput?.value;
                 
+                console.log('[AUTH] Password input found:', !!passwordInput);
+                console.log('[AUTH] Password provided:', !!password);
+                
                 if (!password) {
+                    console.warn('[AUTH] No password provided');
                     this.showToast('Please enter your administrator password', 'warning');
                     return;
                 }
                 
-                const result = await this.apiCall('/api/auth/sudo-grant', 'POST', { 
-                    method: 'password', 
-                    password: password 
+                // DIAGNOSTIC: Check the API call parameters
+                const requestData = { method: 'password', password: password };
+                console.log('[AUTH] Password request data:', { method: 'password', password: '[REDACTED]' });
+                
+                // FIXED API CALL
+                const result = await this.apiCall('/api/auth/sudo-grant', {
+                    method: 'POST',
+                    body: JSON.stringify(requestData)
                 });
                 
+                console.log('[AUTH] Password authentication result:', result);
+                
                 if (result.success) {
+                    console.log('[AUTH] Password authentication successful');
                     this.dismissSudoDialog();
                     this.showToast('Administrator access granted via password', 'success');
                     if (result.securityWarning) {
-                        console.warn('Security Warning:', result.securityWarning);
+                        console.warn('[AUTH] Security Warning:', result.securityWarning);
                     }
+                    return result; // Return success result
                 } else {
+                    console.warn('[AUTH] Password authentication failed:', result.error);
                     this.showToast('Invalid password or authentication failed', 'error');
                     passwordInput.value = ''; // Clear password on failure
+                    return result; // Return failure result
                 }
             }
         } catch (error) {
-            console.error('Failed to request sudo access:', error);
-            this.showToast('Failed to obtain administrator access', 'error');
+            console.error('[AUTH] Exception during sudo access request:', error);
+            this.showToast('Failed to obtain administrator access: ' + error.message, 'error');
+            return { success: false, error: error.message }; // Return failure result
+        } finally {
+            // Always restore button state
+            const grantButton = document.getElementById('grant-sudo-access');
+            if (grantButton) {
+                grantButton.disabled = false;
+                grantButton.innerHTML = 'Grant Access & Continue';
+                console.log('[AUTH] Button state restored');
+            }
         }
     }
 
