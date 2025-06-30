@@ -1,0 +1,60 @@
+{
+  "id": "trade-show-demo-mcholxqq-2mcb2l",
+  "name": "Trade Show Demo",
+  "description": "Temporary installation for trade shows and events",
+  "category": "event",
+  "author": "Installation Up 4evr",
+  "version": "1.0.0",
+  "created": "2025-06-29T13:04:17.426Z",
+  "updated": "2025-06-29T13:04:17.426Z",
+  "tags": [
+    "trade-show",
+    "event",
+    "temporary",
+    "demo"
+  ],
+  "systemSettings": [
+    {
+      "id": "screensaver",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "displaySleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "computerSleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "desktopBackground",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "hideMenuBar",
+      "enabled": true,
+      "priority": "normal"
+    }
+  ],
+  "launchAgents": [],
+  "additionalScripts": [],
+  "compatibility": {
+    "minMacOS": "10.14",
+    "maxMacOS": null,
+    "architecture": [
+      "x64",
+      "arm64"
+    ],
+    "sipRequired": false
+  },
+  "installation": {
+    "preInstall": [],
+    "postInstall": [],
+    "testing": [],
+    "troubleshooting": []
+  }
+}

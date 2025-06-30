@@ -1,0 +1,116 @@
+{
+  "id": "test-applications-suite-mcholxqq-hjahdq",
+  "name": "Test Applications Suite",
+  "description": "Complete test applications for validating Installation Up 4evr functionality",
+  "category": "testing",
+  "author": "Installation Up 4evr",
+  "version": "1.0.0",
+  "created": "2025-06-29T13:04:17.427Z",
+  "updated": "2025-06-29T13:04:17.427Z",
+  "tags": [
+    "testing",
+    "validation",
+    "demo",
+    "development",
+    "monitoring",
+    "crash-recovery",
+    "network"
+  ],
+  "systemSettings": [
+    {
+      "id": "screensaver",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "displaySleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "computerSleep",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "autoRestart",
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "id": "desktopBackground",
+      "enabled": true,
+      "priority": "normal"
+    }
+  ],
+  "launchAgents": [
+    {
+      "name": "HeartbeatApp",
+      "appPath": "./test-apps/HeartbeatApp",
+      "options": {
+        "keepAlive": true,
+        "successfulExit": true,
+        "runAtLoad": true,
+        "environmentVariables": {},
+        "args": []
+      },
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "name": "CrashSimulator",
+      "appPath": "./test-apps/CrashSimulator",
+      "options": {
+        "keepAlive": true,
+        "successfulExit": true,
+        "runAtLoad": true,
+        "environmentVariables": {},
+        "args": []
+      },
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "name": "ResourceDemo",
+      "appPath": "./test-apps/ResourceDemo",
+      "options": {
+        "keepAlive": true,
+        "successfulExit": true,
+        "runAtLoad": false,
+        "environmentVariables": {},
+        "args": []
+      },
+      "enabled": true,
+      "priority": "normal"
+    },
+    {
+      "name": "SimpleWebServer",
+      "appPath": "./test-apps/SimpleWebServer",
+      "options": {
+        "keepAlive": true,
+        "successfulExit": true,
+        "runAtLoad": true,
+        "environmentVariables": {},
+        "args": []
+      },
+      "enabled": true,
+      "priority": "normal"
+    }
+  ],
+  "additionalScripts": [],
+  "compatibility": {
+    "minMacOS": "10.14",
+    "maxMacOS": null,
+    "architecture": [
+      "x64",
+      "arm64"
+    ],
+    "sipRequired": false
+  },
+  "installation": {
+    "preInstall": [],
+    "postInstall": [],
+    "testing": [],
+    "troubleshooting": []
+  }
+}
