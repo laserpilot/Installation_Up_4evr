@@ -17,6 +17,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // System preferences
     applySystemSettings: (settings) => ipcRenderer.invoke('apply-system-settings', settings),
 
+    // Authentication
+    requestSudoAccess: () => ipcRenderer.invoke('request-sudo-access'),
+    checkSudoStatus: () => ipcRenderer.invoke('check-sudo-status'),
+
     // Launch agents
     createLaunchAgent: (appPath, options) => ipcRenderer.invoke('create-launch-agent', appPath, options),
     installLaunchAgent: (appPath, options) => ipcRenderer.invoke('install-launch-agent', appPath, options),

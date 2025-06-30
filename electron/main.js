@@ -888,6 +888,72 @@ class InstallationUp4evrApp {
         ipcMain.handle('open-external', async (event, url) => {
             shell.openExternal(url);
         });
+
+        // Authentication handlers
+        ipcMain.handle('request-sudo-access', async () => {
+            debugLog('IPC: request-sudo-access called');
+            return new Promise((resolve) => {
+                const options = {
+                    name: 'Installation Up 4evr',
+                    icns: '/Applications/Utilities/Terminal.app/Contents/Resources/Terminal.icns'
+                };
+                
+                debugLog('IPC: Calling sudo.exec with native dialog');
+                sudo.exec('true', options, (error, stdout, stderr) => {
+                    debugLog(`IPC: sudo.exec result - error: ${error}, stdout: ${stdout}, stderr: ${stderr}`);
+                    
+                    if (error) {
+                        if (error.message.includes('User did not grant permission') || 
+                            error.message.includes('cancelled')) {
+                            resolve({
+                                success: false,
+                                error: 'Authentication cancelled',
+                                message: 'User cancelled administrator access request',
+                                method: 'native'
+                            });
+                        } else {
+                            resolve({
+                                success: false,
+                                error: 'Authentication failed',
+                                message: 'Invalid administrator password or insufficient privileges',
+                                method: 'native'
+                            });
+                        }
+                    } else {
+                        resolve({
+                            success: true,
+                            message: 'Administrator access granted via native dialog',
+                            method: 'native',
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                });
+            });
+        });
+
+        ipcMain.handle('check-sudo-status', async () => {
+            debugLog('IPC: check-sudo-status called');
+            return new Promise((resolve) => {
+                // Test if we can run a simple sudo command without password prompt
+                exec('sudo -n true', { timeout: 3000 }, (error, stdout, stderr) => {
+                    if (error) {
+                        resolve({
+                            success: true,
+                            hasSudoAccess: false,
+                            message: 'Administrator access required',
+                            timestamp: new Date().toISOString()
+                        });
+                    } else {
+                        resolve({
+                            success: true,
+                            hasSudoAccess: true,
+                            message: 'Administrator access is available',
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                });
+            });
+        });
     }
 
     runSudoCommand(command, description) {

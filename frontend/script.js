@@ -3,6 +3,132 @@
  * Handles UI interactions and API communication
  */
 
+/**
+ * Authentication Session Manager
+ * Handles persistent authentication sessions with timeout
+ */
+class AuthSessionManager {
+    constructor() {
+        this.storageKey = 'up4evr_auth_session';
+        this.defaultTimeout = 45 * 60 * 1000; // 45 minutes
+        this.warningTime = 5 * 60 * 1000; // 5 minutes before expiration
+        this.warningShown = false;
+    }
+
+    /**
+     * Check if current session is valid
+     */
+    isSessionValid() {
+        try {
+            const session = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+            if (!session.expires) return false;
+            
+            const now = Date.now();
+            const isValid = now < session.expires;
+            
+            // Check if we should show expiration warning
+            if (isValid && !this.warningShown && (session.expires - now) < this.warningTime) {
+                this.showExpirationWarning(session.expires);
+            }
+            
+            return isValid;
+        } catch (error) {
+            console.error('[SESSION] Error checking session validity:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Create new authentication session
+     */
+    createSession(method = 'unknown', customTimeout = null) {
+        const now = Date.now();
+        const timeout = customTimeout || this.defaultTimeout;
+        const expires = now + timeout;
+        
+        const session = {
+            created: now,
+            expires: expires,
+            method: method,
+            timestamp: new Date(now).toISOString(),
+            expiresAt: new Date(expires).toISOString()
+        };
+        
+        localStorage.setItem(this.storageKey, JSON.stringify(session));
+        this.warningShown = false;
+        
+        console.log(`[SESSION] Created session (${method}) expires at ${session.expiresAt}`);
+        return session;
+    }
+
+    /**
+     * Get current session info
+     */
+    getSession() {
+        try {
+            return JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        } catch (error) {
+            return {};
+        }
+    }
+
+    /**
+     * Clear authentication session
+     */
+    clearSession() {
+        localStorage.removeItem(this.storageKey);
+        this.warningShown = false;
+        console.log('[SESSION] Session cleared');
+    }
+
+    /**
+     * Get time remaining in session (in minutes)
+     */
+    getTimeRemaining() {
+        const session = this.getSession();
+        if (!session.expires) return 0;
+        
+        const remaining = session.expires - Date.now();
+        return Math.max(0, Math.ceil(remaining / (60 * 1000)));
+    }
+
+    /**
+     * Show expiration warning
+     */
+    showExpirationWarning(expiresAt) {
+        this.warningShown = true;
+        const remainingMinutes = Math.ceil((expiresAt - Date.now()) / (60 * 1000));
+        
+        console.warn(`[SESSION] Authentication expires in ${remainingMinutes} minutes`);
+        
+        // Show toast notification if available
+        if (window.installationApp && window.installationApp.showToast) {
+            window.installationApp.showToast(
+                `Authentication expires in ${remainingMinutes} minutes`, 
+                'warning'
+            );
+        }
+    }
+
+    /**
+     * Extend current session
+     */
+    extendSession(additionalMinutes = 45) {
+        const session = this.getSession();
+        if (!session.expires) return false;
+        
+        const newExpires = Date.now() + (additionalMinutes * 60 * 1000);
+        session.expires = newExpires;
+        session.expiresAt = new Date(newExpires).toISOString();
+        
+        localStorage.setItem(this.storageKey, JSON.stringify(session));
+        this.warningShown = false;
+        
+        console.log(`[SESSION] Extended session to ${session.expiresAt}`);
+        return true;
+    }
+}
+
 class InstallationUp4evr {
     constructor() {
         // Fix base URL for Electron vs web browser
@@ -10,6 +136,13 @@ class InstallationUp4evr {
         this.baseUrl = this.isElectron ? 'http://localhost:3001' : window.location.origin;
         this.selectedSettings = new Set();
         this.currentAppPath = null;
+        
+        // Initialize session manager
+        this.authSession = new AuthSessionManager();
+        
+        // Make app instance globally available for session warnings
+        window.installationApp = this;
+        
         this.init();
     }
 
@@ -67,6 +200,9 @@ class InstallationUp4evr {
             
             this.updateLoadingMessage('Loading dashboard...');
             await this.refreshDashboard();
+            
+            // Setup session management UI
+            this.setupSessionUI();
             
             this.hideLoadingStates();
         } else {
@@ -206,6 +342,112 @@ class InstallationUp4evr {
 
         // Threshold slider sync events
         this.setupThresholdSliders();
+    }
+
+    setupSessionUI() {
+        console.log('[SESSION] Setting up session management UI');
+        
+        // Add session status indicator to header
+        this.addSessionStatusIndicator();
+        
+        // Update session status every 30 seconds
+        setInterval(() => this.updateSessionStatus(), 30000);
+        
+        // Update immediately
+        this.updateSessionStatus();
+    }
+
+    addSessionStatusIndicator() {
+        // Check if already exists
+        if (document.getElementById('session-status')) return;
+        
+        // Find a good place in header to add status
+        const header = document.querySelector('.header') || document.querySelector('header') || document.body;
+        
+        const sessionContainer = document.createElement('div');
+        sessionContainer.id = 'session-status';
+        sessionContainer.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        `;
+        
+        sessionContainer.innerHTML = `
+            <div id="session-indicator">🔐 Not Authenticated</div>
+            <div id="session-actions" style="display: none; margin-top: 5px;">
+                <button id="extend-session" style="background: #007bff; color: white; border: none; padding: 4px 8px; margin-right: 4px; border-radius: 3px; font-size: 11px;">Extend</button>
+                <button id="logout-session" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 11px;">Logout</button>
+            </div>
+        `;
+        
+        // Add click handler to show/hide actions
+        sessionContainer.addEventListener('click', (e) => {
+            if (e.target.id === 'session-status' || e.target.id === 'session-indicator') {
+                const actions = document.getElementById('session-actions');
+                actions.style.display = actions.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+        
+        // Add extend session handler
+        sessionContainer.addEventListener('click', (e) => {
+            if (e.target.id === 'extend-session') {
+                this.extendSession();
+            } else if (e.target.id === 'logout-session') {
+                this.logoutSession();
+            }
+        });
+        
+        header.appendChild(sessionContainer);
+        console.log('[SESSION] Session status indicator added');
+    }
+
+    updateSessionStatus() {
+        const indicator = document.getElementById('session-indicator');
+        const container = document.getElementById('session-status');
+        const actions = document.getElementById('session-actions');
+        
+        if (!indicator) return;
+        
+        if (this.authSession.isSessionValid()) {
+            const remaining = this.authSession.getTimeRemaining();
+            const session = this.authSession.getSession();
+            
+            indicator.textContent = `🔓 Authenticated (${remaining}m)`;
+            container.style.background = remaining > 10 ? 'rgba(0, 128, 0, 0.8)' : 'rgba(255, 165, 0, 0.8)';
+            
+            // Show actions for authenticated users
+            if (actions) actions.style.display = 'block';
+            
+        } else {
+            indicator.textContent = '🔐 Not Authenticated';
+            container.style.background = 'rgba(128, 128, 128, 0.8)';
+            
+            // Hide actions for non-authenticated users
+            if (actions) actions.style.display = 'none';
+        }
+    }
+
+    extendSession() {
+        if (this.authSession.extendSession(45)) {
+            this.updateSessionStatus();
+            this.showToast('Session extended by 45 minutes', 'success');
+        } else {
+            this.showToast('No active session to extend', 'warning');
+        }
+    }
+
+    logoutSession() {
+        this.authSession.clearSession();
+        this.updateSessionStatus();
+        this.showToast('Logged out - authentication cleared', 'info');
     }
 
     // API Communication
@@ -537,7 +779,19 @@ class InstallationUp4evr {
     async requireAuthentication() {
         console.log('[AUTH] Requiring authentication...');
         
+        // Check if we have a valid session first
+        if (this.authSession.isSessionValid()) {
+            const remaining = this.authSession.getTimeRemaining();
+            console.log(`[AUTH] Using cached authentication (${remaining} minutes remaining)`);
+            this.showToast(`Using cached authentication (${remaining}m remaining)`, 'info');
+            return Promise.resolve();
+        }
+        
+        console.log('[AUTH] No valid session, showing authentication dialog');
+        
         return new Promise((resolve, reject) => {
+            let authenticationSucceeded = false;
+            
             // Show the sudo dialog
             this.showSudoPermissionDialog();
             
@@ -552,8 +806,10 @@ class InstallationUp4evr {
                     const selectedMethod = document.querySelector('input[name="auth-method"]:checked')?.value || 'native';
                     
                     if (selectedMethod === 'password' && authResult && authResult.success) {
-                        // Password authentication succeeded - don't need to check sudo status
+                        // Password authentication succeeded - create session
                         console.log('[AUTH] Password authentication requirement satisfied');
+                        this.authSession.createSession('password');
+                        authenticationSucceeded = true;
                         resolve();
                         return;
                     }
@@ -562,6 +818,8 @@ class InstallationUp4evr {
                     const status = await this.apiCall('/api/auth/sudo-status');
                     if (status.hasSudoAccess) {
                         console.log('[AUTH] Native authentication requirement satisfied');
+                        this.authSession.createSession('native');
+                        authenticationSucceeded = true;
                         resolve();
                     } else {
                         console.log('[AUTH] Authentication requirement not satisfied');
@@ -582,7 +840,14 @@ class InstallationUp4evr {
                 console.log('[AUTH] Authentication dialog dismissed');
                 originalDismiss.call(this);
                 this.requestSudoAccess = originalRequestSudoAccess;
-                reject(new Error('Authentication cancelled by user'));
+                
+                // Only reject if authentication didn't succeed
+                if (!authenticationSucceeded) {
+                    console.log('[AUTH] Authentication cancelled by user (no success)');
+                    reject(new Error('Authentication cancelled by user'));
+                } else {
+                    console.log('[AUTH] Dialog dismissed after successful authentication');
+                }
             }.bind(this);
         });
     }
@@ -4278,15 +4543,22 @@ class InstallationUp4evr {
             if (selectedMethod === 'native') {
                 console.log('[AUTH] Attempting native authentication...');
                 
-                // DIAGNOSTIC: Check the API call parameters
-                const requestData = { method: 'native' };
-                console.log('[AUTH] Native request data:', requestData);
-                
-                // Try native authentication first - FIXED API CALL
-                const result = await this.apiCall('/api/auth/sudo-grant', {
-                    method: 'POST',
-                    body: JSON.stringify(requestData)
-                });
+                let result;
+                if (this.isElectron && window.electronAPI?.requestSudoAccess) {
+                    // Use Electron IPC for native authentication
+                    console.log('[AUTH] Using Electron IPC for native authentication');
+                    result = await window.electronAPI.requestSudoAccess();
+                } else {
+                    // Fallback to web API (should not happen for native method)
+                    console.log('[AUTH] Using web API for native authentication');
+                    const requestData = { method: 'native' };
+                    console.log('[AUTH] Native request data:', requestData);
+                    
+                    result = await this.apiCall('/api/auth/sudo-grant', {
+                        method: 'POST',
+                        body: JSON.stringify(requestData)
+                    });
+                }
                 
                 console.log('[AUTH] Native authentication result:', result);
                 
