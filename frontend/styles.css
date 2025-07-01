@@ -3817,3 +3817,212 @@ input:checked + .slider:before {
         font-size: 0.8rem;
     }
 }
+
+/* Verification Modal Styles */
+.verification-modal {
+    max-width: 900px;
+    width: 95%;
+}
+
+.verification-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.verification-summary {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+}
+
+.summary-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    min-width: 120px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.verification-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.verification-item {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.verification-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.verification-item.status-applied {
+    border-left: 4px solid var(--success-color);
+}
+
+.verification-item.status-needs-applying {
+    border-left: 4px solid var(--warning-color);
+}
+
+.verification-item.status-error {
+    border-left: 4px solid var(--error-color);
+}
+
+.verification-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.verification-icon {
+    font-size: 1.2rem;
+}
+
+.verification-name {
+    font-weight: 600;
+    flex: 1;
+    color: #333;
+}
+
+.verification-status {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.status-applied .verification-status {
+    background: var(--success-color);
+    color: white;
+}
+
+.status-needs-applying .verification-status {
+    background: var(--warning-color);
+    color: white;
+}
+
+.status-error .verification-status {
+    background: var(--error-color);
+    color: white;
+}
+
+.verification-details-section {
+    padding: 1rem;
+}
+
+.verification-output,
+.verification-error,
+.verification-action {
+    margin-bottom: 1rem;
+}
+
+.verification-output:last-child,
+.verification-error:last-child,
+.verification-action:last-child {
+    margin-bottom: 0;
+}
+
+.verification-output strong,
+.verification-error strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.verification-output code,
+.verification-error code {
+    display: block;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 0.75rem;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.verification-error .error-text {
+    background: #fff5f5;
+    border-color: #fed7d7;
+    color: #c53030;
+}
+
+.verification-action {
+    padding: 0.75rem;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-style: italic;
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+/* Mobile responsiveness for verification modal */
+@media (max-width: 768px) {
+    .verification-modal {
+        width: 98%;
+    }
+    
+    .summary-stats {
+        gap: 1rem;
+    }
+    
+    .stat {
+        min-width: 100px;
+        padding: 0.75rem;
+    }
+    
+    .verification-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .verification-details-section {
+        padding: 0.75rem;
+    }
+}
