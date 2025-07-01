@@ -826,15 +826,189 @@ class InstallationUp4evr {
     }
 
     async verifySettings() {
+        console.log('[VERIFY] Starting system settings verification...');
         this.showLoading();
+        this.updateLoadingMessage('Checking current system settings status...');
+        
         try {
-            const results = await this.apiCall('/api/system-prefs/verify');
-            this.displayResults('System Settings Verification', results);
+            const response = await this.apiCall('/api/system-prefs/verify');
+            console.log('[VERIFY] Verification response:', response);
+            
+            if (response.success && response.data) {
+                this.showDetailedVerificationResults(response.data);
+                this.updateSystemPreferencesUI(response.data);
+                
+                // Provide summary feedback
+                const settingsData = response.data;
+                const appliedCount = settingsData.filter(s => s.status === 'applied').length;
+                const needsAttentionCount = settingsData.filter(s => s.status === 'not_applied').length;
+                const errorCount = settingsData.filter(s => s.status === 'error').length;
+                const totalCount = settingsData.length;
+                
+                let summaryMessage = `Verification complete: ${appliedCount}/${totalCount} settings properly configured`;
+                if (needsAttentionCount > 0) {
+                    summaryMessage += `, ${needsAttentionCount} need attention`;
+                }
+                if (errorCount > 0) {
+                    summaryMessage += `, ${errorCount} have errors`;
+                }
+                
+                this.showToast(summaryMessage, needsAttentionCount > 0 || errorCount > 0 ? 'warning' : 'success');
+            } else {
+                this.displayResults('System Settings Verification', response);
+                this.showToast('Verification completed with warnings', 'warning');
+            }
         } catch (error) {
-            this.showToast('Failed to verify settings', 'error');
+            console.error('[VERIFY] Verification failed:', error);
+            this.showToast(`Failed to verify settings: ${error.message}`, 'error');
         } finally {
             this.hideLoading();
         }
+    }
+
+    showDetailedVerificationResults(settingsData) {
+        console.log('[VERIFY] Showing detailed verification results...');
+        
+        // Create detailed results modal
+        const modal = document.createElement('div');
+        modal.className = 'modal verification-modal';
+        modal.innerHTML = `
+            <div class="modal-content verification-content">
+                <div class="modal-header">
+                    <h2>🔍 System Settings Verification Results</h2>
+                    <button class="close-button" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="verification-summary">
+                        <div class="summary-stats">
+                            <div class="stat applied-stat">
+                                <span class="stat-icon">🟢</span>
+                                <span class="stat-number">${settingsData.filter(s => s.status === 'applied').length}</span>
+                                <span class="stat-label">Applied</span>
+                            </div>
+                            <div class="stat needs-attention-stat">
+                                <span class="stat-icon">🟡</span>
+                                <span class="stat-number">${settingsData.filter(s => s.status === 'not_applied').length}</span>
+                                <span class="stat-label">Need Attention</span>
+                            </div>
+                            <div class="stat error-stat">
+                                <span class="stat-icon">🔴</span>
+                                <span class="stat-number">${settingsData.filter(s => s.status === 'error').length}</span>
+                                <span class="stat-label">Errors</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="verification-details">
+                        ${settingsData.map(setting => this.createVerificationResultItem(setting)).join('')}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+                    <button class="btn btn-secondary" onclick="window.app.refreshSystemPreferences()">Refresh Settings</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add click outside to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+
+    createVerificationResultItem(setting) {
+        const statusClass = {
+            'applied': 'status-applied',
+            'not_applied': 'status-needs-applying', 
+            'error': 'status-error',
+            'unknown': 'status-unknown'
+        }[setting.status] || 'status-unknown';
+        
+        return `
+            <div class="verification-item ${statusClass}">
+                <div class="verification-header">
+                    <span class="verification-icon">${setting.statusIcon}</span>
+                    <span class="verification-name">${setting.name}</span>
+                    <span class="verification-status">${setting.statusText}</span>
+                </div>
+                <div class="verification-details-section">
+                    ${setting.output ? `
+                        <div class="verification-output">
+                            <strong>Current Value:</strong>
+                            <code>${this.escapeHtml(setting.output)}</code>
+                        </div>
+                    ` : ''}
+                    ${setting.error ? `
+                        <div class="verification-error">
+                            <strong>Error:</strong>
+                            <code class="error-text">${this.escapeHtml(setting.error)}</code>
+                        </div>
+                    ` : ''}
+                    ${setting.status === 'not_applied' ? `
+                        <div class="verification-action">
+                            <em>💡 This setting needs to be applied for optimal installation performance.</em>
+                        </div>
+                    ` : ''}
+                    ${setting.status === 'error' ? `
+                        <div class="verification-action">
+                            <em>⚠️ Unable to check this setting. May require administrator access.</em>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    updateSystemPreferencesUI(settingsData) {
+        console.log('[VERIFY] Updating system preferences UI with verification results...');
+        
+        // Create a lookup for quick access
+        const statusLookup = settingsData.reduce((acc, item) => {
+            acc[item.setting] = item;
+            return acc;
+        }, {});
+        
+        // Update existing setting cards in the UI
+        document.querySelectorAll('.setting-card').forEach(card => {
+            const settingId = card.dataset.settingId;
+            const status = statusLookup[settingId];
+            
+            if (status) {
+                // Update status display
+                const statusElement = card.querySelector('.setting-status');
+                if (statusElement) {
+                    statusElement.textContent = status.statusText;
+                    statusElement.className = `setting-status ${this.getStatusClass(status.status)}`;
+                }
+                
+                // Update status icon
+                const iconElement = card.querySelector('.status-icon');
+                if (iconElement) {
+                    iconElement.textContent = status.statusIcon;
+                }
+                
+                // Update overall card class
+                card.className = `setting-card ${this.getStatusClass(status.status)}`;
+            }
+        });
+        
+        console.log('[VERIFY] UI updated with latest verification status');
+    }
+
+    async refreshSystemPreferences() {
+        console.log('[REFRESH] Refreshing system preferences...');
+        await this.loadSystemPreferences();
+        this.showToast('System preferences refreshed', 'success');
+    }
+
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     async applyRequiredSettings() {
