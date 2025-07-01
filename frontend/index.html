@@ -56,10 +56,10 @@
                             <i class="fas fa-rocket"></i> Launch Agents
                         </button>
                         <button class="sidebar-button" data-tab="monitoring">
-                            <i class="fas fa-chart-line"></i> Monitoring Details
+                            <i class="fas fa-chart-line"></i> System Monitoring
                         </button>
                         <button class="sidebar-button" data-tab="monitoring-config">
-                            <i class="fas fa-chart-bar"></i> Alerts & Thresholds
+                            <i class="fas fa-chart-bar"></i> Monitoring Configuration
                         </button>
                         <button class="sidebar-button" data-tab="installation-settings">
                             <i class="fas fa-microchip"></i> Installation Settings
@@ -104,49 +104,61 @@
                             
                             <!-- System Health Overview -->
                             <div class="dashboard-section">
-                                <h3><i class="fas fa-heartbeat"></i> System Health</h3>
-                                <div class="health-grid">
-                                    <div class="health-card" id="dashboard-cpu">
-                                        <div class="health-icon">💻</div>
-                                        <div class="health-info">
-                                            <div class="health-label">CPU Usage</div>
-                                            <div class="health-value" id="dashboard-cpu-value">--</div>
-                                            <div class="health-status" id="dashboard-cpu-status">Checking...</div>
+                                <h3><i class="fas fa-heartbeat"></i> System Monitoring</h3>
+                                <div class="monitoring-grid">
+                                    <div class="metric-card" id="dashboard-cpu">
+                                        <div class="metric-header">
+                                            <i class="fas fa-microchip"></i>
+                                            <h4>CPU Usage</h4>
                                         </div>
+                                        <div class="metric-value" id="dashboard-cpu-value">--</div>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" id="dashboard-cpu-bar"></div>
+                                        </div>
+                                        <div class="metric-status" id="dashboard-cpu-status">Checking...</div>
                                     </div>
                                     
-                                    <div class="health-card" id="dashboard-memory">
-                                        <div class="health-icon">🧠</div>
-                                        <div class="health-info">
-                                            <div class="health-label">Memory</div>
-                                            <div class="health-value" id="dashboard-memory-value">--</div>
-                                            <div class="health-status" id="dashboard-memory-status">Checking...</div>
+                                    <div class="metric-card" id="dashboard-memory">
+                                        <div class="metric-header">
+                                            <i class="fas fa-memory"></i>
+                                            <h4>Memory</h4>
                                         </div>
+                                        <div class="metric-value" id="dashboard-memory-value">--</div>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" id="dashboard-memory-bar"></div>
+                                        </div>
+                                        <div class="metric-status" id="dashboard-memory-status">Checking...</div>
                                     </div>
                                     
-                                    <div class="health-card" id="dashboard-disk">
-                                        <div class="health-icon">💾</div>
-                                        <div class="health-info">
-                                            <div class="health-label">Disk Space</div>
-                                            <div class="health-value" id="dashboard-disk-value">--</div>
-                                            <div class="health-status" id="dashboard-disk-status">Checking...</div>
+                                    <div class="metric-card" id="dashboard-disk">
+                                        <div class="metric-header">
+                                            <i class="fas fa-hdd"></i>
+                                            <h4>Disk Space</h4>
                                         </div>
+                                        <div class="metric-value" id="dashboard-disk-value">--</div>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" id="dashboard-disk-bar"></div>
+                                        </div>
+                                        <div class="metric-status" id="dashboard-disk-status">Checking...</div>
                                     </div>
                                     
-                                    <div class="health-card" id="dashboard-uptime">
-                                        <div class="health-icon">⏱️</div>
-                                        <div class="health-info">
-                                            <div class="health-label">System Uptime</div>
-                                            <div class="health-value" id="dashboard-uptime-value">--</div>
-                                            <div class="health-status" id="dashboard-uptime-status">Active</div>
+                                    <div class="metric-card" id="dashboard-uptime">
+                                        <div class="metric-header">
+                                            <i class="fas fa-clock"></i>
+                                            <h4>System Uptime</h4>
                                         </div>
+                                        <div class="metric-value" id="dashboard-uptime-value">--</div>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" id="dashboard-uptime-bar"></div>
+                                        </div>
+                                        <div class="metric-status" id="dashboard-uptime-status">Active</div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Applications Status -->
                             <div class="dashboard-section">
-                                <h3><i class="fas fa-desktop"></i> Application Status</h3>
+                                <h3><i class="fas fa-cogs"></i> Application Status</h3>
                                 <div id="dashboard-applications" class="applications-list">
                                     <div class="no-apps-message">
                                         <i class="fas fa-info-circle"></i>
@@ -453,6 +465,9 @@
                     <button id="apply-selected" class="btn btn-success" title="Apply only the settings you have selected above">
                         <i class="fas fa-play"></i> Apply Selected Settings
                     </button>
+                    <button id="generate-script" class="btn btn-outline" title="Generate terminal commands to copy and run manually (Browser-safe option)">
+                        <i class="fas fa-terminal"></i> Generate Terminal Commands
+                    </button>
                 </div>
                         </section>
                     </div>
@@ -551,7 +566,7 @@
                     <!-- Monitoring Dashboard Tab -->
                     <div id="monitoring-tab" class="tab-pane">
                         <section class="card">
-                            <h2><i class="fas fa-chart-line"></i> Monitoring Dashboard</h2>
+                            <h2><i class="fas fa-chart-line"></i> System Monitoring</h2>
                             <p>Real-time system monitoring and installation health</p>
                             
                             <!-- System Overview -->
@@ -581,7 +596,7 @@
                                 </div>
                                 
                                 <div class="metric-card">
-                                    <h3><i class="fas fa-heartbeat"></i> System Health</h3>
+                                    <h3><i class="fas fa-heartbeat"></i> Health Status</h3>
                                     <div class="health-status" id="health-status">
                                         <span class="health-indicator" id="health-indicator">🟡</span>
                                         <span id="health-text">Checking...</span>
@@ -600,7 +615,7 @@
                             <!-- System Details -->
                             <div class="details-grid">
                                 <div class="detail-card">
-                                    <h4><i class="fas fa-desktop"></i> Display Status</h4>
+                                    <h4><i class="fas fa-tv"></i> Display Status</h4>
                                     <div id="display-status" class="detail-content">Loading...</div>
                                 </div>
                                 
@@ -615,7 +630,7 @@
                                 </div>
                                 
                                 <div class="detail-card">
-                                    <h4><i class="fas fa-cogs"></i> Monitored Apps</h4>
+                                    <h4><i class="fas fa-list-check"></i> Monitored Apps</h4>
                                     <div id="apps-status" class="detail-content">Loading...</div>
                                 </div>
                             </div>
@@ -1230,13 +1245,13 @@
                     <!-- Monitoring & Alerts Configuration Tab -->
                     <div id="monitoring-config-tab" class="tab-pane">
                         <section class="card">
-                            <h2><i class="fas fa-chart-bar"></i> Monitoring & Alert Configuration</h2>
+                            <h2><i class="fas fa-chart-bar"></i> System Monitoring Configuration</h2>
                             <p>Configure monitoring thresholds and alert conditions for real-time system monitoring</p>
                             
                             <!-- Current System Status -->
                             <div class="monitoring-status-section">
                                 <div class="section-header">
-                                    <h3><i class="fas fa-heartbeat"></i> Current System Status</h3>
+                                    <h3><i class="fas fa-heartbeat"></i> System Monitoring Status</h3>
                                     <button id="refresh-system-status" class="btn btn-small btn-secondary">
                                         <i class="fas fa-sync-alt"></i> Refresh
                                     </button>
@@ -1421,7 +1436,7 @@
 
                             <!-- Application Monitoring -->
                             <div class="app-monitoring-section">
-                                <h3><i class="fas fa-desktop"></i> Application Monitoring</h3>
+                                <h3><i class="fas fa-cogs"></i> Application Monitoring</h3>
                                 <div class="app-monitor-list" id="app-monitor-list">
                                     <!-- Dynamic application entries will be added here -->
                                 </div>

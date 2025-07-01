@@ -3,6 +3,7 @@
 
 # Ignore build artifacts and distribution files
 dist/
+ai_summaries/
 node_modules/
 backend/node_modules/
 
