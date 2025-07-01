@@ -103,6 +103,107 @@ class PlatformManager {
                 APIResponse.partial(result, { message: 'Some settings failed to revert' });
         });
 
+        // SIP status route (macOS specific)
+        this.api.registerRoute('/system/sip-status', 'GET', async () => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'SIP status only available on macOS' });
+            }
+            const sipStatus = await this.systemManager.checkSIPStatus();
+            return APIResponse.success(sipStatus);
+        });
+
+        // Legacy route for compatibility
+        this.api.registerRoute('/system-prefs/sip-status', 'GET', async () => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'SIP status only available on macOS' });
+            }
+            const sipStatus = await this.systemManager.checkSIPStatus();
+            return APIResponse.success(sipStatus);
+        });
+
+        // Launch Agents routes (macOS specific)
+        this.api.registerRoute('/launch-agents/list', 'GET', async () => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const agents = await this.processManager.getAutoStartEntries();
+            return APIResponse.success(agents);
+        });
+
+        this.api.registerRoute('/launch-agents/status', 'GET', async () => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const agents = await this.processManager.getAutoStartEntries();
+            const statusList = [];
+            for (const agent of agents) {
+                statusList.push({
+                    name: agent.name,
+                    label: agent.label,
+                    loaded: agent.loaded,
+                    status: agent.loaded ? 'running' : 'stopped'
+                });
+            }
+            return APIResponse.success(statusList);
+        });
+
+        this.api.registerRoute('/launch-agents/create', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { appPath, name, description, options = {} } = data;
+            if (!appPath || !name) {
+                throw new Error('App path and name are required');
+            }
+            const result = await this.processManager.createAutoStartEntry(appPath, name, description, options);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/install', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { appPath, name, description, options = {} } = data;
+            if (!appPath || !name) {
+                throw new Error('App path and name are required');
+            }
+            const result = await this.processManager.createAutoStartEntry(appPath, name, description, options);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/remove', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { name } = data;
+            if (!name) {
+                throw new Error('Name is required');
+            }
+            const result = await this.processManager.removeAutoStartEntry(name);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/app-info', 'POST', async (data) => {
+            // This endpoint is for getting app info - we can return basic info
+            const { appPath } = data;
+            if (!appPath) {
+                throw new Error('App path is required');
+            }
+            const path = require('path');
+            const appName = path.basename(appPath, '.app');
+            return APIResponse.success({
+                name: appName,
+                path: appPath,
+                type: appPath.endsWith('.app') ? 'macOS App' : 'Executable'
+            });
+        });
+
         // Monitoring routes
         this.api.registerRoute('/monitoring/status', 'GET', async () => {
             const data = this.monitoring.getCurrentData();
