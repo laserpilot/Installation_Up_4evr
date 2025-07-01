@@ -3300,6 +3300,13 @@ class InstallationUp4evr {
     }
 
     async refreshDashboard() {
+        // Prevent multiple simultaneous refreshes
+        if (this.dashboardRefreshing) {
+            console.log('[DASHBOARD] Refresh already in progress, skipping duplicate call');
+            return;
+        }
+        
+        this.dashboardRefreshing = true;
         const refreshBtn = document.getElementById('dashboard-refresh');
         const originalText = refreshBtn ? refreshBtn.innerHTML : '';
         
@@ -3324,6 +3331,7 @@ class InstallationUp4evr {
                 refreshBtn.innerHTML = originalText;
                 refreshBtn.disabled = false;
             }
+            this.dashboardRefreshing = false;
         }
     }
 
