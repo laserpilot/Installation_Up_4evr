@@ -324,6 +324,8 @@ class PlatformManager {
         this.api.registerRoute('/platform', 'GET', async () => {
             return APIResponse.success({
                 platform: this.platform,
+                mode: 'platform',
+                version: '1.0.0-alpha.1',
                 initialized: this.initialized,
                 features: this.getAvailableFeatures()
             });

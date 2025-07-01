@@ -6,6 +6,7 @@
 const { exec } = require('child_process');
 const util = require('util');
 const os = require('os');
+const sudo = require('@expo/sudo-prompt');
 const { SystemManagerInterface } = require('../../core/interfaces');
 
 // Create execAsync with safe working directory
@@ -98,23 +99,68 @@ class MacOSSystemManager extends SystemManagerInterface {
                 required: false,
                 category: 'performance'
             },
+            doNotDisturb: {
+                name: "Enable Do Not Disturb",
+                description: "Prevent notifications from appearing over applications",
+                command: 'defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true',
+                revert: 'defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean false',
+                verify: 'defaults -currentHost read ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb 2>/dev/null || echo "false"',
+                required: false,
+                category: 'ui'
+            },
+            hideDesktopIcons: {
+                name: "Hide Desktop Icons",
+                description: "Hide all desktop icons for a cleaner failure state",
+                command: 'defaults write com.apple.finder CreateDesktop -bool false; killall Finder',
+                revert: 'defaults write com.apple.finder CreateDesktop -bool true; killall Finder',
+                verify: 'defaults read com.apple.finder CreateDesktop',
+                required: false,
+                category: 'ui'
+            },
+            disableStageManager: {
+                name: "Disable Stage Manager",
+                description: "Disable Stage Manager (macOS Ventura+) to prevent windowing interference",
+                command: 'defaults write com.apple.WindowManager GloballyEnabled -bool false; killall Dock',
+                revert: 'defaults write com.apple.WindowManager GloballyEnabled -bool true; killall Dock',
+                verify: 'defaults read com.apple.WindowManager GloballyEnabled 2>/dev/null || echo "false"',
+                required: false,
+                category: 'ui'
+            },
+            disableNetworkPrompts: {
+                name: "Disable WiFi Network Prompts",
+                description: "Prevent 'Ask to join new networks' prompts",
+                command: 'sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.airport JoinMode -string "Automatic"',
+                revert: 'sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.airport JoinMode -string "Prompt"',
+                verify: 'defaults read /Library/Preferences/SystemConfiguration/com.apple.airport JoinMode 2>/dev/null || echo "Prompt"',
+                required: false,
+                category: 'network'
+            },
             disableGatekeeper: {
                 name: "Disable Gatekeeper",
-                description: "Allow apps from unidentified developers",
+                description: "⚠️ SECURITY RISK: Allow apps from unidentified developers",
                 command: 'sudo spctl --master-disable',
                 revert: 'sudo spctl --master-enable',
                 verify: 'spctl --status',
                 required: false,
-                category: 'security'
+                category: 'danger'
             },
             allowAppsAnywhere: {
                 name: "Allow Apps from Anywhere",
-                description: "Allow apps from anywhere (Gatekeeper bypass)",
+                description: "⚠️ SECURITY RISK: Allow apps from anywhere (Gatekeeper bypass)",
                 command: 'sudo spctl --master-disable',
                 revert: 'sudo spctl --master-enable',
                 verify: 'spctl --status',
                 required: false,
-                category: 'security'
+                category: 'danger'
+            },
+            disableCrashReporter: {
+                name: "Disable Application Crash Reporter",
+                description: "⚠️ DANGER: Prevent 'Application Unexpectedly Quit' dialogs (requires SIP disabled)",
+                command: 'sudo chmod 000 "/System/Library/CoreServices/Problem Reporter.app"',
+                revert: 'sudo chmod 755 "/System/Library/CoreServices/Problem Reporter.app"',
+                verify: 'ls -la "/System/Library/CoreServices/Problem Reporter.app" | awk \'{print $1}\'',
+                required: false,
+                category: 'danger'
             }
         };
     }
@@ -164,14 +210,30 @@ class MacOSSystemManager extends SystemManagerInterface {
             }
 
             try {
-                const { stdout, stderr } = await execAsync(setting.command);
-                results.push({
-                    setting: key,
-                    name: setting.name,
-                    success: true,
-                    output: stdout,
-                    stderr: stderr || null
-                });
+                // Check if command requires sudo
+                if (setting.command.startsWith('sudo ')) {
+                    // Use command-specific sudo with native macOS dialog
+                    const commandWithoutSudo = setting.command.replace(/^sudo /, '');
+                    const result = await this.executeSudoCommand(commandWithoutSudo, setting.name);
+                    
+                    results.push({
+                        setting: key,
+                        name: setting.name,
+                        success: result.success,
+                        output: result.stdout || '',
+                        stderr: result.stderr || null
+                    });
+                } else {
+                    // Execute regular command without sudo
+                    const { stdout, stderr } = await execAsync(setting.command);
+                    results.push({
+                        setting: key,
+                        name: setting.name,
+                        success: true,
+                        output: stdout,
+                        stderr: stderr || null
+                    });
+                }
             } catch (error) {
                 results.push({
                     setting: key,
@@ -234,6 +296,41 @@ class MacOSSystemManager extends SystemManagerInterface {
         return results;
     }
 
+    /**
+     * Execute sudo command with native macOS authentication dialog
+     */
+    async executeSudoCommand(command, settingName) {
+        return new Promise((resolve) => {
+            const options = {
+                name: 'Installation Up 4evr'
+                // Don't include icns property to use default
+            };
+
+            console.log(`[SUDO] Executing with native dialog: ${command}`);
+            console.log(`[SUDO] For setting: ${settingName}`);
+
+            sudo.exec(command, options, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`[SUDO] Error executing ${command}:`, error.message);
+                    resolve({
+                        success: false,
+                        error: error.message,
+                        stdout: null,
+                        stderr: stderr
+                    });
+                } else {
+                    console.log(`[SUDO] Successfully executed: ${command}`);
+                    resolve({
+                        success: true,
+                        error: null,
+                        stdout: stdout,
+                        stderr: stderr
+                    });
+                }
+            });
+        });
+    }
+
     async revertSettings(settingKeys) {
         const results = [];
 
@@ -249,14 +346,30 @@ class MacOSSystemManager extends SystemManagerInterface {
             }
 
             try {
-                const { stdout, stderr } = await execAsync(setting.revert);
-                results.push({
-                    setting: key,
-                    name: setting.name,
-                    success: true,
-                    output: stdout,
-                    stderr: stderr || null
-                });
+                // Check if revert command requires sudo
+                if (setting.revert.startsWith('sudo ')) {
+                    // Use command-specific sudo with native macOS dialog
+                    const commandWithoutSudo = setting.revert.replace(/^sudo /, '');
+                    const result = await this.executeSudoCommand(commandWithoutSudo, `Revert ${setting.name}`);
+                    
+                    results.push({
+                        setting: key,
+                        name: setting.name,
+                        success: result.success,
+                        output: result.stdout || '',
+                        stderr: result.stderr || null
+                    });
+                } else {
+                    // Execute regular revert command without sudo
+                    const { stdout, stderr } = await execAsync(setting.revert);
+                    results.push({
+                        setting: key,
+                        name: setting.name,
+                        success: true,
+                        output: stdout,
+                        stderr: stderr || null
+                    });
+                }
             } catch (error) {
                 results.push({
                     setting: key,
@@ -272,6 +385,114 @@ class MacOSSystemManager extends SystemManagerInterface {
             success: results.every(r => r.success),
             results,
             timestamp: new Date().toISOString()
+        };
+    }
+
+    /**
+     * Generate executable shell script for browser users
+     */
+    generateTerminalScript(settingKeys, options = {}) {
+        const { includeVerification = true, mode = 'apply' } = options;
+        
+        if (settingKeys.length === 0) {
+            return {
+                success: false,
+                error: 'No settings provided'
+            };
+        }
+
+        const timestamp = new Date().toISOString();
+        const validSettings = settingKeys.filter(key => this.settings[key]);
+        
+        if (validSettings.length === 0) {
+            return {
+                success: false,
+                error: 'No valid settings found'
+            };
+        }
+
+        // Group settings by category for better organization
+        const categories = {
+            power: [],
+            ui: [],
+            performance: [],
+            security: []
+        };
+
+        validSettings.forEach(key => {
+            const setting = this.settings[key];
+            const category = setting.category || 'other';
+            if (categories[category]) {
+                categories[category].push({ key, setting });
+            }
+        });
+
+        // Generate script content
+        let script = `#!/bin/bash
+# Installation Up 4evr - System Configuration Script
+# Generated: ${timestamp}
+# Mode: ${mode}
+# 
+# This script contains macOS system configuration commands.
+# Review each command before execution.
+# Some commands require administrator privileges.
+
+set -e  # Exit on any error
+
+echo "🚀 Installation Up 4evr - System Configuration"
+echo "Generated: ${timestamp}"
+echo "Settings to ${mode}: ${validSettings.length}"
+echo "====================================="
+echo
+`;
+
+        // Add commands by category
+        Object.entries(categories).forEach(([categoryName, settings]) => {
+            if (settings.length === 0) return;
+            
+            const categoryTitle = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+            script += `
+# ${categoryTitle} Settings
+echo "Applying ${categoryTitle.toLowerCase()} settings..."
+`;
+            
+            settings.forEach(({ key, setting }) => {
+                const command = mode === 'revert' ? setting.revert : setting.command;
+                script += `echo "  → ${setting.name}"
+${command}
+`;
+            });
+        });
+
+        // Add verification section if requested
+        if (includeVerification) {
+            script += `
+# Verification
+echo
+echo "🔍 Verifying changes..."
+`;
+            
+            validSettings.forEach(key => {
+                const setting = this.settings[key];
+                script += `echo "Checking ${setting.name}:"
+${setting.verify}
+echo
+`;
+            });
+        }
+
+        script += `
+echo "✅ Script execution completed!"
+echo "Review the output above for any errors."
+`;
+
+        return {
+            success: true,
+            script: script,
+            settingsCount: validSettings.length,
+            categories: Object.keys(categories).filter(cat => categories[cat].length > 0),
+            timestamp: timestamp,
+            mode: mode
         };
     }
 

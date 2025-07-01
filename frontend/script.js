@@ -4,6 +4,165 @@
  */
 
 /**
+ * Monitoring Data Manager
+ * Centralized system for collecting and distributing monitoring data
+ */
+class MonitoringDataManager {
+    constructor(app) {
+        this.app = app;
+        this.data = {
+            system: null,
+            applications: null,
+            alerts: [],
+            status: 'unknown',
+            lastUpdate: null
+        };
+        this.subscribers = new Set();
+        this.updateInterval = null;
+        this.refreshRate = 5000; // 5 seconds
+    }
+
+    subscribe(callback) {
+        this.subscribers.add(callback);
+        // Immediately call with current data if available
+        if (this.data.lastUpdate) {
+            callback(this.data);
+        }
+    }
+
+    unsubscribe(callback) {
+        this.subscribers.delete(callback);
+    }
+
+    notifySubscribers() {
+        this.subscribers.forEach(callback => {
+            try {
+                callback(this.data);
+            } catch (error) {
+                console.error('[MONITORING] Subscriber callback error:', error);
+            }
+        });
+    }
+
+    async startMonitoring() {
+        console.log('[MONITORING] Starting unified monitoring system');
+        
+        // Initial data fetch
+        await this.refreshData();
+        
+        // Start periodic updates
+        this.updateInterval = setInterval(() => {
+            this.refreshData();
+        }, this.refreshRate);
+    }
+
+    stopMonitoring() {
+        console.log('[MONITORING] Stopping monitoring system');
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+    }
+
+    async refreshData() {
+        try {
+            console.log('[MONITORING] Refreshing monitoring data...');
+            
+            // Add timeout wrapper for API calls
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timeout')), 10000); // 10 second timeout
+            });
+            
+            // Fetch all monitoring data in parallel with timeout
+            const dataPromises = Promise.all([
+                Promise.race([
+                    this.app.apiCall('/api/monitoring/status'),
+                    timeoutPromise
+                ]).catch(err => {
+                    console.warn('[MONITORING] System status failed:', err.message);
+                    return null;
+                }),
+                Promise.race([
+                    this.app.apiCall('/api/monitoring/applications'),
+                    timeoutPromise
+                ]).catch(err => {
+                    console.warn('[MONITORING] Applications data failed:', err.message);
+                    return [];
+                })
+            ]);
+
+            const [systemData, appsData] = await dataPromises;
+
+            // Update data object
+            this.data = {
+                system: systemData?.data?.system || systemData?.system || null,
+                storage: systemData?.data?.storage || systemData?.storage || null,
+                applications: appsData?.data || appsData || [],
+                alerts: systemData?.data?.notifications || systemData?.notifications || [],
+                status: systemData?.data?.status || systemData?.status || 'unknown',
+                lastUpdate: new Date().toISOString(),
+                timestamp: Date.now()
+            };
+
+            // Notify all subscribers with detailed logging
+            this.notifySubscribers();
+
+        } catch (error) {
+            console.error('[MONITORING] Failed to refresh data:', error);
+            this.data.status = 'error';
+            this.data.lastUpdate = new Date().toISOString();
+            this.data.errorMessage = error.message;
+            this.notifySubscribers();
+        }
+    }
+
+    getCurrentData() {
+        return { ...this.data };
+    }
+
+    getSystemMetrics() {
+        if (!this.data.system) {
+            return null;
+        }
+        
+        return {
+            cpu: this.data.system.cpu?.usage || this.data.system.cpuUsage || 0,
+            memory: this.data.system.memory?.usage || this.data.system.memoryUsage || 0,
+            disk: this.data.system.disk?.usage || this.calculateDiskUsage(),
+            status: this.data.status
+        };
+    }
+
+    calculateDiskUsage() {
+        if (!this.data.storage) return 0;
+        
+        // Find the highest disk usage percentage
+        return Object.values(this.data.storage).reduce((max, disk) => {
+            if (disk.usagePercent && disk.usagePercent < 100) {
+                return Math.max(max, disk.usagePercent);
+            }
+            return max;
+        }, 0);
+    }
+
+    getHealthStatus() {
+        const metrics = this.getSystemMetrics();
+        if (!metrics) return { status: 'unknown', issues: [] };
+
+        const issues = [];
+        
+        if (metrics.cpu > 80) issues.push(`High CPU usage: ${metrics.cpu.toFixed(1)}%`);
+        if (metrics.memory > 85) issues.push(`High memory usage: ${metrics.memory.toFixed(1)}%`);
+        if (metrics.disk > 90) issues.push(`High disk usage: ${metrics.disk.toFixed(1)}%`);
+
+        const status = issues.length === 0 ? 'healthy' : 
+                      issues.length <= 2 ? 'warning' : 'critical';
+
+        return { status, issues };
+    }
+}
+
+/**
  * Authentication Session Manager
  * Handles persistent authentication sessions with timeout
  */
@@ -140,6 +299,9 @@ class InstallationUp4evr {
         // Initialize session manager
         this.authSession = new AuthSessionManager();
         
+        // Initialize unified monitoring system
+        this.monitoringData = new MonitoringDataManager(this);
+        
         // Make app instance globally available for session warnings
         window.installationApp = this;
         
@@ -172,11 +334,6 @@ class InstallationUp4evr {
             console.log('[INIT] Electron mode - starting backend server...');
             this.updateLoadingMessage('Starting backend server...');
             await this.waitForServer();
-            
-            // Check for sudo permissions early
-            console.log('[INIT] Checking sudo permissions...');
-            this.updateLoadingMessage('Checking system permissions...');
-            await this.checkSudoPermissions();
         } else {
             console.log('[INIT] Browser mode - skipping Electron-specific setup');
         }
@@ -201,8 +358,9 @@ class InstallationUp4evr {
             this.updateLoadingMessage('Loading dashboard...');
             await this.refreshDashboard();
             
-            // Setup session management UI
-            this.setupSessionUI();
+            // Start unified monitoring system
+            this.updateLoadingMessage('Starting monitoring...');
+            this.monitoringData.startMonitoring();
             
             this.hideLoadingStates();
         } else {
@@ -257,6 +415,15 @@ class InstallationUp4evr {
             applySelectedBtn.addEventListener('click', () => {
                 console.log('[SETUP] Apply selected button clicked!');
                 this.applySelectedSettings();
+            });
+        }
+
+        // Generate Terminal Script button
+        const generateScriptBtn = document.getElementById('generate-script');
+        if (generateScriptBtn) {
+            generateScriptBtn.addEventListener('click', () => {
+                console.log('[SETUP] Generate script button clicked!');
+                this.generateTerminalScript();
             });
         }
 
@@ -344,111 +511,6 @@ class InstallationUp4evr {
         this.setupThresholdSliders();
     }
 
-    setupSessionUI() {
-        console.log('[SESSION] Setting up session management UI');
-        
-        // Add session status indicator to header
-        this.addSessionStatusIndicator();
-        
-        // Update session status every 30 seconds
-        setInterval(() => this.updateSessionStatus(), 30000);
-        
-        // Update immediately
-        this.updateSessionStatus();
-    }
-
-    addSessionStatusIndicator() {
-        // Check if already exists
-        if (document.getElementById('session-status')) return;
-        
-        // Find a good place in header to add status
-        const header = document.querySelector('.header') || document.querySelector('header') || document.body;
-        
-        const sessionContainer = document.createElement('div');
-        sessionContainer.id = 'session-status';
-        sessionContainer.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            z-index: 1000;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        `;
-        
-        sessionContainer.innerHTML = `
-            <div id="session-indicator">🔐 Not Authenticated</div>
-            <div id="session-actions" style="display: none; margin-top: 5px;">
-                <button id="extend-session" style="background: #007bff; color: white; border: none; padding: 4px 8px; margin-right: 4px; border-radius: 3px; font-size: 11px;">Extend</button>
-                <button id="logout-session" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 11px;">Logout</button>
-            </div>
-        `;
-        
-        // Add click handler to show/hide actions
-        sessionContainer.addEventListener('click', (e) => {
-            if (e.target.id === 'session-status' || e.target.id === 'session-indicator') {
-                const actions = document.getElementById('session-actions');
-                actions.style.display = actions.style.display === 'none' ? 'block' : 'none';
-            }
-        });
-        
-        // Add extend session handler
-        sessionContainer.addEventListener('click', (e) => {
-            if (e.target.id === 'extend-session') {
-                this.extendSession();
-            } else if (e.target.id === 'logout-session') {
-                this.logoutSession();
-            }
-        });
-        
-        header.appendChild(sessionContainer);
-        console.log('[SESSION] Session status indicator added');
-    }
-
-    updateSessionStatus() {
-        const indicator = document.getElementById('session-indicator');
-        const container = document.getElementById('session-status');
-        const actions = document.getElementById('session-actions');
-        
-        if (!indicator) return;
-        
-        if (this.authSession.isSessionValid()) {
-            const remaining = this.authSession.getTimeRemaining();
-            const session = this.authSession.getSession();
-            
-            indicator.textContent = `🔓 Authenticated (${remaining}m)`;
-            container.style.background = remaining > 10 ? 'rgba(0, 128, 0, 0.8)' : 'rgba(255, 165, 0, 0.8)';
-            
-            // Show actions for authenticated users
-            if (actions) actions.style.display = 'block';
-            
-        } else {
-            indicator.textContent = '🔐 Not Authenticated';
-            container.style.background = 'rgba(128, 128, 128, 0.8)';
-            
-            // Hide actions for non-authenticated users
-            if (actions) actions.style.display = 'none';
-        }
-    }
-
-    extendSession() {
-        if (this.authSession.extendSession(45)) {
-            this.updateSessionStatus();
-            this.showToast('Session extended by 45 minutes', 'success');
-        } else {
-            this.showToast('No active session to extend', 'warning');
-        }
-    }
-
-    logoutSession() {
-        this.authSession.clearSession();
-        this.updateSessionStatus();
-        this.showToast('Logged out - authentication cleared', 'info');
-    }
 
     // API Communication
     async apiCall(endpoint, options = {}) {
@@ -549,8 +611,11 @@ class InstallationUp4evr {
     }
 
     async checkSIPStatus() {
+        console.log('[SIP] Checking SIP status...');
         try {
             const sipStatus = await this.apiCall('/api/system-prefs/sip-status');
+            console.log('[SIP] SIP status response:', sipStatus);
+            
             const status = sipStatus.enabled ? 'warning' : 'online';
             const text = sipStatus.enabled ? 'SIP Enabled' : 'SIP Disabled';
             this.updateStatus('sip-status', status, text);
@@ -559,68 +624,187 @@ class InstallationUp4evr {
                 this.showToast(sipStatus.warning, 'warning');
             }
         } catch (error) {
+            console.error('[SIP] Failed to check SIP status:', error);
             this.updateStatus('sip-status', 'offline', 'SIP Unknown');
         }
     }
 
     updateStatus(elementId, status, text) {
         const element = document.getElementById(elementId);
+        if (!element) {
+            console.warn(`[STATUS] Element ${elementId} not found`);
+            return;
+        }
         element.className = `status-indicator ${status}`;
         element.innerHTML = `<i class="fas fa-circle"></i> ${text}`;
+        console.log(`[STATUS] Updated ${elementId}: ${status} - ${text}`);
     }
 
     // System Preferences
     async loadSystemPreferences() {
+        console.log('[SYSTEM-PREFS] Loading system preferences...');
         try {
-            const [required, optional, statusData] = await Promise.all([
-                this.apiCall('/api/system-prefs/required'),
-                this.apiCall('/api/system-prefs/optional'),
+            const [allSettings, statusData] = await Promise.all([
+                this.apiCall('/api/system-prefs/settings'),
                 this.apiCall('/api/system-prefs/status')
             ]);
 
+            console.log('[SYSTEM-PREFS] All settings:', allSettings);
+            console.log('[SYSTEM-PREFS] Status data:', statusData);
+
             // Create status lookup for quick access
             const statusLookup = {};
-            statusData.forEach(status => {
-                statusLookup[status.setting] = status;
-            });
+            if (Array.isArray(statusData)) {
+                statusData.forEach(status => {
+                    statusLookup[status.setting] = status;
+                });
+            } else {
+                console.warn('[SYSTEM-PREFS] Status data is not an array:', statusData);
+            }
 
-            this.renderSettings('required-settings', required, statusLookup);
-            this.renderSettings('optional-settings', optional, statusLookup);
+            console.log('[SYSTEM-PREFS] Status lookup:', statusLookup);
+
+            // Filter settings by required vs optional and render
+            const settingsArray = Array.isArray(allSettings) 
+                ? allSettings 
+                : Object.entries(allSettings).map(([key, setting]) => ({
+                    id: key,
+                    name: setting.name,
+                    description: setting.description,
+                    required: setting.required,
+                    category: setting.category || 'general'
+                }));
+
+            const requiredSettings = settingsArray.filter(s => s.required);
+            const optionalSettings = settingsArray.filter(s => !s.required);
+
+            console.log('[SYSTEM-PREFS] Required settings:', requiredSettings);
+            console.log('[SYSTEM-PREFS] Optional settings:', optionalSettings);
+
+            this.renderSettings('required-settings', requiredSettings, statusLookup);
+            this.renderSettings('optional-settings', optionalSettings, statusLookup);
+            
+            console.log('[SYSTEM-PREFS] Settings rendered successfully');
         } catch (error) {
+            console.error('[SYSTEM-PREFS] Failed to load system preferences:', error);
             this.showToast('Failed to load system preferences', 'error');
         }
     }
 
     renderSettings(containerId, settings, statusLookup = {}) {
         const container = document.getElementById(containerId);
-        container.innerHTML = settings.map(setting => {
-            const status = statusLookup[setting.id] || { statusIcon: '⚪', statusText: 'Unknown' };
-            const statusClass = this.getStatusClass(status.status);
+        
+        // Convert object to array of entries if needed
+        const settingsArray = Array.isArray(settings) 
+            ? settings 
+            : Object.entries(settings).map(([key, setting]) => ({
+                id: key,
+                name: setting.name,
+                description: setting.description,
+                required: setting.required,
+                category: setting.category || 'general'
+            }));
+        
+        if (settingsArray.length === 0) {
+            container.innerHTML = '<div class="no-settings">No settings available</div>';
+            return;
+        }
+        
+        // Group settings by category
+        const categorizedSettings = settingsArray.reduce((acc, setting) => {
+            const category = setting.category || 'general';
+            if (!acc[category]) acc[category] = [];
+            acc[category].push(setting);
+            return acc;
+        }, {});
+        
+        // Define category order and metadata
+        const categoryInfo = {
+            power: { name: 'Power & Sleep', icon: 'fas fa-bolt', description: 'Essential settings for unattended operation' },
+            ui: { name: 'User Interface', icon: 'fas fa-desktop', description: 'Display and interface behavior' },
+            performance: { name: 'Performance', icon: 'fas fa-tachometer-alt', description: 'System performance optimizations' },
+            network: { name: 'Network', icon: 'fas fa-wifi', description: 'Network and connectivity settings' },
+            general: { name: 'General', icon: 'fas fa-cog', description: 'General system settings' },
+            danger: { name: '⚠️ Expert / Danger Zone', icon: 'fas fa-exclamation-triangle', description: 'Advanced settings with security implications' }
+        };
+        
+        const categoryOrder = ['power', 'ui', 'performance', 'network', 'general', 'danger'];
+        
+        container.innerHTML = categoryOrder.map(categoryKey => {
+            const categorySettings = categorizedSettings[categoryKey];
+            if (!categorySettings || categorySettings.length === 0) return '';
+            
+            const categoryMeta = categoryInfo[categoryKey];
+            const isDangerZone = categoryKey === 'danger';
+            
+            const settingsHtml = categorySettings.map(setting => {
+                const status = statusLookup[setting.id] || { statusIcon: '⚪', statusText: 'Unknown' };
+                const statusClass = this.getStatusClass(status.status);
+                const dangerClass = isDangerZone ? 'danger-setting' : '';
+                
+                return `
+                    <div class="setting-item ${statusClass} ${dangerClass}" data-setting-id="${setting.id}" data-category="${categoryKey}">
+                        <label class="checkbox-label">
+                            <input type="checkbox" data-setting="${setting.id}" ${isDangerZone ? 'data-danger="true"' : ''}>
+                            <span class="checkbox-custom"></span>
+                            <div class="setting-content">
+                                <div class="setting-header">
+                                    <h4>${setting.name} <span class="status-emoji">${status.statusIcon}</span></h4>
+                                    <span class="status-text">${status.statusText}</span>
+                                </div>
+                                <p>${setting.description}</p>
+                            </div>
+                        </label>
+                    </div>
+                `;
+            }).join('');
+            
+            const dangerZoneClass = isDangerZone ? 'danger-zone-category' : '';
+            const collapsedClass = isDangerZone ? 'collapsed' : '';
             
             return `
-                <div class="setting-item ${statusClass}" data-setting-id="${setting.id}">
-                    <label class="checkbox-label">
-                        <input type="checkbox" data-setting="${setting.id}">
-                        <span class="checkbox-custom"></span>
-                        <div class="setting-content">
-                            <div class="setting-header">
-                                <h4>${setting.name} <span class="status-emoji">${status.statusIcon}</span></h4>
-                                <span class="status-text">${status.statusText}</span>
-                            </div>
-                            <p>${setting.description}</p>
-                        </div>
-                    </label>
+                <div class="settings-category ${dangerZoneClass} ${collapsedClass}" data-category="${categoryKey}">
+                    <div class="category-header" ${isDangerZone ? 'onclick="this.parentElement.classList.toggle(\'collapsed\')"' : ''}>
+                        <h3>
+                            <i class="${categoryMeta.icon}"></i>
+                            ${categoryMeta.name}
+                            ${isDangerZone ? '<i class="fas fa-chevron-down toggle-icon"></i>' : ''}
+                        </h3>
+                        <p class="category-description">${categoryMeta.description}</p>
+                        ${isDangerZone ? '<p class="danger-warning">⚠️ These settings may compromise system security. Use with caution!</p>' : ''}
+                    </div>
+                    <div class="category-settings">
+                        ${settingsHtml}
+                    </div>
                 </div>
             `;
-        }).join('');
+        }).filter(html => html).join('');
 
         // Add change listeners
         container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
                 const settingId = e.target.dataset.setting;
                 const settingItem = e.target.closest('.setting-item');
+                const isDangerSetting = e.target.dataset.danger === 'true';
                 
                 if (e.target.checked) {
+                    // Special confirmation for danger zone settings
+                    if (isDangerSetting) {
+                        const settingName = settingItem.querySelector('h4').textContent.replace('⚠️', '').trim();
+                        const confirmed = confirm(
+                            `⚠️ DANGER ZONE SETTING ⚠️\n\n` +
+                            `You are about to enable: "${settingName}"\n\n` +
+                            `This setting may compromise system security or stability. ` +
+                            `Only proceed if you understand the risks and have proper backups.\n\n` +
+                            `Continue with this dangerous setting?`
+                        );
+                        
+                        if (!confirmed) {
+                            e.target.checked = false;
+                            return;
+                        }
+                    }
+                    
                     this.selectedSettings.add(settingId);
                     settingItem.classList.add('selected');
                 } else {
@@ -656,40 +840,78 @@ class InstallationUp4evr {
     async applyRequiredSettings() {
         console.log('[REQUIRED] Starting apply required settings...');
         
-        if (!confirm('This will apply all required system settings. Some changes require admin privileges. Continue?')) {
+        // Step 1: Check current status of required settings
+        this.showLoading();
+        this.updateLoadingMessage('Checking current system status...');
+        
+        let requiredSettingsToApply = [];
+        try {
+            const statusResponse = await this.apiCall('/api/system-prefs/status');
+            if (statusResponse.success) {
+                const statusData = statusResponse.data;
+                
+                // Filter to only required settings that need to be applied
+                requiredSettingsToApply = statusData.filter(item => {
+                    // Assuming the backend marks required settings somehow
+                    // This might need adjustment based on how required settings are identified
+                    return item.status !== 'applied';
+                });
+            } else {
+                throw new Error('Failed to get system status');
+            }
+        } catch (error) {
+            console.warn('[REQUIRED] Status check failed:', error);
+            this.hideLoading();
+            this.showToast('Unable to check system status. Please try manual application.', 'error');
+            return;
+        } finally {
+            this.hideLoading();
+        }
+
+        // Step 2: Show user what will actually be changed
+        if (requiredSettingsToApply.length === 0) {
+            this.showToast('All required settings are already applied! ✅', 'success');
             return;
         }
 
-        // In browser mode, check for authentication first
-        if (!this.isElectron) {
-            console.log('[REQUIRED] Browser mode - checking authentication first...');
-            
-            try {
-                // Check if we have sudo access
-                const sudoStatus = await this.apiCall('/api/auth/sudo-status');
-                console.log('[REQUIRED] Sudo status:', sudoStatus);
-                
-                if (!sudoStatus.hasSudoAccess) {
-                    console.log('[REQUIRED] No sudo access - showing auth dialog...');
-                    
-                    // Show the authentication dialog and wait for completion
-                    await this.requireAuthentication();
-                    
-                    // Verify authentication worked
-                    const newSudoStatus = await this.apiCall('/api/auth/sudo-status');
-                    if (!newSudoStatus.hasSudoAccess) {
-                        this.showToast('Administrator access required to apply system settings', 'error');
-                        return;
-                    }
-                    console.log('[REQUIRED] Authentication successful, proceeding...');
-                }
-            } catch (error) {
-                console.error('[REQUIRED] Authentication check failed:', error);
-                this.showToast('Failed to verify administrator access', 'error');
-                return;
-            }
+        // Step 3: Show smart authentication dialog
+        const settingsList = requiredSettingsToApply.map(s => `• ${s.name} (${s.statusText})`).join('\n');
+        let message = `📋 Required Settings Review\n\n`;
+        message += `${requiredSettingsToApply.length} required settings need to be applied:\n\n${settingsList}\n\n`;
+        
+        if (this.isElectron) {
+            message += `These are essential settings for installation computers.\n\n`;
+            message += `🔒 Apply automatically using native authentication?\n`;
+            message += `(You can also choose manual commands if preferred)`;
+        } else {
+            message += `⚠️ Browser Mode: Generate terminal commands to run manually?\n`;
+            message += `(Automatic application may not work reliably in browsers)`;
         }
 
+        const choice = confirm(message);
+        
+        if (choice) {
+            if (this.isElectron) {
+                await this.executeRequiredSettingsApplication();
+            } else {
+                // Generate script for all required settings that need to be applied
+                this.selectedSettings = new Set(requiredSettingsToApply.map(s => s.setting));
+                await this.generateTerminalScript();
+            }
+        } else if (this.isElectron) {
+            // Offer manual option for Electron users who declined automatic
+            const manualChoice = confirm(
+                'Would you like to see the manual terminal commands instead?\n\n' +
+                'This will show you the exact commands to run in Terminal.'
+            );
+            if (manualChoice) {
+                this.selectedSettings = new Set(requiredSettingsToApply.map(s => s.setting));
+                await this.generateTerminalScript();
+            }
+        }
+    }
+
+    async executeRequiredSettingsApplication() {
         this.showLoading();
         try {
             console.log('[REQUIRED] Applying required settings via API...');
@@ -699,6 +921,9 @@ class InstallationUp4evr {
             console.log('[REQUIRED] Required settings application result:', results);
             this.displayResults('Applied Required Settings', results);
             this.showToast('Required settings applied successfully!', 'success');
+            
+            // Refresh the display to show updated status
+            await this.loadSystemPreferences();
         } catch (error) {
             console.error('[REQUIRED] Failed to apply required settings:', error);
             this.showToast('Failed to apply required settings', 'error');
@@ -717,63 +942,367 @@ class InstallationUp4evr {
 
         console.log('[APPLY] Selected settings:', Array.from(this.selectedSettings));
 
-        if (!confirm(`This will apply ${this.selectedSettings.size} selected settings. Some changes require admin privileges. Continue?`)) {
+        // Step 1: Check current status of selected settings
+        this.showLoading();
+        this.updateLoadingMessage('Checking current system status...');
+        
+        let settingsToApply = [];
+        try {
+            const statusResponse = await this.apiCall('/api/system-prefs/status');
+            if (statusResponse.success) {
+                const statusData = statusResponse.data;
+                const statusLookup = statusData.reduce((acc, item) => {
+                    acc[item.setting] = item;
+                    return acc;
+                }, {});
+
+                // Filter out settings that are already applied
+                for (const settingId of this.selectedSettings) {
+                    const status = statusLookup[settingId];
+                    if (!status || status.status !== 'applied') {
+                        settingsToApply.push({
+                            id: settingId,
+                            name: status?.name || settingId,
+                            status: status?.status || 'unknown',
+                            statusText: status?.statusText || 'Unknown status'
+                        });
+                    }
+                }
+            } else {
+                // If status check fails, apply all selected settings
+                settingsToApply = Array.from(this.selectedSettings).map(id => ({ id, name: id, status: 'unknown' }));
+            }
+        } catch (error) {
+            console.warn('[APPLY] Status check failed, proceeding with all selected settings:', error);
+            settingsToApply = Array.from(this.selectedSettings).map(id => ({ id, name: id, status: 'unknown' }));
+        } finally {
+            this.hideLoading();
+        }
+
+        // Step 2: Show user what will actually be changed
+        if (settingsToApply.length === 0) {
+            this.showToast('All selected settings are already applied! ✅', 'success');
             return;
         }
 
-        // In browser mode, check for authentication first
-        if (!this.isElectron) {
-            console.log('[APPLY] Browser mode - checking authentication first...');
-            
-            try {
-                // Check if we have sudo access
-                const sudoStatus = await this.apiCall('/api/auth/sudo-status');
-                console.log('[APPLY] Sudo status:', sudoStatus);
-                
-                if (!sudoStatus.hasSudoAccess) {
-                    console.log('[APPLY] No sudo access - showing auth dialog...');
-                    
-                    // Show the authentication dialog and wait for completion
-                    await this.requireAuthentication();
-                    
-                    // Verify authentication worked
-                    const newSudoStatus = await this.apiCall('/api/auth/sudo-status');
-                    if (!newSudoStatus.hasSudoAccess) {
-                        this.showToast('Administrator access required to apply system settings', 'error');
-                        return;
-                    }
-                    console.log('[APPLY] Authentication successful, proceeding...');
-                }
-            } catch (error) {
-                console.error('[APPLY] Authentication check failed:', error);
-                this.showToast('Failed to verify administrator access', 'error');
-                return;
-            }
+        // Step 3: Show smart authentication dialog with multiple options
+        const choice = await this.showSmartAuthDialog(settingsToApply);
+        
+        switch (choice) {
+            case 'manual':
+                await this.generateTerminalScript();
+                break;
+            case 'apply':
+                await this.executeSettingsApplication(settingsToApply.map(s => s.id));
+                break;
+            case 'cancel':
+            default:
+                console.log('[APPLY] User cancelled settings application');
+                break;
         }
+    }
 
+    async showSmartAuthDialog(settingsToApply) {
+        return new Promise((resolve) => {
+            // Create enhanced dialog showing what will be changed
+            const settingsCount = settingsToApply.length;
+            const settingsList = settingsToApply.map(s => `• ${s.name} (${s.statusText})`).join('\n');
+            
+            const isElectron = this.isElectron;
+            
+            let message = `📋 Settings Review\n\n`;
+            message += `${settingsCount} settings need to be applied:\n\n${settingsList}\n\n`;
+            message += `Choose how to proceed:\n\n`;
+            
+            if (isElectron) {
+                message += `🔒 Apply for Me - Use native authentication (recommended)\n`;
+                message += `📄 Show Manual Commands - Copy-paste terminal commands\n`;
+                message += `❌ Cancel - Don't make changes\n\n`;
+                message += `Would you like to apply these settings automatically?`;
+            } else {
+                message += `⚠️ Browser Mode: Automatic application may not work reliably.\n\n`;
+                message += `📄 Generate Terminal Commands (Recommended)\n`;
+                message += `🔒 Try Direct Application (May Fail)\n`;
+                message += `❌ Cancel\n\n`;
+                message += `Generate terminal commands to run manually?`;
+            }
+
+            const choice = confirm(message);
+            
+            if (choice) {
+                resolve(isElectron ? 'apply' : 'manual');
+            } else {
+                // Show manual option for Electron users who said no to automatic
+                if (isElectron) {
+                    const manualChoice = confirm(
+                        'Would you like to see the manual terminal commands instead?\n\n' +
+                        'This will show you the exact commands to run in Terminal.'
+                    );
+                    resolve(manualChoice ? 'manual' : 'cancel');
+                } else {
+                    resolve('cancel');
+                }
+            }
+        });
+    }
+
+    async executeSettingsApplication(settingIds) {
         this.showLoading();
         try {
             let results;
             if (this.isElectron) {
                 // Use native Electron API for better sudo handling
-                results = await window.electronAPI.applySystemSettings(Array.from(this.selectedSettings));
+                results = await window.electronAPI.applySystemSettings(settingIds);
             } else {
                 // Fallback to web API
                 console.log('[APPLY] Applying settings via web API...');
                 results = await this.apiCall('/api/system-prefs/apply', {
                     method: 'POST',
-                    body: JSON.stringify({ settings: Array.from(this.selectedSettings) })
+                    body: JSON.stringify({ settings: settingIds })
                 });
                 console.log('[APPLY] Settings application result:', results);
             }
             this.displayResults('Applied Selected Settings', results);
-            this.showToast(`Applied ${this.selectedSettings.size} settings successfully!`, 'success');
+            this.showToast(`Applied ${settingIds.length} settings successfully!`, 'success');
+            
+            // Refresh the display to show updated status
+            await this.loadSystemPreferences();
         } catch (error) {
             console.error('[APPLY] Failed to apply settings:', error);
             this.showToast('Failed to apply selected settings', 'error');
         } finally {
             this.hideLoading();
         }
+    }
+
+    // Debug function to test Electron API connectivity
+    async testElectronAPI() {
+        console.log('=== ELECTRON API DEBUG TEST ===');
+        console.log('1. Environment Detection:');
+        console.log('   - isElectron:', this.isElectron);
+        console.log('   - window.electronAPI exists:', !!window.electronAPI);
+        console.log('   - window.electronAPI.isElectron:', window.electronAPI?.isElectron);
+        console.log('   - requestSudoAccess available:', !!window.electronAPI?.requestSudoAccess);
+        
+        if (window.electronAPI) {
+            console.log('2. Available Electron API methods:');
+            console.log('   -', Object.keys(window.electronAPI).join(', '));
+        }
+        
+        if (this.isElectron && window.electronAPI?.checkSudoStatus) {
+            console.log('3. Testing sudo status check...');
+            try {
+                const sudoStatus = await window.electronAPI.checkSudoStatus();
+                console.log('   - Sudo status result:', sudoStatus);
+            } catch (error) {
+                console.error('   - Sudo status error:', error);
+            }
+        }
+        
+        console.log('4. Debug log location: ~/installation-up-4evr-debug.log');
+        console.log('=== END DEBUG TEST ===');
+        
+        this.showToast('Debug info logged to console. Check ~/installation-up-4evr-debug.log for Electron logs.', 'info');
+    }
+
+    async generateTerminalScript(mode = 'apply') {
+        try {
+            console.log('[SCRIPT-GEN] Generating terminal script for browser users...');
+            
+            if (this.selectedSettings.size === 0) {
+                this.showToast('No settings selected for script generation', 'warning');
+                return;
+            }
+
+            const settingsArray = Array.from(this.selectedSettings);
+            console.log('[SCRIPT-GEN] Selected settings:', settingsArray);
+
+            // Show loading state
+            this.showLoading();
+
+            // Call the new script generation API
+            const response = await this.apiCall('/api/system-prefs/generate-script', {
+                method: 'POST',
+                body: JSON.stringify({
+                    settings: settingsArray,
+                    mode: mode,
+                    includeVerification: true
+                })
+            });
+
+            console.log('[SCRIPT-GEN] Script generation response:', response);
+
+            if (response.success) {
+                // Show the generated script in a modal
+                this.showTerminalScriptModal(response.data);
+                this.showToast(`Generated script for ${response.data.settingsCount} settings`, 'success');
+            } else {
+                this.showToast('Failed to generate terminal script', 'error');
+                console.error('[SCRIPT-GEN] Generation failed:', response.error);
+            }
+        } catch (error) {
+            console.error('[SCRIPT-GEN] Error generating script:', error);
+            this.showToast('Error generating terminal script', 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    showTerminalScriptModal(scriptData) {
+        // Remove any existing modal
+        const existingModal = document.getElementById('terminal-script-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create modal HTML
+        const modalHtml = `
+            <div id="terminal-script-modal" class="modal-overlay">
+                <div class="modal-content script-modal">
+                    <div class="modal-header">
+                        <h2>🖥️ Terminal Commands Generated</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="script-info">
+                            <p><strong>Settings:</strong> ${scriptData.settingsCount} (${scriptData.categories.join(', ')})</p>
+                            <p><strong>Generated:</strong> ${new Date(scriptData.timestamp).toLocaleString()}</p>
+                            <p class="script-instructions">
+                                📋 <strong>Instructions:</strong> Copy the script below, save it as a .sh file, and run it in Terminal.
+                                Some commands require administrator privileges and will prompt for your password.
+                            </p>
+                        </div>
+                        <div class="script-container">
+                            <div class="script-header">
+                                <span>installation-up-4evr-config.sh</span>
+                                <button id="copy-script-btn" class="copy-button" onclick="installationApp.copyScriptToClipboard()">
+                                    📋 Copy Script
+                                </button>
+                            </div>
+                            <pre id="terminal-script-content" class="script-content">${scriptData.script}</pre>
+                        </div>
+                        <div class="script-actions">
+                            <button class="btn btn-primary" id="download-script-btn">
+                                💾 Download Script
+                            </button>
+                            <button class="btn btn-secondary" id="close-script-modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Add event listeners
+        const downloadBtn = document.getElementById('download-script-btn');
+        const closeBtn = document.getElementById('close-script-modal');
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                this.downloadScript(scriptData.script, 'installation-up-4evr-config.sh');
+            });
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                const modal = document.getElementById('terminal-script-modal');
+                if (modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Make modal visible with animation
+        setTimeout(() => {
+            const modal = document.getElementById('terminal-script-modal');
+            if (modal) {
+                modal.classList.add('show');
+            }
+        }, 10);
+    }
+
+    async copyScriptToClipboard() {
+        const scriptElement = document.getElementById('terminal-script-content');
+        if (!scriptElement) return;
+
+        const scriptText = scriptElement.textContent;
+        const copyBtn = document.getElementById('copy-script-btn');
+        const originalText = copyBtn?.innerHTML;
+
+        try {
+            // Try modern Clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(scriptText);
+                this.showToast('Script copied to clipboard! 📋', 'success');
+                console.log('[COPY] Script copied using modern Clipboard API');
+            } else {
+                // Fallback to legacy method for older browsers or non-HTTPS
+                await this.legacyCopyToClipboard(scriptText);
+                this.showToast('Script copied to clipboard! 📋', 'success');
+                console.log('[COPY] Script copied using legacy method');
+            }
+            
+            // Update button text temporarily
+            if (copyBtn) {
+                copyBtn.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2500);
+            }
+        } catch (err) {
+            console.error('[COPY] Failed to copy script:', err);
+            this.showToast('Failed to copy script. Please select and copy manually.', 'warning');
+            
+            // Select the text for manual copying
+            if (scriptElement) {
+                const range = document.createRange();
+                range.selectNodeContents(scriptElement);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
+    }
+
+    legacyCopyToClipboard(text) {
+        return new Promise((resolve, reject) => {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    resolve();
+                } else {
+                    reject(new Error('execCommand returned false'));
+                }
+            } catch (err) {
+                reject(err);
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        });
+    }
+
+    downloadScript(scriptContent, filename) {
+        const blob = new Blob([scriptContent], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.showToast('Script downloaded successfully!', 'success');
     }
 
     async requireAuthentication() {
@@ -1318,16 +1847,19 @@ class InstallationUp4evr {
                     this.initializeWizard();
                 }
                 
+                // Load system preferences if system-prefs tab is selected
+                if (targetTab === 'system-prefs') {
+                    this.loadSystemPreferences();
+                }
+                
                 // Load monitoring data if monitoring tab is selected
                 if (targetTab === 'monitoring') {
-                    this.loadMonitoringData();
-                    this.startMonitoringUpdates();
+                    this.setupMonitoringTabSubscription();
                 }
                 
                 // Load monitoring config and system status if monitoring-config tab is selected
                 if (targetTab === 'monitoring-config') {
-                    this.loadSystemStatus();
-                    this.startSystemStatusUpdates();
+                    this.setupMonitoringConfigSubscription();
                 }
                 
                 // Load service status if service control tab is selected
@@ -1347,61 +1879,118 @@ class InstallationUp4evr {
     }
 
     // Monitoring Dashboard
-    async loadMonitoringData() {
-        try {
-            const monitoringData = await this.apiCall('/api/monitoring/status');
-            this.updateMonitoringDisplay(monitoringData);
-        } catch (error) {
-            console.error('Failed to load monitoring data:', error);
-            this.showToast('Failed to load monitoring data', 'error');
+    setupMonitoringTabSubscription() {
+        // Remove any existing subscription for monitoring tab
+        if (this.monitoringTabCallback) {
+            this.monitoringData.unsubscribe(this.monitoringTabCallback);
+        }
+        
+        // Create new callback for monitoring tab updates
+        this.monitoringTabCallback = (data) => {
+            this.updateMonitoringDisplay(data);
+        };
+        
+        // Subscribe to monitoring updates
+        this.monitoringData.subscribe(this.monitoringTabCallback);
+        
+        // Update immediately with current data
+        const currentData = this.monitoringData.getCurrentData();
+        if (currentData.lastUpdate) {
+            this.updateMonitoringDisplay(currentData);
         }
     }
 
     updateMonitoringDisplay(data) {
-        // Update system metrics
-        if (data.system) {
-            this.updateMetric('cpu', data.system.cpuUsage, '%');
-            this.updateMetric('memory', data.system.memoryUsage, '%');
-            
-            // Calculate disk usage from storage data
-            if (data.storage) {
-                const totalDisk = Object.values(data.storage).reduce((acc, disk) => {
-                    if (disk.usagePercent && disk.usagePercent < 100) {
-                        return Math.max(acc, disk.usagePercent);
-                    }
-                    return acc;
-                }, 0);
-                this.updateMetric('disk', totalDisk, '%');
-            }
+        // Get processed metrics from monitoring manager
+        const metrics = this.monitoringData.getSystemMetrics();
+        const healthStatus = this.monitoringData.getHealthStatus();
+        
+        if (metrics) {
+            // Update system metrics using the centralized data
+            this.updateMetric('cpu', metrics.cpu, '%');
+            this.updateMetric('memory', metrics.memory, '%');
+            this.updateMetric('disk', metrics.disk, '%');
         }
 
         // Update health status
-        this.updateHealthStatus(data.status, data.issues || []);
+        this.updateHealthStatus(healthStatus.status, healthStatus.issues || []);
 
         // Update alerts
-        this.updateAlerts(data.notifications || []);
+        this.updateAlerts(data.alerts || []);
 
-        // Update details
+        // Update system details with raw data
         this.updateSystemDetails(data);
     }
 
     updateMetric(metricId, value, unit) {
-        const valueElement = document.getElementById(`${metricId}-usage`);
-        const barElement = document.getElementById(`${metricId}-bar`);
+        // Ensure value is a number
+        const numericValue = parseFloat(value) || 0;
         
-        if (valueElement && barElement) {
-            valueElement.textContent = value !== undefined ? `${Math.round(value)}${unit}` : '--';
-            barElement.style.width = value !== undefined ? `${Math.min(value, 100)}%` : '0%';
-            
-            // Color coding for the bars
-            if (value > 90) {
-                barElement.style.background = 'rgb(239, 68, 68)'; // Red
-            } else if (value > 70) {
-                barElement.style.background = 'rgb(245, 158, 11)'; // Yellow  
-            } else {
-                barElement.style.background = 'rgb(34, 197, 94)'; // Green
+        // Define all possible element ID patterns for this metric
+        const elementPatterns = [
+            // Monitoring tab pattern (primary)
+            { value: `${metricId}-usage`, bar: `${metricId}-bar` },
+            // Dashboard pattern (now unified with monitoring tab)
+            { value: `dashboard-${metricId}-value`, bar: `dashboard-${metricId}-bar`, status: `dashboard-${metricId}-status` },
+            // Config tab pattern
+            { value: `current-${metricId}`, indicator: `${metricId}-indicator`, trend: `${metricId}-trend` }
+        ];
+        
+        const displayValue = numericValue > 0 ? `${Math.round(numericValue)}${unit}` : '--';
+        const widthPercent = numericValue > 0 ? `${Math.min(numericValue, 100)}%` : '0%';
+        
+        // Update all matching elements
+        elementPatterns.forEach((pattern, index) => {
+            const valueElement = document.getElementById(pattern.value);
+            if (valueElement) {
+                valueElement.textContent = displayValue;
             }
-        }
+            
+            // Update progress bar (monitoring tab)
+            if (pattern.bar) {
+                const barElement = document.getElementById(pattern.bar);
+                if (barElement) {
+                    barElement.style.width = widthPercent;
+                    
+                    // Color coding for the bars
+                    if (numericValue > 90) {
+                        barElement.style.background = 'rgb(239, 68, 68)'; // Red
+                    } else if (numericValue > 70) {
+                        barElement.style.background = 'rgb(245, 158, 11)'; // Yellow  
+                    } else {
+                        barElement.style.background = 'rgb(34, 197, 94)'; // Green
+                    }
+                }
+            }
+            
+            // Update status text (dashboard)
+            if (pattern.status) {
+                const statusElement = document.getElementById(pattern.status);
+                if (statusElement) {
+                    const statusText = numericValue > 0 ? 
+                        (numericValue > 80 ? 'High' : numericValue > 50 ? 'Normal' : 'Low') : 'Checking...';
+                    statusElement.textContent = statusText;
+                }
+            }
+            
+            // Update indicator and trend (config tab)
+            if (pattern.indicator) {
+                const indicatorElement = document.getElementById(pattern.indicator);
+                if (indicatorElement) {
+                    const indicator = numericValue > 0 ? 
+                        (numericValue > 80 ? '🔴' : numericValue > 60 ? '🟡' : '🟢') : '⚪';
+                    indicatorElement.textContent = indicator;
+                }
+            }
+            
+            if (pattern.trend) {
+                const trendElement = document.getElementById(pattern.trend);
+                if (trendElement) {
+                    // Simple trend logic (could be enhanced with historical data)
+                    trendElement.textContent = numericValue > 0 ? '→' : '--';
+                }
+            }
+        });
     }
 
     updateHealthStatus(status, issues) {
@@ -1419,7 +2008,14 @@ class InstallationUp4evr {
         
         if (indicator && text) {
             indicator.textContent = config.icon;
-            text.textContent = issues.length > 0 ? `${config.text} (${issues.length} issues)` : config.text;
+            
+            if (issues.length > 0) {
+                // Show the actual issue details instead of just the count
+                text.textContent = issues.length === 1 ? issues[0] : `${config.text}: ${issues.join(', ')}`;
+            } else {
+                text.textContent = config.text;
+            }
+            
             text.style.color = config.color;
         }
     }
@@ -1459,41 +2055,54 @@ class InstallationUp4evr {
     }
 
     updateSystemDetails(data) {
-        // Display status
+        // Display status - Add fallback since displays data not in API
         const displayElement = document.getElementById('display-status');
-        if (displayElement && data.displays) {
-            const displays = Object.values(data.displays);
-            const onlineDisplays = displays.filter(d => d.online).length;
-            displayElement.textContent = `${onlineDisplays}/${displays.length} displays online`;
-        }
-
-        // Network status
-        const networkElement = document.getElementById('network-status');
-        if (networkElement && data.network) {
-            if (data.network.summary) {
-                const status = data.network.summary.status;
-                const ip = data.network.summary.primaryIP;
-                const interfaces = data.network.summary.totalInterfaces;
-                networkElement.textContent = `${status} - ${ip} (${interfaces} interfaces)`;
+        if (displayElement) {
+            if (data.displays) {
+                const displays = Object.values(data.displays);
+                const onlineDisplays = displays.filter(d => d.online).length;
+                displayElement.textContent = `${onlineDisplays}/${displays.length} displays online`;
             } else {
-                // Fallback for older data format
-                const connected = data.network.internetConnected ? 'Connected' : 'Disconnected';
-                const interfaces = Object.keys(data.network).filter(k => k !== 'internetConnected' && k !== 'summary').length;
-                networkElement.textContent = `${connected} (${interfaces} interfaces)`;
+                displayElement.textContent = 'Display monitoring not available';
             }
         }
 
-        // Uptime
-        const uptimeElement = document.getElementById('uptime-status');
-        if (uptimeElement && data.system) {
-            const uptime = this.formatUptime(data.system.uptime);
-            uptimeElement.textContent = uptime;
+        // Network status - Fix data path to match API response
+        const networkElement = document.getElementById('network-status');
+        if (networkElement && data.network) {
+            const connectivity = data.network.connectivity ? 'Connected' : 'Disconnected';
+            const primaryIP = data.network.primaryIP || 'Unknown IP';
+            const interfaceCount = data.network.interfaces ? data.network.interfaces.length : 0;
+            networkElement.textContent = `${connectivity} - ${primaryIP} (${interfaceCount} interfaces)`;
+        } else if (networkElement) {
+            networkElement.textContent = 'Network status unavailable';
         }
 
-        // Monitored apps with health scores
+        // Uptime - Fix data path to handle object structure
+        const uptimeElement = document.getElementById('uptime-status');
+        if (uptimeElement && data.system) {
+            if (data.system.uptime) {
+                // Use formatted string if available, otherwise format the seconds
+                const uptime = data.system.uptime.formatted || this.formatUptime(data.system.uptime.seconds);
+                uptimeElement.textContent = uptime;
+            } else {
+                uptimeElement.textContent = 'Uptime unavailable';
+            }
+        } else if (uptimeElement) {
+            uptimeElement.textContent = 'System data unavailable';
+        }
+
+        // Monitored apps - Add fallback and handle missing data
         const appsElement = document.getElementById('apps-status');
-        if (appsElement && data.watchedApps) {
-            this.updateAppsStatus(appsElement, data.watchedApps);
+        if (appsElement) {
+            if (data.watchedApps && data.watchedApps.length > 0) {
+                this.updateAppsStatus(appsElement, data.watchedApps);
+            } else if (data.applications) {
+                // Fallback to applications array if watchedApps not available
+                this.updateAppsStatus(appsElement, data.applications);
+            } else {
+                appsElement.textContent = 'No applications being monitored';
+            }
         }
     }
 
@@ -1568,42 +2177,75 @@ class InstallationUp4evr {
         return '#FF3B30'; // Red
     }
 
+    // Legacy function - now handled by unified MonitoringDataManager
     startMonitoringUpdates() {
-        // Clear existing interval
-        if (this.monitoringInterval) {
-            clearInterval(this.monitoringInterval);
-        }
-        
-        // Update every 5 seconds when monitoring tab is active
-        this.monitoringInterval = setInterval(() => {
-            const activeTab = document.querySelector('.tab-pane.active');
-            if (activeTab && activeTab.id === 'monitoring-tab') {
-                this.loadMonitoringData();
-            } else {
-                // Stop updates if not on monitoring tab
-                clearInterval(this.monitoringInterval);
-                this.monitoringInterval = null;
-            }
-        }, 5000);
+        console.log('[MONITORING] Using unified monitoring system - startMonitoringUpdates deprecated');
     }
 
-    startSystemStatusUpdates() {
-        // Clear existing interval
-        if (this.systemStatusInterval) {
-            clearInterval(this.systemStatusInterval);
+    setupMonitoringConfigSubscription() {
+        // Remove any existing subscription for monitoring config tab
+        if (this.monitoringConfigCallback) {
+            this.monitoringData.unsubscribe(this.monitoringConfigCallback);
         }
         
-        // Update every 10 seconds when monitoring-config tab is active
-        this.systemStatusInterval = setInterval(() => {
-            const activeTab = document.querySelector('.tab-pane.active');
-            if (activeTab && activeTab.id === 'monitoring-config-tab') {
-                this.loadSystemStatus();
-            } else {
-                // Stop updates if not on monitoring-config tab
-                clearInterval(this.systemStatusInterval);
-                this.systemStatusInterval = null;
-            }
-        }, 10000);
+        // Create new callback for monitoring config tab updates
+        this.monitoringConfigCallback = (data) => {
+            this.updateSystemStatusFromMonitoringData(data);
+        };
+        
+        // Subscribe to monitoring updates
+        this.monitoringData.subscribe(this.monitoringConfigCallback);
+        
+        // Load current threshold settings
+        this.loadSystemStatus();
+        
+        // Update immediately with current data
+        const currentData = this.monitoringData.getCurrentData();
+        if (currentData.lastUpdate) {
+            this.updateSystemStatusFromMonitoringData(currentData);
+        }
+    }
+
+    updateSystemStatusFromMonitoringData(data) {
+        const metrics = this.monitoringData.getSystemMetrics();
+        if (metrics) {
+            // Update the system status displays in monitoring config tab
+            this.updateSystemStatusMetrics(metrics);
+        }
+    }
+
+    updateSystemStatusMetrics(metrics) {
+        // Update CPU status
+        const cpuElement = document.getElementById('system-cpu-status');
+        if (cpuElement) {
+            cpuElement.textContent = `${metrics.cpu.toFixed(1)}%`;
+            cpuElement.className = `metric-value ${this.getMetricStatusClass(metrics.cpu, 80)}`;
+        }
+
+        // Update Memory status
+        const memoryElement = document.getElementById('system-memory-status');
+        if (memoryElement) {
+            memoryElement.textContent = `${metrics.memory.toFixed(1)}%`;
+            memoryElement.className = `metric-value ${this.getMetricStatusClass(metrics.memory, 85)}`;
+        }
+
+        // Update Disk status
+        const diskElement = document.getElementById('system-disk-status');
+        if (diskElement) {
+            diskElement.textContent = `${metrics.disk.toFixed(1)}%`;
+            diskElement.className = `metric-value ${this.getMetricStatusClass(metrics.disk, 90)}`;
+        }
+    }
+
+    getMetricStatusClass(value, threshold) {
+        if (value > threshold + 10) return 'critical';
+        if (value > threshold) return 'warning';
+        return 'healthy';
+    }
+
+    // Legacy function - now handled by unified MonitoringDataManager
+    startSystemStatusUpdates() {
+        console.log('[MONITORING] Using unified monitoring system - startSystemStatusUpdates deprecated');
     }
     
     // Service Control Management
@@ -2487,12 +3129,11 @@ class InstallationUp4evr {
                 refreshBtn.disabled = true;
             }
 
-            // Load dashboard data
-            await Promise.all([
-                this.updateDashboardHealth(),
-                this.updateDashboardApplications(),
-                this.updateDashboardAlerts()
-            ]);
+            // Subscribe to monitoring data updates
+            this.setupDashboardMonitoring();
+            
+            // Force a refresh of monitoring data
+            await this.monitoringData.refreshData();
 
             this.showToast('Dashboard refreshed successfully', 'success');
         } catch (error) {
@@ -2503,6 +3144,50 @@ class InstallationUp4evr {
                 refreshBtn.innerHTML = originalText;
                 refreshBtn.disabled = false;
             }
+        }
+    }
+
+    setupDashboardMonitoring() {
+        // Remove any existing subscription
+        if (this.dashboardUpdateCallback) {
+            this.monitoringData.unsubscribe(this.dashboardUpdateCallback);
+        }
+        
+        // Create new callback for dashboard updates
+        this.dashboardUpdateCallback = (data) => {
+            this.updateDashboardFromMonitoringData(data);
+        };
+        
+        // Subscribe to monitoring updates
+        this.monitoringData.subscribe(this.dashboardUpdateCallback);
+    }
+
+    updateDashboardFromMonitoringData(data) {
+        try {
+            const metrics = this.monitoringData.getSystemMetrics();
+            const healthStatus = this.monitoringData.getHealthStatus();
+            
+            if (metrics) {
+                // Update system metrics
+                this.updateMetric('cpu', metrics.cpu, '%');
+                this.updateMetric('memory', metrics.memory, '%');
+                this.updateMetric('disk', metrics.disk, '%');
+                
+                // Update health status
+                this.updateHealthStatus(healthStatus.status, healthStatus.issues);
+            }
+            
+            // Update alerts
+            this.updateAlerts(data.alerts || []);
+            
+            // Update applications if available
+            if (data.applications) {
+                this.updateDashboardApplications(data.applications);
+            }
+            
+            console.log('[DASHBOARD] Updated from monitoring data');
+        } catch (error) {
+            console.error('[DASHBOARD] Error updating from monitoring data:', error);
         }
     }
 
@@ -2941,35 +3626,7 @@ class InstallationUp4evr {
                 return;
             }
 
-            // In browser mode, check for authentication first
-            if (!this.isElectron) {
-                console.log('[WIZARD] Browser mode - checking authentication first...');
-                
-                try {
-                    // Check if we have sudo access
-                    const sudoStatus = await this.apiCall('/api/auth/sudo-status');
-                    console.log('[WIZARD] Sudo status:', sudoStatus);
-                    
-                    if (!sudoStatus.hasSudoAccess) {
-                        console.log('[WIZARD] No sudo access - showing auth dialog...');
-                        
-                        // Show the authentication dialog and wait for completion
-                        await this.requireAuthentication();
-                        
-                        // Verify authentication worked
-                        const newSudoStatus = await this.apiCall('/api/auth/sudo-status');
-                        if (!newSudoStatus.hasSudoAccess) {
-                            this.showToast('Administrator access required to apply system settings', 'error');
-                            return;
-                        }
-                        console.log('[WIZARD] Authentication successful, proceeding...');
-                    }
-                } catch (error) {
-                    console.error('[WIZARD] Authentication check failed:', error);
-                    this.showToast('Failed to verify administrator access', 'error');
-                    return;
-                }
-            }
+            // Using command-specific sudo - backend will handle authentication for each command
 
             console.log('[WIZARD] Applying settings via API...');
             const response = await this.apiCall('/api/system-prefs/apply', {
@@ -2977,6 +3634,34 @@ class InstallationUp4evr {
                 body: JSON.stringify({ settings: settingsToApply })
             });
             console.log('[WIZARD] Settings application result:', response);
+
+            // Check if any settings failed due to authentication cancellation
+            if (response.results) {
+                const cancelledResults = response.results.filter(result => 
+                    !result.success && result.error && (
+                        result.error.includes('User did not grant permission') ||
+                        result.error.includes('cancelled') ||
+                        result.error.includes('Authentication cancelled')
+                    )
+                );
+                
+                if (cancelledResults.length > 0) {
+                    console.log('[WIZARD] Authentication was cancelled for some settings:', cancelledResults);
+                    this.handleAuthenticationCancellation(settingsToApply);
+                    return;
+                }
+            }
+
+            // Check overall response for authentication issues
+            if (!response.success && response.error && (
+                response.error.includes('Authentication cancelled') ||
+                response.error.includes('User cancelled') ||
+                response.error.includes('cancelled')
+            )) {
+                console.log('[WIZARD] Overall authentication was cancelled');
+                this.handleAuthenticationCancellation(settingsToApply);
+                return;
+            }
 
             this.showToast('Settings applied successfully', 'success');
             this.wizardData.settingsApplied = settingsToApply;
@@ -2986,11 +3671,184 @@ class InstallationUp4evr {
 
         } catch (error) {
             console.error('[WIZARD] Failed to apply settings:', error);
-            this.showToast('Failed to apply some settings', 'error');
+            
+            // Check if it's an authentication cancellation
+            if (error.message && (
+                error.message.includes('Authentication cancelled') ||
+                error.message.includes('User cancelled') ||
+                error.message.includes('cancelled') ||
+                error.status === 401
+            )) {
+                // Show authentication cancellation dialog with options
+                this.handleAuthenticationCancellation(settingsToApply);
+            } else {
+                this.showToast('Failed to apply some settings', 'error');
+            }
         } finally {
             button.innerHTML = originalText;
             button.disabled = false;
         }
+    }
+
+    handleAuthenticationCancellation(settingsToApply) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content auth-cancel-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Authentication Required</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Administrator access is required to apply these system settings. You cancelled the authentication request.</p>
+                    <p>Choose how you'd like to proceed:</p>
+                    
+                    <div class="auth-options">
+                        <button class="btn btn-primary" id="retry-auth">
+                            <i class="fas fa-key"></i> Try Authentication Again
+                        </button>
+                        <button class="btn btn-secondary" id="generate-script">
+                            <i class="fas fa-terminal"></i> Generate Terminal Commands
+                        </button>
+                        <button class="btn btn-tertiary" id="skip-settings">
+                            <i class="fas fa-forward"></i> Skip Settings (Continue Without Changes)
+                        </button>
+                    </div>
+                    
+                    <div class="info-text">
+                        <p><strong>Terminal Commands:</strong> Generate a script you can run manually in Terminal with your admin password.</p>
+                        <p><strong>Skip Settings:</strong> Continue to the next step without applying these system changes.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="cancel-modal">Cancel</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add event listeners
+        document.getElementById('retry-auth').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.applyWizardSettings(); // Try again
+        });
+        
+        document.getElementById('generate-script').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.generateWizardScript(settingsToApply);
+        });
+        
+        document.getElementById('skip-settings').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.showToast('Skipped system settings - you can apply them later', 'info');
+            this.nextWizardStep(); // Continue to next step
+        });
+        
+        document.getElementById('cancel-modal').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    async generateWizardScript(settingsToApply) {
+        try {
+            console.log('[WIZARD-SCRIPT] Generating script for settings:', settingsToApply);
+            
+            const response = await this.apiCall('/api/system-prefs/generate-script', {
+                method: 'POST',
+                body: JSON.stringify({
+                    settings: settingsToApply,
+                    mode: 'apply',
+                    includeVerification: true
+                })
+            });
+            
+            if (response.success) {
+                this.showWizardTerminalModal(response.data);
+                this.showToast('Terminal script generated successfully', 'success');
+            } else {
+                this.showToast('Failed to generate script', 'error');
+            }
+        } catch (error) {
+            console.error('[WIZARD-SCRIPT] Error generating script:', error);
+            this.showToast('Failed to generate script', 'error');
+        }
+    }
+
+    showWizardTerminalModal(scriptData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content terminal-script-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-terminal"></i> Terminal Commands</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Copy and run these commands in Terminal to apply your settings:</p>
+                    
+                    <div class="script-container">
+                        <pre class="script-content" id="wizard-script-content">${scriptData.script}</pre>
+                        <div class="script-actions">
+                            <button class="btn btn-primary" id="copy-wizard-script">
+                                <i class="fas fa-copy"></i> Copy to Clipboard
+                            </button>
+                            <button class="btn btn-secondary" id="download-wizard-script">
+                                <i class="fas fa-download"></i> Download Script
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="script-info">
+                        <p><strong>Instructions:</strong></p>
+                        <ol>
+                            <li>Copy the commands above</li>
+                            <li>Open Terminal (Applications > Utilities > Terminal)</li>
+                            <li>Paste and run the commands</li>
+                            <li>Enter your administrator password when prompted</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="continue-wizard">Continue Setup</button>
+                    <button class="btn btn-cancel" id="close-wizard-modal">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add event listeners
+        document.getElementById('copy-wizard-script').addEventListener('click', () => {
+            this.copyToClipboard(scriptData.script);
+            this.showToast('Script copied to clipboard', 'success');
+        });
+        
+        document.getElementById('download-wizard-script').addEventListener('click', () => {
+            this.downloadScript(scriptData.script, 'installation-up4evr-setup.sh');
+            this.showToast('Script downloaded', 'success');
+        });
+        
+        document.getElementById('continue-wizard').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.nextWizardStep(); // Continue to next step
+        });
+        
+        document.getElementById('close-wizard-modal').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
     }
 
     setupApplicationMethods() {

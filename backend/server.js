@@ -236,6 +236,54 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
+// Terminal Script Generator API Route
+app.post('/api/system-prefs/generate-script', async (req, res) => {
+    try {
+        const { settings = [], mode = 'apply', includeVerification = true } = req.body;
+        
+        console.log('[SCRIPT-GEN] Generating terminal script for settings:', settings);
+        
+        // Get the system manager from platform manager
+        const systemManager = platformManager.getSystemManager();
+        
+        if (!systemManager || !systemManager.generateTerminalScript) {
+            throw new Error('System manager or script generator not available');
+        }
+        
+        const result = systemManager.generateTerminalScript(settings, {
+            mode,
+            includeVerification
+        });
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                data: {
+                    script: result.script,
+                    settingsCount: result.settingsCount,
+                    categories: result.categories,
+                    timestamp: result.timestamp,
+                    mode: result.mode
+                },
+                message: `Generated script for ${result.settingsCount} settings`
+            });
+        } else {
+            res.status(400).json({
+                success: false,
+                error: result.error,
+                message: 'Failed to generate script'
+            });
+        }
+    } catch (error) {
+        console.error('[SCRIPT-GEN] Error generating script:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Server error generating script'
+        });
+    }
+});
+
 // System Preferences API Routes with platform manager integration
 app.get('/api/system-prefs/settings', async (req, res) => {
     try {
@@ -249,8 +297,13 @@ app.get('/api/system-prefs/settings', async (req, res) => {
 
 app.get('/api/system-prefs/status', async (req, res) => {
     try {
-        const status = await compatibility.getSystemPrefsStatus(systemPrefs);
-        res.json(status);
+        // Use platform manager for system status
+        const result = await platformManager.handleAPIRequest('/system/settings/status', 'GET');
+        if (result.success) {
+            res.json(result.data);
+        } else {
+            res.status(500).json({ error: result.error });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -258,8 +311,13 @@ app.get('/api/system-prefs/status', async (req, res) => {
 
 app.post('/api/system-prefs/apply', async (req, res) => {
     try {
-        const result = await compatibility.applySystemPrefsSettings(req.body, systemPrefs);
-        res.json(result);
+        // Use platform manager for applying settings
+        const result = await platformManager.handleAPIRequest('/system/settings/apply', 'POST', req.body);
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(500).json({ error: result.error });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -268,8 +326,19 @@ app.post('/api/system-prefs/apply', async (req, res) => {
 // Legacy system-prefs routes (preserved for compatibility)
 app.get('/api/system-prefs/required', async (req, res) => {
     try {
-        const settings = systemPrefs.getRequiredSettings();
-        res.json(settings);
+        // Get all settings and filter for required ones
+        const result = await platformManager.handleAPIRequest('/system/settings', 'GET');
+        if (result.success) {
+            const requiredSettings = Object.entries(result.data)
+                .filter(([key, setting]) => setting.required)
+                .reduce((acc, [key, setting]) => {
+                    acc[key] = setting;
+                    return acc;
+                }, {});
+            res.json(requiredSettings);
+        } else {
+            res.status(500).json({ error: result.error });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -277,8 +346,19 @@ app.get('/api/system-prefs/required', async (req, res) => {
 
 app.get('/api/system-prefs/optional', async (req, res) => {
     try {
-        const settings = systemPrefs.getOptionalSettings();
-        res.json(settings);
+        // Get all settings and filter for optional ones
+        const result = await platformManager.handleAPIRequest('/system/settings', 'GET');
+        if (result.success) {
+            const optionalSettings = Object.entries(result.data)
+                .filter(([key, setting]) => !setting.required)
+                .reduce((acc, [key, setting]) => {
+                    acc[key] = setting;
+                    return acc;
+                }, {});
+            res.json(optionalSettings);
+        } else {
+            res.status(500).json({ error: result.error });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -286,8 +366,20 @@ app.get('/api/system-prefs/optional', async (req, res) => {
 
 app.post('/api/system-prefs/apply-required', async (req, res) => {
     try {
-        const results = await systemPrefs.applyRequiredSettings();
-        res.json(results);
+        // Get all settings and filter for required ones, then apply them
+        const settingsResult = await platformManager.handleAPIRequest('/system/settings', 'GET');
+        if (!settingsResult.success) {
+            return res.status(500).json({ error: settingsResult.error });
+        }
+        
+        const requiredSettingKeys = Object.entries(settingsResult.data)
+            .filter(([key, setting]) => setting.required)
+            .map(([key]) => key);
+            
+        const result = await platformManager.handleAPIRequest('/system/settings/apply', 'POST', { 
+            settings: requiredSettingKeys 
+        });
+        res.json(result.success ? result : { error: result.error });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -295,8 +387,8 @@ app.post('/api/system-prefs/apply-required', async (req, res) => {
 
 app.get('/api/system-prefs/verify', async (req, res) => {
     try {
-        const results = await systemPrefs.verifyAllSettings();
-        res.json(results);
+        const result = await platformManager.handleAPIRequest('/system/settings/status', 'GET');
+        res.json(result.success ? result : { error: result.error });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -314,8 +406,8 @@ app.get('/api/system-prefs/sip-status', async (req, res) => {
 // Monitoring API Routes with platform manager integration
 app.get('/api/monitoring/status', async (req, res) => {
     try {
-        const status = await compatibility.getMonitoringStatus(monitoring);
-        res.json(status);
+        const result = await platformManager.handleAPIRequest('/monitoring/status', 'GET');
+        res.json(result.success ? result.data : { error: result.error });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -323,8 +415,12 @@ app.get('/api/monitoring/status', async (req, res) => {
 
 app.get('/api/monitoring/system', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/monitoring/system', 'GET');
-        res.json(result.data);
+        const result = await platformManager.handleAPIRequest('/monitoring/status', 'GET');
+        if (result.success) {
+            res.json(result.data || {});
+        } else {
+            res.status(500).json({ error: result.error || 'Failed to get system data' });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -333,7 +429,11 @@ app.get('/api/monitoring/system', async (req, res) => {
 app.get('/api/monitoring/applications', async (req, res) => {
     try {
         const result = await platformManager.handleAPIRequest('/monitoring/applications', 'GET');
-        res.json(result.data);
+        if (result.success) {
+            res.json(result.data || []);
+        } else {
+            res.status(500).json({ error: result.error || 'Failed to get applications data' });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -342,8 +442,9 @@ app.get('/api/monitoring/applications', async (req, res) => {
 // Missing Monitoring endpoints
 app.get('/api/monitoring/alerts', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/monitoring/alerts', 'GET');
-        res.json(result);
+        // For now, return empty alerts since the platform manager doesn't expose alerts directly
+        // The monitoring system generates alerts in the console but doesn't store them in a queryable way
+        res.json([]);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -431,7 +532,7 @@ app.post('/api/monitoring/test-alert/:type', async (req, res) => {
 // Configuration API Routes (new platform manager features)
 app.get('/api/config', async (req, res) => {
     try {
-        const config = await compatibility.getConfiguration();
+        const config = await platformManager.handleAPIRequest("/config", "GET");
         res.json(config);
     } catch (error) {
         res.status(500).json({ 
@@ -444,7 +545,7 @@ app.get('/api/config', async (req, res) => {
 app.put('/api/config', async (req, res) => {
     try {
         const { path, value } = req.body;
-        const result = await compatibility.updateConfiguration(path, value);
+        const result = await platformManager.handleAPIRequest("/config", "PUT")(path, value);
         res.json(result);
     } catch (error) {
         res.status(500).json({ 
@@ -468,8 +569,8 @@ app.get('/api/platform', async (req, res) => {
 // User preferences endpoints for first-run detection
 app.get('/api/config/user-preferences', async (req, res) => {
     try {
-        if (compatibility.isUsingPlatformManager()) {
-            const config = compatibility.platformManager.getConfig();
+        if (true) {
+            const config = platformManager.getConfig();
             const preferences = config.get('userPreferences') || {};
             res.json({ success: true, data: preferences });
         } else {
@@ -494,8 +595,8 @@ app.get('/api/config/user-preferences', async (req, res) => {
 
 app.post('/api/config/user-preferences', async (req, res) => {
     try {
-        if (compatibility.isUsingPlatformManager()) {
-            const config = compatibility.platformManager.getConfig();
+        if (true) {
+            const config = platformManager.getConfig();
             const currentPrefs = config.get('userPreferences') || {};
             const updatedPrefs = { ...currentPrefs, ...req.body };
             
@@ -668,8 +769,8 @@ async function startServer() {
         // Test validation workflow route
         app.post('/api/validation-test', async (req, res) => {
             try {
-                if (compatibility.isUsingPlatformManager()) {
-                    const result = await compatibility.platformManager.handleAPIRequest('/validation/run', 'POST', req.body);
+                if (true) {
+                    const result = await platformManager.handleAPIRequest('/validation/run', 'POST', req.body);
                     res.json(result);
                 } else {
                     res.status(501).json({ error: 'Validation workflow requires platform manager mode' });

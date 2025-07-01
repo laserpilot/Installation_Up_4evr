@@ -893,41 +893,79 @@ class InstallationUp4evrApp {
         ipcMain.handle('request-sudo-access', async () => {
             debugLog('IPC: request-sudo-access called');
             return new Promise((resolve) => {
-                const options = {
-                    name: 'Installation Up 4evr',
-                    icns: '/Applications/Utilities/Terminal.app/Contents/Resources/Terminal.icns'
-                };
-                
-                debugLog('IPC: Calling sudo.exec with native dialog');
-                sudo.exec('true', options, (error, stdout, stderr) => {
-                    debugLog(`IPC: sudo.exec result - error: ${error}, stdout: ${stdout}, stderr: ${stderr}`);
+                try {
+                    const options = {
+                        name: 'Installation Up 4evr'
+                        // Don't specify icns to use system default
+                    };
                     
-                    if (error) {
-                        if (error.message.includes('User did not grant permission') || 
-                            error.message.includes('cancelled')) {
-                            resolve({
-                                success: false,
-                                error: 'Authentication cancelled',
-                                message: 'User cancelled administrator access request',
-                                method: 'native'
-                            });
+                    debugLog('IPC: Calling sudo.exec with native dialog, options: ' + JSON.stringify(options));
+                    debugLog('IPC: Testing with simple "true" command to validate sudo access');
+                    
+                    sudo.exec('true', options, (error, stdout, stderr) => {
+                        debugLog(`IPC: sudo.exec callback fired`);
+                        debugLog(`IPC: error: ${error ? error.message : 'null'}`);
+                        debugLog(`IPC: stdout: "${stdout}"`);
+                        debugLog(`IPC: stderr: "${stderr}"`);
+                        
+                        if (error) {
+                            debugLog(`IPC: Error details - code: ${error.code}, signal: ${error.signal}`);
+                            
+                            if (error.message.includes('User did not grant permission') || 
+                                error.message.includes('cancelled') ||
+                                error.message.includes('Authorization was cancelled') ||
+                                error.code === 'CANCELLED') {
+                                debugLog('IPC: User cancelled authentication');
+                                resolve({
+                                    success: false,
+                                    error: 'Authentication cancelled',
+                                    message: 'User cancelled administrator access request',
+                                    method: 'native',
+                                    debugInfo: {
+                                        errorMessage: error.message,
+                                        errorCode: error.code
+                                    }
+                                });
+                            } else {
+                                debugLog('IPC: Authentication failed with error');
+                                resolve({
+                                    success: false,
+                                    error: 'Authentication failed',
+                                    message: `Authentication error: ${error.message}`,
+                                    method: 'native',
+                                    debugInfo: {
+                                        errorMessage: error.message,
+                                        errorCode: error.code,
+                                        stderr: stderr
+                                    }
+                                });
+                            }
                         } else {
+                            debugLog('IPC: Authentication successful');
                             resolve({
-                                success: false,
-                                error: 'Authentication failed',
-                                message: 'Invalid administrator password or insufficient privileges',
-                                method: 'native'
+                                success: true,
+                                message: 'Administrator access granted via native dialog',
+                                method: 'native',
+                                timestamp: new Date().toISOString(),
+                                debugInfo: {
+                                    stdout: stdout,
+                                    stderr: stderr
+                                }
                             });
                         }
-                    } else {
-                        resolve({
-                            success: true,
-                            message: 'Administrator access granted via native dialog',
-                            method: 'native',
-                            timestamp: new Date().toISOString()
-                        });
-                    }
-                });
+                    });
+                } catch (syncError) {
+                    debugLog(`IPC: Synchronous error in request-sudo-access: ${syncError.message}`);
+                    resolve({
+                        success: false,
+                        error: 'Setup error',
+                        message: `Failed to setup authentication: ${syncError.message}`,
+                        method: 'native',
+                        debugInfo: {
+                            syncError: syncError.message
+                        }
+                    });
+                }
             });
         });
 
