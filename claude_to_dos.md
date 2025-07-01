@@ -13,9 +13,9 @@ sudo defaults write /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekKe
     - [ ] i feel like we should give the user an option to generate or show a terminal command that will effectively return all the values of these various things to their default states again in case they are done with the thing being an installation
     - [ ] Setup Wizard should be kept in parity of preferences to be enabled if anything in the main "advanced" system preferences changes
 - [x] Launch Agents tab seems to not be working or it no longer shows existing launch agents ✅ FIXED - Added launch agents API routes to platform manager
-- [ ] System Monitoring tab issues
-    - [ ] Display Status shows "Display Monitoring not available" on frontend
-    - [ ] Network Status shows only "Network Status unavailable"
+- [x] System Monitoring tab issues ✅ FIXED - Added displays data to sanitizeMonitoringData 
+    - [x] Display Status shows "Display Monitoring not available" on frontend
+    - [x] Network Status shows only "Network Status unavailable"
 - [ ] In the Installation Dashboard tab, there are a few issues
     - When clicking into the dashboard, it always shows 3x Toast messages that identically say "Dashboard Refreshed Successfully" 
     - [ ] Memory usage seems to always be at 99% even though thats not really how modern memory management works with swap memory and things like that. i wonder if we need to show like the top 3 memory using processes or a percentage like that anytime we show the memory usage - right now its not very useful for the user
