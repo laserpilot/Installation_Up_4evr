@@ -357,6 +357,7 @@ class DataTransformer {
             },
             applications: Array.isArray(data.applications) ? data.applications : [],
             network: data.network || {},
+            displays: data.displays || {},
             timestamp: data.timestamp || new Date().toISOString()
         };
     }
