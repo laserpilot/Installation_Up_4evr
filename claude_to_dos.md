@@ -3,7 +3,7 @@ Current issue and to-do list. Please pay attention to the nesting of to-do list 
 - [x] Top bar always shows "SIP Unknown" ✅ FIXED - Added SIP status API routes to platform manager
 - [ ] On system configuration tab - the following issues:
     - [x] then selecting "Verify Current Settings", the modal pops up in a weird way at the bottom of the screen and seems to layer itself if you click Verify a few times. This should pop up similarly to what happens when you click "Generate Terminal commands" ✅ FIXED - Modal now uses proper overlay structure and prevents layering
-    - [ ] Auto Restart system setting seems incorrect or outdated, it may need to be revised to be `sudo systemsetup -setrestartfreeze on` and moved to an optional step
+    - [x] Auto Restart system setting seems incorrect or outdated, it may need to be revised to be `sudo systemsetup -setrestartfreeze on` and moved to an optional step ✅ FIXED - Updated autoRestart to use systemsetup -setrestartfreeze and made it optional, added separate powerFailureRestart setting
     - [ ] Related to sleep and restart - we may want to consider these adding or modifying these pmset settings as well sudo pmset -a sleep 0 displaysleep 0 disksleep 0 standby 0 hibernatemode 0 powernap 0 
     - [ ] Enable Do not disturb is actually not quite right. What really needs to happen is to enable do not disturb and set a start and end time for it - if it is just set once, it will reset later. I think what works is to set it to start at midnight and end at midnight.
     - [ ] Hide Menu bar seems ok, but i think we might also need "Automatically show and hide Dock" to be an option that is enabled - Dock should automatically hide

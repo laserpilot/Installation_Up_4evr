@@ -55,20 +55,20 @@ class MacOSSystemManager extends SystemManagerInterface {
                 category: 'power'
             },
             autoRestart: {
-                name: "Auto Restart",
-                description: "Restart automatically after power failure",
-                command: 'sudo pmset -c autorestart 1',
-                revert: 'sudo pmset -c autorestart 0',
-                verify: 'pmset -g | grep autorestart',
-                required: true,
-                category: 'power'
-            },
-            restartFreeze: {
-                name: "Restart on Freeze",
-                description: "Restart automatically if system freezes",
+                name: "Auto Restart on Freeze",
+                description: "Restart automatically if system freezes (recommended for installations)",
                 command: 'sudo systemsetup -setrestartfreeze on',
                 revert: 'sudo systemsetup -setrestartfreeze off',
                 verify: 'systemsetup -getrestartfreeze',
+                required: false,
+                category: 'power'
+            },
+            powerFailureRestart: {
+                name: "Restart after Power Failure",
+                description: "Restart automatically after power failure (optional)",
+                command: 'sudo pmset -c autorestart 1',
+                revert: 'sudo pmset -c autorestart 0',
+                verify: 'pmset -g | grep autorestart',
                 required: false,
                 category: 'power'
             },
@@ -512,10 +512,10 @@ echo "Review the output above for any errors."
                 return { applied: output.includes('sleep                0') };
             
             case 'autoRestart':
-                return { applied: output.includes('autorestart          1') };
-            
-            case 'restartFreeze':
                 return { applied: output.includes('on') };
+            
+            case 'powerFailureRestart':
+                return { applied: output.includes('autorestart          1') };
             
             case 'hideMenuBar':
                 return { applied: output.trim() === '1' };
