@@ -72,6 +72,15 @@ class MacOSSystemManager extends SystemManagerInterface {
                 required: false,
                 category: 'power'
             },
+            doNotDisturb: {
+                name: "Enable Do Not Disturb",
+                description: "Enable Do Not Disturb from midnight to midnight (prevents notification interruptions)",
+                command: 'plutil -replace dndStart -integer 0 ~/Library/Preferences/com.apple.ncprefs.plist && plutil -replace dndEnd -integer 1440 ~/Library/Preferences/com.apple.ncprefs.plist && defaults write com.apple.ncprefs doNotDisturb -bool true',
+                revert: 'defaults delete com.apple.ncprefs doNotDisturb 2>/dev/null || true',
+                verify: 'defaults read com.apple.ncprefs doNotDisturb 2>/dev/null || echo "0"',
+                required: false,
+                category: 'ui'
+            },
             hideMenuBar: {
                 name: "Hide Menu Bar",
                 description: "Auto-hide menu bar in full screen",
@@ -80,6 +89,33 @@ class MacOSSystemManager extends SystemManagerInterface {
                 verify: 'defaults read NSGlobalDomain _HIHideMenuBar',
                 required: false,
                 category: 'ui'
+            },
+            hideDesktopIcons: {
+                name: "Hide Desktop Icons",
+                description: "Hide desktop icons for cleaner installation appearance",
+                command: 'defaults write com.apple.finder CreateDesktop -bool false && killall Finder',
+                revert: 'defaults write com.apple.finder CreateDesktop -bool true && killall Finder',
+                verify: 'defaults read com.apple.finder CreateDesktop 2>/dev/null || echo "1"',
+                required: false,
+                category: 'ui'
+            },
+            autohideDock: {
+                name: "Auto-hide Dock",
+                description: "Automatically show and hide Dock (recommended for installations)",
+                command: 'defaults write com.apple.dock autohide -bool true && killall Dock',
+                revert: 'defaults write com.apple.dock autohide -bool false && killall Dock',
+                verify: 'defaults read com.apple.dock autohide 2>/dev/null || echo "0"',
+                required: false,
+                category: 'ui'
+            },
+            disableBluetoothSetup: {
+                name: "Disable Bluetooth Setup Assistant",
+                description: "Prevent Bluetooth Setup Assistant from appearing",
+                command: 'sudo defaults write /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekPointingDevice -bool false && sudo defaults write /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekKeyboard -bool false',
+                revert: 'sudo defaults delete /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekPointingDevice 2>/dev/null || true && sudo defaults delete /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekKeyboard 2>/dev/null || true',
+                verify: 'defaults read /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekPointingDevice 2>/dev/null || echo "1"',
+                required: false,
+                category: 'system'
             },
             disableAppNap: {
                 name: "Disable App Nap",
@@ -517,8 +553,20 @@ echo "Review the output above for any errors."
             case 'powerFailureRestart':
                 return { applied: output.includes('autorestart          1') };
             
+            case 'doNotDisturb':
+                return { applied: output.trim() === '1' };
+            
             case 'hideMenuBar':
                 return { applied: output.trim() === '1' };
+            
+            case 'hideDesktopIcons':
+                return { applied: output.trim() === '0' };
+            
+            case 'autohideDock':
+                return { applied: output.trim() === '1' };
+            
+            case 'disableBluetoothSetup':
+                return { applied: output.trim() === '0' };
             
             case 'disableAppNap':
                 return { applied: output.trim() === '1' };
