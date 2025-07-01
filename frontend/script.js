@@ -869,14 +869,20 @@ class InstallationUp4evr {
     showDetailedVerificationResults(settingsData) {
         console.log('[VERIFY] Showing detailed verification results...');
         
+        // Remove any existing verification modal to prevent layering
+        const existingModal = document.querySelector('.modal-overlay .verification-content');
+        if (existingModal) {
+            existingModal.closest('.modal-overlay').remove();
+        }
+        
         // Create detailed results modal
         const modal = document.createElement('div');
-        modal.className = 'modal verification-modal';
+        modal.className = 'modal-overlay';
         modal.innerHTML = `
             <div class="modal-content verification-content">
                 <div class="modal-header">
                     <h2>🔍 System Settings Verification Results</h2>
-                    <button class="close-button" onclick="this.closest('.modal').remove()">×</button>
+                    <button class="close-button" onclick="this.closest('.modal-overlay').remove()">×</button>
                 </div>
                 <div class="modal-body">
                     <div class="verification-summary">
@@ -903,7 +909,7 @@ class InstallationUp4evr {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Close</button>
+                    <button class="btn btn-primary" onclick="this.closest('.modal-overlay').remove()">Close</button>
                     <button class="btn btn-secondary" onclick="window.app.refreshSystemPreferences()">Refresh Settings</button>
                 </div>
             </div>
