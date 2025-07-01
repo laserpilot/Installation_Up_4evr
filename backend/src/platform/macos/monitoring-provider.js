@@ -87,21 +87,68 @@ class MacOSMonitoringProvider {
             });
 
             const totalPages = freePages + activePages + inactivePages + wiredPages;
-            const usedPages = totalPages - freePages;
+            // Use active + wired as "used" (inactive can be reclaimed)
+            const usedPages = activePages + wiredPages;
+            const availablePages = freePages + inactivePages;
+            
             const totalBytes = totalPages * pageSize;
             const usedBytes = usedPages * pageSize;
+            const availableBytes = availablePages * pageSize;
             const usage = totalPages > 0 ? (usedPages / totalPages) * 100 : 0;
+
+            // Get top memory-using processes
+            const topProcesses = await this.getTopMemoryProcesses();
 
             return {
                 usage,
                 total: totalBytes,
                 used: usedBytes,
-                available: freePages * pageSize,
+                available: availableBytes,
+                free: freePages * pageSize,
+                inactive: inactivePages * pageSize,
+                wired: wiredPages * pageSize,
+                active: activePages * pageSize,
+                topProcesses,
                 status: usage > 90 ? 'critical' : usage > 70 ? 'warning' : 'good'
             };
         } catch (error) {
             console.error('Failed to get memory usage:', error);
             return { usage: 0, total: 0, used: 0, available: 0, status: 'unknown' };
+        }
+    }
+
+    /**
+     * Get top memory-using processes
+     */
+    async getTopMemoryProcesses(limit = 5) {
+        try {
+            // Use ps command to get memory usage by process
+            const { stdout } = await execAsync('ps -axo pid,comm,%mem,rss -m | head -n ' + (limit + 1));
+            const lines = stdout.trim().split('\n').slice(1); // Skip header
+            
+            const processes = [];
+            for (const line of lines) {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length >= 4) {
+                    const pid = parseInt(parts[0]);
+                    const name = parts[1];
+                    const memPercent = parseFloat(parts[2]);
+                    const memKB = parseInt(parts[3]);
+                    
+                    processes.push({
+                        pid,
+                        name: name.replace(/^.*\//, ''), // Remove path, keep just process name
+                        memoryPercent: memPercent,
+                        memoryMB: Math.round(memKB / 1024),
+                        memoryKB: memKB
+                    });
+                }
+            }
+            
+            return processes;
+        } catch (error) {
+            console.error('Failed to get top memory processes:', error);
+            return [];
         }
     }
 
