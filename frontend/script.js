@@ -3387,8 +3387,8 @@ class InstallationUp4evr {
             // Update CPU
             this.updateHealthCard('cpu', data.cpu?.usage || 0, data.cpu?.status || 'unknown');
 
-            // Update Memory
-            this.updateHealthCard('memory', data.memory?.usage || 0, data.memory?.status || 'unknown');
+            // Update Memory with enhanced data
+            this.updateMemoryCard(data.memory);
 
             // Update Disk
             this.updateHealthCard('disk', data.disk?.usage || 0, data.disk?.status || 'unknown');
@@ -3418,6 +3418,38 @@ class InstallationUp4evr {
         if (statusEl) {
             statusEl.textContent = this.getStatusText(status);
             statusEl.className = `health-status ${status}`;
+        }
+    }
+
+    updateMemoryCard(memoryData) {
+        if (!memoryData) {
+            this.updateHealthCard('memory', 0, 'unknown');
+            return;
+        }
+
+        const valueEl = document.getElementById('dashboard-memory-value');
+        const statusEl = document.getElementById('dashboard-memory-status');
+
+        if (valueEl) {
+            // Show usage percentage and top processes
+            const usage = Math.round(memoryData.usage || 0);
+            let content = `${usage}%`;
+            
+            // Add top processes if available
+            if (memoryData.topProcesses && memoryData.topProcesses.length > 0) {
+                const topProcs = memoryData.topProcesses.slice(0, 3);
+                const procList = topProcs.map(proc => 
+                    `${proc.name}: ${proc.memoryMB}MB`
+                ).join(', ');
+                content += `<div class="memory-details" style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">Top: ${procList}</div>`;
+            }
+            
+            valueEl.innerHTML = content;
+        }
+
+        if (statusEl) {
+            statusEl.textContent = this.getStatusText(memoryData.status || 'unknown');
+            statusEl.className = `health-status ${memoryData.status || 'unknown'}`;
         }
     }
 
