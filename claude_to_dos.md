@@ -19,7 +19,7 @@ sudo defaults write /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekKe
 - [ ] In the Installation Dashboard tab, there are a few issues
     - [x] When clicking into the dashboard, it always shows 3x Toast messages that identically say "Dashboard Refreshed Successfully" ✅ FIXED - Added guard to prevent simultaneous refreshes 
     - [x] Memory usage seems to always be at 99% even though thats not really how modern memory management works with swap memory and things like that. i wonder if we need to show like the top 3 memory using processes or a percentage like that anytime we show the memory usage - right now its not very useful for the user ✅ FIXED - Improved memory calculation (active+wired vs total) and added top 3 memory processes display
-    - [ ] Disk usage also seems to be incorrect - it always shows 1% but i think if we're actually looking at disk storage amount, we probably need another metric
+    - [x] Disk usage also seems to be incorrect - it always shows 1% but i think if we're actually looking at disk storage amount, we probably need another metric ✅ FIXED - Enhanced disk monitoring with comprehensive volume info, storage breakdown, and GB display
 - [ ] Backend Service Control tab no longer shows the status of the backend and needs to be updated. Service logs are also not working
 - [ ] Installation Settings Tab gives a 404 error notification and that the settings cannot be found
 - [ ] Future features:

@@ -157,29 +157,123 @@ class MacOSMonitoringProvider {
      */
     async getDiskUsage() {
         try {
-            const { stdout } = await execAsync('df -h /');
-            const lines = stdout.split('\n');
-            if (lines.length > 1) {
-                const parts = lines[1].split(/\s+/);
-                const usageStr = parts[4] || '0%';
-                const usage = parseFloat(usageStr.replace('%', ''));
-                const total = parts[1] || '0';
-                const used = parts[2] || '0';
-                const available = parts[3] || '0';
-
-                return {
-                    usage,
-                    total,
-                    used,
-                    available,
-                    status: usage > 90 ? 'critical' : usage > 80 ? 'warning' : 'good'
-                };
+            // Get comprehensive disk information
+            const volumes = await this.getAllVolumeInfo();
+            const rootVolume = volumes.find(v => v.mountPoint === '/') || volumes[0];
+            
+            if (!rootVolume) {
+                throw new Error('No root volume found');
             }
-            throw new Error('Invalid df output');
+
+            // Get additional disk space information using system_profiler for more accuracy
+            const storageInfo = await this.getStorageBreakdown();
+
+            return {
+                usage: rootVolume.usage,
+                total: rootVolume.total,
+                used: rootVolume.used,
+                available: rootVolume.available,
+                totalGB: rootVolume.totalGB,
+                usedGB: rootVolume.usedGB,
+                availableGB: rootVolume.availableGB,
+                volumes: volumes,
+                storageBreakdown: storageInfo,
+                status: rootVolume.usage > 90 ? 'critical' : rootVolume.usage > 80 ? 'warning' : 'good'
+            };
         } catch (error) {
             console.error('Failed to get disk usage:', error);
             return { usage: 0, total: '0', used: '0', available: '0', status: 'unknown' };
         }
+    }
+
+    /**
+     * Get information for all mounted volumes
+     */
+    async getAllVolumeInfo() {
+        try {
+            const { stdout } = await execAsync('df -h');
+            const lines = stdout.split('\n').slice(1); // Skip header
+            const volumes = [];
+
+            for (const line of lines) {
+                const parts = line.split(/\s+/);
+                if (parts.length >= 6 && !parts[0].startsWith('map')) {
+                    const filesystem = parts[0];
+                    const total = parts[1];
+                    const used = parts[2];
+                    const available = parts[3];
+                    const usageStr = parts[4];
+                    const mountPoint = parts.slice(5).join(' ');
+                    
+                    const usage = parseFloat(usageStr.replace('%', ''));
+                    
+                    // Convert sizes to GB for easier comparison
+                    const totalGB = this.convertToGB(total);
+                    const usedGB = this.convertToGB(used);
+                    const availableGB = this.convertToGB(available);
+
+                    volumes.push({
+                        filesystem,
+                        mountPoint,
+                        total,
+                        used,
+                        available,
+                        totalGB,
+                        usedGB,
+                        availableGB,
+                        usage
+                    });
+                }
+            }
+
+            return volumes;
+        } catch (error) {
+            console.error('Failed to get volume info:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Get storage breakdown using system_profiler
+     */
+    async getStorageBreakdown() {
+        try {
+            const { stdout } = await execAsync('system_profiler SPStorageDataType -json');
+            const data = JSON.parse(stdout);
+            
+            if (data.SPStorageDataType && data.SPStorageDataType.length > 0) {
+                const storage = data.SPStorageDataType[0];
+                return {
+                    totalSize: storage.size_in_bytes || 0,
+                    freeSpace: storage.free_space_in_bytes || 0,
+                    physicalDrives: storage.physical_drives || [],
+                    volumeName: storage._name || 'Unknown'
+                };
+            }
+            
+            return null;
+        } catch (error) {
+            console.warn('Failed to get detailed storage info:', error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Convert disk size string to GB
+     */
+    convertToGB(sizeStr) {
+        if (!sizeStr || sizeStr === '0') return 0;
+        
+        const units = { 'B': 0.000000001, 'K': 0.000001, 'M': 0.001, 'G': 1, 'T': 1000 };
+        const match = sizeStr.match(/^(\d+(?:\.\d+)?)\s*([BKMGT])?i?$/);
+        
+        if (match) {
+            const value = parseFloat(match[1]);
+            const unit = match[2] || 'B';
+            return Math.round(value * (units[unit] || 1) * 10) / 10; // Round to 1 decimal
+        }
+        
+        return 0;
     }
 
     /**

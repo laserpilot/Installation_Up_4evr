@@ -3390,8 +3390,8 @@ class InstallationUp4evr {
             // Update Memory with enhanced data
             this.updateMemoryCard(data.memory);
 
-            // Update Disk
-            this.updateHealthCard('disk', data.disk?.usage || 0, data.disk?.status || 'unknown');
+            // Update Disk with enhanced data
+            this.updateDiskCard(data.disk);
 
             // Update Uptime
             if (data.uptime) {
@@ -3450,6 +3450,38 @@ class InstallationUp4evr {
         if (statusEl) {
             statusEl.textContent = this.getStatusText(memoryData.status || 'unknown');
             statusEl.className = `health-status ${memoryData.status || 'unknown'}`;
+        }
+    }
+
+    updateDiskCard(diskData) {
+        if (!diskData) {
+            this.updateHealthCard('disk', 0, 'unknown');
+            return;
+        }
+
+        const valueEl = document.getElementById('dashboard-disk-value');
+        const statusEl = document.getElementById('dashboard-disk-status');
+
+        if (valueEl) {
+            // Show usage percentage and storage details
+            const usage = Math.round(diskData.usage || 0);
+            let content = `${usage}%`;
+            
+            // Add storage details if available
+            if (diskData.totalGB && diskData.availableGB) {
+                const totalGB = Math.round(diskData.totalGB);
+                const availableGB = Math.round(diskData.availableGB);
+                content += `<div class="disk-details" style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">${availableGB}GB free of ${totalGB}GB</div>`;
+            } else if (diskData.available && diskData.total) {
+                content += `<div class="disk-details" style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">${diskData.available} free of ${diskData.total}</div>`;
+            }
+            
+            valueEl.innerHTML = content;
+        }
+
+        if (statusEl) {
+            statusEl.textContent = this.getStatusText(diskData.status || 'unknown');
+            statusEl.className = `health-status ${diskData.status || 'unknown'}`;
         }
     }
 
