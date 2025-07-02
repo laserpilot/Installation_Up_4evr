@@ -3363,6 +3363,56 @@ input:checked + .slider:before {
     }
 }
 
+/* Wizard Settings Sections */
+.wizard-settings-section {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.wizard-settings-section h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.wizard-settings-section h4 .fas {
+    margin-right: var(--spacing-xs);
+}
+
+.wizard-settings-section p {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.wizard-settings-section .setting-item {
+    background: white;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+    padding: var(--spacing-md);
+    transition: all 0.2s ease;
+}
+
+.wizard-settings-section .setting-item:hover {
+    background: var(--background-light);
+    border-color: var(--primary-color);
+}
+
+.wizard-settings-section .setting-status {
+    font-size: 0.8rem;
+    margin-top: var(--spacing-xs);
+    color: var(--text-secondary);
+}
+
 /* Modal Base Styles */
 .modal-overlay {
     position: fixed;
