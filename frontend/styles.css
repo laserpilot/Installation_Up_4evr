@@ -389,7 +389,7 @@ body {
 .agent-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -405,6 +405,28 @@ body {
     font-size: 0.8rem;
     color: var(--text-secondary);
     font-family: monospace;
+}
+
+.agent-description {
+    color: var(--text-primary) !important;
+    font-style: italic;
+    margin-bottom: var(--spacing-xs);
+}
+
+.agent-paths {
+    margin-top: var(--spacing-xs);
+}
+
+.agent-paths p {
+    margin: 2px 0;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    word-break: break-all;
+}
+
+.agent-paths p strong {
+    color: var(--text-secondary);
+    font-weight: 600;
 }
 
 .agent-status {
@@ -936,6 +958,98 @@ body {
     font-size: 0.8rem;
     color: var(--text-secondary);
     margin-left: auto;
+}
+
+/* Top Processes Display */
+.top-processes {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.top-processes-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-xs);
+}
+
+.processes-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.process-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.process-name {
+    color: var(--text-primary);
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: var(--spacing-sm);
+}
+
+.process-value {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.8rem;
+    min-width: fit-content;
+}
+
+/* Disk Details Display */
+.disk-details {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.disk-details-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-xs);
+}
+
+.disk-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.disk-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.disk-info-label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.disk-info-value {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.8rem;
 }
 
 /* Details Grid */

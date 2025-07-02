@@ -413,18 +413,6 @@ app.get('/api/monitoring/status', async (req, res) => {
     }
 });
 
-app.get('/api/monitoring/system', async (req, res) => {
-    try {
-        const result = await platformManager.handleAPIRequest('/monitoring/status', 'GET');
-        if (result.success) {
-            res.json(result.data || {});
-        } else {
-            res.status(500).json({ error: result.error || 'Failed to get system data' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 app.get('/api/monitoring/applications', async (req, res) => {
     try {
@@ -622,67 +610,7 @@ app.post('/api/config/user-preferences', async (req, res) => {
     }
 });
 
-// All other legacy routes preserved exactly as they were...
-// (Launch Agents, Profiles, Notifications, Remote Control, etc.)
-
-// Launch Agents API Routes
-app.get('/api/launch-agents', async (req, res) => {
-    try {
-        const agents = await launchAgents.listLaunchAgents();
-        res.json(agents);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/launch-agents/create', async (req, res) => {
-    try {
-        const { appPath, options } = req.body;
-        const result = await launchAgents.createLaunchAgent(appPath, options);
-        res.json(result);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/launch-agents/install', async (req, res) => {
-    try {
-        const { plistPath } = req.body;
-        const result = await launchAgents.installLaunchAgent(plistPath);
-        res.json(result);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Missing Launch Agents endpoints
-app.get('/api/launch-agents/list', async (req, res) => {
-    try {
-        const agents = await launchAgents.listLaunchAgents();
-        res.json(agents);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/launch-agents/status', async (req, res) => {
-    try {
-        const status = await launchAgents.getLaunchAgentStatus();
-        res.json(status);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/launch-agents/app-info', async (req, res) => {
-    try {
-        const { appPath } = req.body;
-        const appInfo = await launchAgents.getAppInfo(appPath);
-        res.json(appInfo);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// Launch Agents endpoints are handled by the platform manager
 
 // Profiles API Routes
 app.get('/api/profiles', async (req, res) => {

@@ -13,6 +13,8 @@ class MonitoringDataManager {
         this.data = {
             system: null,
             applications: null,
+            displays: null,
+            network: null,
             alerts: [],
             status: 'unknown',
             lastUpdate: null
@@ -93,10 +95,12 @@ class MonitoringDataManager {
 
             const [systemData, appsData] = await dataPromises;
 
-            // Update data object
+            // Update data object with complete API response data
             this.data = {
                 system: systemData?.data?.system || systemData?.system || null,
                 storage: systemData?.data?.storage || systemData?.storage || null,
+                displays: systemData?.data?.displays || systemData?.displays || [],
+                network: systemData?.data?.network || systemData?.network || null,
                 applications: appsData?.data || appsData || [],
                 alerts: systemData?.data?.notifications || systemData?.notifications || [],
                 status: systemData?.data?.status || systemData?.status || 'unknown',
@@ -1796,11 +1800,11 @@ class InstallationUp4evr {
 
     showDemoAppInfo(appPath) {
         const demoInfo = {
-            appName: appPath.split('/').pop().replace('.app', ''),
-            displayName: appPath.split('/').pop().replace('.app', ''),
+            appName: (appPath || 'unknown').split('/').pop().replace('.app', ''),
+            displayName: (appPath || 'unknown').split('/').pop().replace('.app', ''),
             appPath: appPath,
             version: '1.0.0',
-            bundleIdentifier: `com.example.${appPath.split('/').pop().replace('.app', '').toLowerCase()}`
+            bundleIdentifier: `com.example.${(appPath || 'unknown').split('/').pop().replace('.app', '').toLowerCase()}`
         };
         
         this.currentAppPath = appPath;
@@ -1813,11 +1817,18 @@ class InstallationUp4evr {
         document.getElementById('app-version').textContent = `v${appInfo.version}`;
         document.getElementById('app-bundle-id').textContent = appInfo.bundleIdentifier || 'No Bundle ID';
         
-        // Set default label
+        // Set default label with safe property access
         const defaultLabel = appInfo.bundleIdentifier 
             ? `${appInfo.bundleIdentifier}.up4evr`
-            : `com.up4evr.${appInfo.appName.toLowerCase()}`;
+            : `com.up4evr.${(appInfo.appName || 'app').toLowerCase()}`;
         document.getElementById('custom-label').value = defaultLabel;
+        
+        // Set program filepath - use the executablePath from backend if available, otherwise construct it
+        const programPath = appInfo.executablePath 
+            || (appInfo.appPath && appInfo.appName 
+                ? `${appInfo.appPath}/Contents/MacOS/${appInfo.appName}`
+                : appInfo.appPath || '');
+        document.getElementById('program-filepath').value = programPath;
         
         document.getElementById('app-info').style.display = 'block';
     }
@@ -1887,7 +1898,8 @@ class InstallationUp4evr {
             keepAlive: document.getElementById('keep-alive').checked,
             successfulExit: document.getElementById('successful-exit').checked,
             runAtLoad: document.getElementById('run-at-load').checked,
-            label: document.getElementById('custom-label').value || undefined
+            label: document.getElementById('custom-label').value || undefined,
+            programPath: document.getElementById('program-filepath').value || undefined
         };
     }
 
@@ -1905,8 +1917,22 @@ class InstallationUp4evr {
         }
     }
 
-    renderLaunchAgents(agents, statusList) {
+    renderLaunchAgents(agentsResponse, statusResponse) {
         const container = document.getElementById('launch-agents-list');
+        
+        // Extract data from API response (handle both {success: true, data: [...]} and direct array)
+        const allAgents = agentsResponse?.data || agentsResponse || [];
+        const statusList = statusResponse?.data || statusResponse || [];
+        
+        // Filter to only show user launch agents (~/Library/LaunchAgents)
+        const agents = allAgents.filter(agent => {
+            return agent.plistPath && agent.plistPath.includes('/Library/LaunchAgents/');
+        });
+        
+        if (!container) {
+            console.error('Launch agents container not found');
+            return;
+        }
         
         if (agents.length === 0) {
             container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No launch agents found</p>';
@@ -2021,12 +2047,21 @@ class InstallationUp4evr {
         const statusText = isRunning ? `Running (PID: ${status.pid})` : 'Stopped';
         const statusIcon = isRunning ? 'fa-play' : 'fa-stop';
         const category = this.getAgentCategory(agent);
+        
+        // Display paths for easier debugging and management
+        const programPath = agent.program || 'Unknown';
+        const plistPath = agent.plistPath || 'Unknown';
+        const description = agent.description || '';
 
         return `
             <div class="agent-item" data-category="${category}" data-label="${agent.label.toLowerCase()}">
                 <div class="agent-info">
                     <h5>${agent.label}</h5>
-                    <p>${agent.filename}</p>
+                    ${description ? `<p class="agent-description">${description}</p>` : ''}
+                    <div class="agent-paths">
+                        <p class="agent-program"><strong>Program:</strong> ${programPath}</p>
+                        <p class="agent-plist"><strong>Plist:</strong> ${plistPath}</p>
+                    </div>
                 </div>
                 <div class="agent-status ${statusClass}">
                     <i class="fas ${statusIcon}"></i>
@@ -2247,8 +2282,14 @@ class InstallationUp4evr {
         // Update alerts
         this.updateAlerts(data.alerts || []);
 
-        // Update system details with system data
-        this.updateSystemDetails(data.system || data);
+        // Update system details with complete data including displays and network
+        this.updateSystemDetails({
+            ...data.system,
+            displays: data.displays,
+            network: data.network,
+            applications: data.applications,
+            uptime: data.system?.uptime || data.uptime
+        });
     }
 
     updateMetric(metricId, value, unit) {
@@ -2431,6 +2472,127 @@ class InstallationUp4evr {
             } else {
                 appsElement.textContent = 'No applications being monitored';
             }
+        }
+
+        // Update disk details display
+        this.updateDiskDetails(data.disk);
+
+        // Update top processes display
+        this.updateTopProcesses(data);
+    }
+
+    updateDiskDetails(diskData) {
+        // Find the disk usage element and enhance it with GB information
+        const diskElement = document.getElementById('disk-usage');
+        if (diskElement && diskData) {
+            // Remove existing disk details
+            const existingDetails = diskElement.parentElement.querySelector('.disk-details');
+            if (existingDetails) {
+                existingDetails.remove();
+            }
+            
+            // Create detailed disk information display
+            if (diskData.totalGB && diskData.usedGB && diskData.availableGB) {
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'disk-details';
+                detailsDiv.innerHTML = `
+                    <div class="disk-details-header">Storage Details:</div>
+                    <div class="disk-info-list">
+                        <div class="disk-info-item">
+                            <span class="disk-info-label">Total:</span>
+                            <span class="disk-info-value">${this.formatDiskSize(diskData.total) || (diskData.totalGB ? diskData.totalGB + 'GB' : 'Unknown')}</span>
+                        </div>
+                        <div class="disk-info-item">
+                            <span class="disk-info-label">Used:</span>
+                            <span class="disk-info-value">${this.formatDiskSize(diskData.used) || (diskData.usedGB ? diskData.usedGB + 'GB' : 'Unknown')}</span>
+                        </div>
+                        <div class="disk-info-item">
+                            <span class="disk-info-label">Available:</span>
+                            <span class="disk-info-value">${this.formatDiskSize(diskData.available) || (diskData.availableGB ? diskData.availableGB + 'GB' : 'Unknown')}</span>
+                        </div>
+                    </div>
+                `;
+                
+                diskElement.parentElement.appendChild(detailsDiv);
+            }
+        }
+    }
+
+    updateTopProcesses(data) {
+        // Create or update CPU top processes display
+        this.updateCPUTopProcesses(data.cpu?.topProcesses || []);
+        
+        // Create or update Memory top processes display  
+        this.updateMemoryTopProcesses(data.memory?.topProcesses || []);
+    }
+
+    formatDiskSize(sizeString) {
+        if (!sizeString) return null;
+        
+        // Convert binary unit abbreviations to more familiar formats
+        return sizeString
+            .replace(/Ti$/, ' TB')      // 3.6Ti → 3.6 TB  
+            .replace(/Gi$/, ' GB')      // 15Gi → 15 GB
+            .replace(/Mi$/, ' MB')      // 500Mi → 500 MB
+            .replace(/Ki$/, ' KB')      // 210Ki → 210 KB
+            .replace(/Bi$/, ' B');      // 0Bi → 0 B
+    }
+
+    updateCPUTopProcesses(processes) {
+        // Find the CPU usage element and add top processes below it
+        const cpuElement = document.getElementById('cpu-usage');
+        if (cpuElement && processes.length > 0) {
+            // Remove existing top processes display
+            const existingProcesses = cpuElement.parentElement.querySelector('.top-processes');
+            if (existingProcesses) {
+                existingProcesses.remove();
+            }
+            
+            // Create new top processes display
+            const processesDiv = document.createElement('div');
+            processesDiv.className = 'top-processes';
+            processesDiv.innerHTML = `
+                <div class="top-processes-header">Top CPU Processes:</div>
+                <div class="processes-list">
+                    ${processes.slice(0, 3).map(proc => `
+                        <div class="process-item">
+                            <span class="process-name">${proc.name ? `${proc.name} (${proc.pid})` : `PID ${proc.pid}`}</span>
+                            <span class="process-value">${proc.cpuPercent?.toFixed(1) || '0'}%</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            cpuElement.parentElement.appendChild(processesDiv);
+        }
+    }
+
+    updateMemoryTopProcesses(processes) {
+        // Find the Memory usage element and add top processes below it
+        const memoryElement = document.getElementById('memory-usage');
+        if (memoryElement && processes.length > 0) {
+            // Remove existing top processes display
+            const existingProcesses = memoryElement.parentElement.querySelector('.top-processes');
+            if (existingProcesses) {
+                existingProcesses.remove();
+            }
+            
+            // Create new top processes display
+            const processesDiv = document.createElement('div');
+            processesDiv.className = 'top-processes';
+            processesDiv.innerHTML = `
+                <div class="top-processes-header">Top Memory Processes:</div>
+                <div class="processes-list">
+                    ${processes.slice(0, 3).map(proc => `
+                        <div class="process-item">
+                            <span class="process-name">${proc.name ? `${proc.name} (${proc.pid})` : `PID ${proc.pid}`}</span>
+                            <span class="process-value">${proc.memoryMB || '0'}MB (${proc.memoryPercent?.toFixed(1) || '0'}%)</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            memoryElement.parentElement.appendChild(processesDiv);
         }
     }
 
@@ -4653,21 +4815,25 @@ class InstallationUp4evr {
         const storageData = status.storage || {};
         const temperatureData = status.temperature || {};
         
-        // CPU usage
-        if (systemData.cpuUsage !== undefined) {
-            document.getElementById('current-cpu').textContent = `${systemData.cpuUsage.toFixed(1)}%`;
-            this.updateStatusCard('cpu', systemData.cpuUsage, this.getThresholds('cpu'));
+        // CPU usage - handle both old and new data structures
+        const cpuUsage = systemData.cpuUsage || systemData.cpu?.usage;
+        if (cpuUsage !== undefined) {
+            document.getElementById('current-cpu').textContent = `${cpuUsage.toFixed(1)}%`;
+            this.updateStatusCard('cpu', cpuUsage, this.getThresholds('cpu'));
         }
         
-        // Memory usage
-        if (systemData.memoryUsage !== undefined) {
-            document.getElementById('current-memory').textContent = `${systemData.memoryUsage.toFixed(1)}%`;
-            this.updateStatusCard('memory', systemData.memoryUsage, this.getThresholds('memory'));
+        // Memory usage - handle both old and new data structures  
+        const memoryUsage = systemData.memoryUsage || systemData.memory?.usage;
+        if (memoryUsage !== undefined) {
+            document.getElementById('current-memory').textContent = `${memoryUsage.toFixed(1)}%`;
+            this.updateStatusCard('memory', memoryUsage, this.getThresholds('memory'));
         }
         
-        // Disk usage - get from main disk or first volume
+        // Disk usage - handle both old and new data structures
         let diskUsage = null;
-        if (storageData.mainDisk && storageData.mainDisk.usagePercent !== undefined) {
+        if (systemData.disk?.usage !== undefined) {
+            diskUsage = systemData.disk.usage;
+        } else if (storageData.mainDisk && storageData.mainDisk.usagePercent !== undefined) {
             diskUsage = storageData.mainDisk.usagePercent;
         } else if (storageData.volumes) {
             const volumes = Object.values(storageData.volumes);
