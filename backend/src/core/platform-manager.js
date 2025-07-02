@@ -103,6 +103,37 @@ class PlatformManager {
                 APIResponse.partial(result, { message: 'Some settings failed to revert' });
         });
 
+        this.api.registerRoute('/system/settings/revert-all-script', 'POST', async () => {
+            const allSettings = Object.keys(this.systemManager.getSettings());
+            const result = this.systemManager.generateTerminalScript(allSettings, {
+                mode: 'revert',
+                includeVerification: false
+            });
+            
+            return result.success ? 
+                APIResponse.success({
+                    ...result,
+                    script: result.script,
+                    settingsCount: allSettings.length,
+                    description: 'Revert all system settings to macOS defaults'
+                }) : 
+                APIResponse.error(result, 'Failed to generate revert script');
+        });
+
+        this.api.registerRoute('/system/settings/generate-script', 'POST', async (data) => {
+            const { settings, mode = 'apply', includeVerification = true } = data;
+            if (!Array.isArray(settings)) {
+                throw new Error('Settings must be an array');
+            }
+            const result = this.systemManager.generateTerminalScript(settings, {
+                mode,
+                includeVerification
+            });
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result, 'Failed to generate script');
+        });
+
         // SIP status route (macOS specific)
         this.api.registerRoute('/system/sip-status', 'GET', async () => {
             if (this.platform !== 'macos') {

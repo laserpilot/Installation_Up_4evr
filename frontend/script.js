@@ -427,6 +427,15 @@ class InstallationUp4evr {
             });
         }
 
+        // Generate Restore Script button
+        const generateRestoreBtn = document.getElementById('generate-restore-script');
+        if (generateRestoreBtn) {
+            generateRestoreBtn.addEventListener('click', () => {
+                console.log('[SETUP] Generate restore script button clicked!');
+                this.generateRestoreScript();
+            });
+        }
+
         // Launch Agents - Drag and Drop
         const dropZone = document.getElementById('app-drop-zone');
         const fileInput = document.getElementById('app-file-input');
@@ -486,6 +495,10 @@ class InstallationUp4evr {
         document.getElementById('test-recovery-alert').addEventListener('click', () => this.testAlert('recovery'));
         document.getElementById('simulate-high-load').addEventListener('click', () => this.simulateHighLoad());
         document.getElementById('add-app-monitor').addEventListener('click', () => this.addAppMonitor());
+        document.getElementById('add-ping-monitor').addEventListener('click', () => this.addPingMonitor());
+        document.getElementById('view-ping-logs').addEventListener('click', () => this.viewPingLogs());
+        document.getElementById('export-ping-logs').addEventListener('click', () => this.exportPingLogs());
+        document.getElementById('clear-ping-logs').addEventListener('click', () => this.clearPingLogs());
         document.getElementById('load-monitoring-config').addEventListener('click', () => this.loadMonitoringConfig());
         document.getElementById('save-monitoring-config').addEventListener('click', () => this.saveMonitoringConfig());
         document.getElementById('reset-monitoring-config').addEventListener('click', () => this.resetMonitoringConfig());
@@ -613,7 +626,7 @@ class InstallationUp4evr {
     async checkSIPStatus() {
         console.log('[SIP] Checking SIP status...');
         try {
-            const sipStatus = await this.apiCall('/api/system-prefs/sip-status');
+            const sipStatus = await this.apiCall('/api/system/sip-status');
             console.log('[SIP] SIP status response:', sipStatus);
             
             const status = sipStatus.enabled ? 'warning' : 'online';
@@ -645,29 +658,33 @@ class InstallationUp4evr {
         console.log('[SYSTEM-PREFS] Loading system preferences...');
         try {
             const [allSettings, statusData] = await Promise.all([
-                this.apiCall('/api/system-prefs/settings'),
-                this.apiCall('/api/system-prefs/status')
+                this.apiCall('/api/system/settings'),
+                this.apiCall('/api/system/settings/status')
             ]);
 
             console.log('[SYSTEM-PREFS] All settings:', allSettings);
             console.log('[SYSTEM-PREFS] Status data:', statusData);
 
+            // Extract the actual data from API response
+            const allSettingsData = allSettings.data || allSettings;
+            const statusArray = statusData.data || statusData;
+
             // Create status lookup for quick access
             const statusLookup = {};
-            if (Array.isArray(statusData)) {
-                statusData.forEach(status => {
+            if (Array.isArray(statusArray)) {
+                statusArray.forEach(status => {
                     statusLookup[status.setting] = status;
                 });
             } else {
-                console.warn('[SYSTEM-PREFS] Status data is not an array:', statusData);
+                console.warn('[SYSTEM-PREFS] Status data is not an array:', statusArray);
             }
 
             console.log('[SYSTEM-PREFS] Status lookup:', statusLookup);
 
             // Filter settings by required vs optional and render
-            const settingsArray = Array.isArray(allSettings) 
-                ? allSettings 
-                : Object.entries(allSettings).map(([key, setting]) => ({
+            const settingsArray = Array.isArray(allSettingsData) 
+                ? allSettingsData 
+                : Object.entries(allSettingsData).map(([key, setting]) => ({
                     id: key,
                     name: setting.name,
                     description: setting.description,
@@ -831,7 +848,7 @@ class InstallationUp4evr {
         this.updateLoadingMessage('Checking current system settings status...');
         
         try {
-            const response = await this.apiCall('/api/system-prefs/verify');
+            const response = await this.apiCall('/api/system/settings/status');
             console.log('[VERIFY] Verification response:', response);
             
             if (response.success && response.data) {
@@ -1026,7 +1043,7 @@ class InstallationUp4evr {
         
         let requiredSettingsToApply = [];
         try {
-            const statusResponse = await this.apiCall('/api/system-prefs/status');
+            const statusResponse = await this.apiCall('/api/system/settings/status');
             if (statusResponse.success) {
                 const statusData = statusResponse.data;
                 
@@ -1095,12 +1112,23 @@ class InstallationUp4evr {
         this.showLoading();
         try {
             console.log('[REQUIRED] Applying required settings via API...');
-            const results = await this.apiCall('/api/system-prefs/apply-required', {
-                method: 'POST'
+            // Get required settings first
+            const settingsResponse = await this.apiCall('/api/system/settings');
+            const allSettings = settingsResponse.data || settingsResponse;
+            const requiredSettings = Object.entries(allSettings)
+                .filter(([key, setting]) => setting.required)
+                .map(([key]) => key);
+            
+            const results = await this.apiCall('/api/system/settings/apply', {
+                method: 'POST',
+                body: JSON.stringify({ settings: requiredSettings })
             });
             console.log('[REQUIRED] Required settings application result:', results);
             this.displayResults('Applied Required Settings', results);
             this.showToast('Required settings applied successfully!', 'success');
+            
+            // Refresh settings across all tabs
+            await this.refreshSystemSettings();
             
             // Refresh the display to show updated status
             await this.loadSystemPreferences();
@@ -1128,7 +1156,7 @@ class InstallationUp4evr {
         
         let settingsToApply = [];
         try {
-            const statusResponse = await this.apiCall('/api/system-prefs/status');
+            const statusResponse = await this.apiCall('/api/system/settings/status');
             if (statusResponse.success) {
                 const statusData = statusResponse.data;
                 const statusLookup = statusData.reduce((acc, item) => {
@@ -1236,7 +1264,7 @@ class InstallationUp4evr {
             } else {
                 // Fallback to web API
                 console.log('[APPLY] Applying settings via web API...');
-                results = await this.apiCall('/api/system-prefs/apply', {
+                results = await this.apiCall('/api/system/settings/apply', {
                     method: 'POST',
                     body: JSON.stringify({ settings: settingIds })
                 });
@@ -1244,6 +1272,9 @@ class InstallationUp4evr {
             }
             this.displayResults('Applied Selected Settings', results);
             this.showToast(`Applied ${settingIds.length} settings successfully!`, 'success');
+            
+            // Refresh settings across all tabs
+            await this.refreshSystemSettings();
             
             // Refresh the display to show updated status
             await this.loadSystemPreferences();
@@ -1301,7 +1332,7 @@ class InstallationUp4evr {
             this.showLoading();
 
             // Call the new script generation API
-            const response = await this.apiCall('/api/system-prefs/generate-script', {
+            const response = await this.apiCall('/api/system/settings/generate-script', {
                 method: 'POST',
                 body: JSON.stringify({
                     settings: settingsArray,
@@ -1326,6 +1357,124 @@ class InstallationUp4evr {
         } finally {
             this.hideLoading();
         }
+    }
+
+    async generateRestoreScript() {
+        try {
+            console.log('[RESTORE-SCRIPT] Generating restore script for all settings...');
+            
+            // Show loading state
+            this.showLoading();
+
+            // Call the restore script generation API
+            const response = await this.apiCall('/api/system/settings/revert-all-script', {
+                method: 'POST'
+            });
+
+            console.log('[RESTORE-SCRIPT] Restore script generation response:', response);
+
+            if (response.success) {
+                // Show the generated script in a modal
+                this.showRestoreScriptModal(response.data);
+                this.showToast(`Generated restore script for ${response.data.settingsCount} settings`, 'success');
+            } else {
+                this.showToast('Failed to generate restore script', 'error');
+                console.error('[RESTORE-SCRIPT] Generation failed:', response.error);
+            }
+        } catch (error) {
+            console.error('[RESTORE-SCRIPT] Error generating restore script:', error);
+            this.showToast('Error generating restore script', 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    showRestoreScriptModal(scriptData) {
+        // Remove any existing modal
+        const existingModal = document.getElementById('restore-script-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create modal HTML
+        const modalHtml = `
+            <div id="restore-script-modal" class="modal-overlay">
+                <div class="modal-content script-modal">
+                    <div class="modal-header">
+                        <h2>⚠️ Restore System Settings to Defaults</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="script-info" style="background: var(--warning-bg); border: 1px solid var(--warning-color); color: var(--warning-color);">
+                            <p><strong>⚠️ WARNING:</strong> This script will restore ALL system settings to macOS defaults.</p>
+                            <p><strong>Settings:</strong> ${scriptData.settingsCount} settings will be reverted</p>
+                            <p><strong>Generated:</strong> ${new Date(scriptData.timestamp).toLocaleString()}</p>
+                            <p class="script-instructions">
+                                🔄 <strong>Purpose:</strong> Use this when you're done with the installation and want to restore the computer to normal macOS behavior.
+                                This will undo all changes made by Installation Up 4evr.
+                            </p>
+                        </div>
+                        <div class="script-container">
+                            <div class="script-header">
+                                <span>restore-macos-defaults.sh</span>
+                                <button id="copy-restore-script-btn" class="copy-button" onclick="installationApp.copyRestoreScriptToClipboard()">
+                                    📋 Copy Script
+                                </button>
+                            </div>
+                            <pre id="restore-script-content" class="script-content">${scriptData.script}</pre>
+                        </div>
+                        <div class="script-actions">
+                            <button class="btn btn-warning" id="download-restore-script-btn">
+                                💾 Download Restore Script
+                            </button>
+                            <button class="btn btn-secondary" id="close-restore-modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Add event listeners
+        document.getElementById('download-restore-script-btn').addEventListener('click', () => {
+            this.downloadRestoreScript(scriptData);
+        });
+
+        document.getElementById('close-restore-modal').addEventListener('click', () => {
+            document.getElementById('restore-script-modal').remove();
+        });
+
+        // Close on background click
+        document.getElementById('restore-script-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'restore-script-modal') {
+                e.target.remove();
+            }
+        });
+    }
+
+    copyRestoreScriptToClipboard() {
+        const scriptContent = document.getElementById('restore-script-content');
+        if (scriptContent) {
+            navigator.clipboard.writeText(scriptContent.textContent).then(() => {
+                this.showToast('Restore script copied to clipboard', 'success');
+            }).catch(() => {
+                this.showToast('Failed to copy script to clipboard', 'error');
+            });
+        }
+    }
+
+    downloadRestoreScript(scriptData) {
+        const blob = new Blob([scriptData.script], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'restore-macos-defaults.sh';
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('Restore script downloaded', 'success');
     }
 
     showTerminalScriptModal(scriptData) {
@@ -3299,6 +3448,29 @@ class InstallationUp4evr {
         this.setupDashboardAutoRefresh();
     }
 
+    async refreshSystemSettings() {
+        console.log('[SYNC] Refreshing system settings across tabs...');
+        
+        // Refresh advanced system preferences tab
+        if (document.getElementById('system-prefs-tab').classList.contains('active')) {
+            await this.loadSystemPreferences();
+        }
+        
+        // Refresh wizard essential settings if wizard is active
+        if (document.getElementById('setup-wizard-tab').classList.contains('active') && 
+            this.currentWizardStep === 3) {
+            await this.loadEssentialSettings();
+        }
+        
+        // Refresh system checks if wizard is on step 2
+        if (document.getElementById('setup-wizard-tab').classList.contains('active') && 
+            this.currentWizardStep === 2) {
+            await this.loadSystemChecks();
+        }
+        
+        console.log('[SYNC] System settings sync completed');
+    }
+
     async refreshDashboard() {
         // Prevent multiple simultaneous refreshes
         if (this.dashboardRefreshing) {
@@ -3381,21 +3553,24 @@ class InstallationUp4evr {
 
     async updateDashboardHealth() {
         try {
-            const response = await this.apiCall('/api/monitoring/system');
+            const response = await this.apiCall('/api/monitoring/status');
             const data = response.data || response;
+            
+            // Get the system data from the response
+            const systemData = data.system || data;
 
             // Update CPU
-            this.updateHealthCard('cpu', data.cpu?.usage || 0, data.cpu?.status || 'unknown');
+            this.updateHealthCard('cpu', systemData.cpu?.usage || 0, systemData.cpu?.status || 'unknown');
 
             // Update Memory with enhanced data
-            this.updateMemoryCard(data.memory);
+            this.updateMemoryCard(systemData.memory);
 
             // Update Disk with enhanced data
-            this.updateDiskCard(data.disk);
+            this.updateDiskCard(systemData.disk);
 
             // Update Uptime
-            if (data.uptime) {
-                this.updateHealthCard('uptime', this.formatUptime(data.uptime.seconds), 'active');
+            if (systemData.uptime) {
+                this.updateHealthCard('uptime', this.formatUptime(systemData.uptime.seconds), 'active');
             }
 
         } catch (error) {
@@ -3757,16 +3932,24 @@ class InstallationUp4evr {
 
         try {
             // Get current system status
-            const systemData = await this.apiCall('/api/system-prefs/status');
+            const systemData = await this.apiCall('/api/system/settings/status');
             const settings = systemData.data || systemData.settings || systemData || [];
 
-            const checks = [
-                { name: 'Screen Saver Settings', key: 'screensaver', description: 'Verifying screen saver is disabled' },
-                { name: 'Display Sleep Settings', key: 'displaySleep', description: 'Checking display sleep settings' },
-                { name: 'Computer Sleep Settings', key: 'computerSleep', description: 'Checking computer sleep settings' },
-                { name: 'Auto-restart Settings', key: 'autoRestart', description: 'Verifying automatic restart on power failure' },
-                { name: 'Menu Bar Settings', key: 'hideMenuBar', description: 'Checking menu bar visibility settings' }
-            ];
+            // Get all settings to create dynamic checks
+            const [allSettingsData] = await Promise.all([
+                this.apiCall('/api/system/settings')
+            ]);
+            
+            const allSettings = allSettingsData.data || allSettingsData;
+            
+            // Create checks for required settings
+            const checks = Object.entries(allSettings)
+                .filter(([key, setting]) => setting.required)
+                .map(([key, setting]) => ({
+                    name: setting.name,
+                    key: key,
+                    description: `Checking ${setting.name.toLowerCase()} configuration`
+                }));
 
             container.innerHTML = checks.map(check => {
                 const setting = settings.find(s => s.setting === check.key);
@@ -3822,17 +4005,32 @@ class InstallationUp4evr {
         if (!container) return;
 
         try {
-            const systemData = await this.apiCall('/api/system-prefs/status');
-            const settings = systemData.data || systemData.settings || systemData || [];
+            // Get all available settings and their current status
+            const [allSettingsData, statusData] = await Promise.all([
+                this.apiCall('/api/system/settings'),
+                this.apiCall('/api/system/settings/status')
+            ]);
+            
+            const allSettings = allSettingsData.data || allSettingsData;
+            const statusArray = statusData.data || statusData || [];
+            
+            // Create status lookup for easier access
+            const statusLookup = statusArray.reduce((acc, item) => {
+                acc[item.setting] = item;
+                return acc;
+            }, {});
 
-            // Filter to essential settings only
-            const essentialSettings = settings.filter(setting => 
-                setting.setting === 'screensaver' || 
-                setting.setting === 'displaySleep' ||
-                setting.setting === 'computerSleep' ||
-                setting.setting === 'autoRestart' ||
-                setting.setting === 'hideMenuBar'
-            );
+            // Filter to essential settings only (required settings)
+            const essentialSettings = Object.entries(allSettings)
+                .filter(([key, setting]) => setting.required)
+                .map(([key, setting]) => ({
+                    setting: key,
+                    name: setting.name,
+                    description: setting.description,
+                    status: statusLookup[key]?.status || 'unknown',
+                    statusIcon: statusLookup[key]?.statusIcon || '🟡',
+                    statusText: statusLookup[key]?.statusText || 'Unknown'
+                }));
 
             container.innerHTML = essentialSettings.map(setting => `
                 <div class="setting-item">
@@ -3881,7 +4079,7 @@ class InstallationUp4evr {
             // Using command-specific sudo - backend will handle authentication for each command
 
             console.log('[WIZARD] Applying settings via API...');
-            const response = await this.apiCall('/api/system-prefs/apply', {
+            const response = await this.apiCall('/api/system/settings/apply', {
                 method: 'POST',
                 body: JSON.stringify({ settings: settingsToApply })
             });
@@ -3917,6 +4115,9 @@ class InstallationUp4evr {
 
             this.showToast('Settings applied successfully', 'success');
             this.wizardData.settingsApplied = settingsToApply;
+
+            // Refresh settings across all tabs
+            await this.refreshSystemSettings();
 
             // Move to next step
             this.nextWizardStep();
@@ -4012,7 +4213,7 @@ class InstallationUp4evr {
         try {
             console.log('[WIZARD-SCRIPT] Generating script for settings:', settingsToApply);
             
-            const response = await this.apiCall('/api/system-prefs/generate-script', {
+            const response = await this.apiCall('/api/system/settings/generate-script', {
                 method: 'POST',
                 body: JSON.stringify({
                     settings: settingsToApply,
@@ -4693,6 +4894,255 @@ class InstallationUp4evr {
             config.appMonitors.forEach(monitor => {
                 this.addAppMonitorToList(monitor);
             });
+        }
+    }
+
+    // Network Ping Monitoring Methods
+    addPingMonitor() {
+        const ipAddress = document.getElementById('ping-ip-address').value.trim();
+        const label = document.getElementById('ping-label').value.trim();
+        const interval = parseInt(document.getElementById('ping-interval').value);
+        const timeout = parseInt(document.getElementById('ping-timeout').value);
+        const critical = document.getElementById('ping-critical').checked;
+        const logToFile = document.getElementById('ping-log-file').checked;
+        
+        if (!ipAddress) {
+            this.showToast('Please enter an IP address or hostname', 'warning');
+            return;
+        }
+
+        // Basic IP/hostname validation
+        const ipPattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        const hostnamePattern = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+        
+        if (!ipPattern.test(ipAddress) && !hostnamePattern.test(ipAddress)) {
+            this.showToast('Please enter a valid IP address or hostname', 'error');
+            return;
+        }
+        
+        const monitor = {
+            id: `ping_${Date.now()}`,
+            type: 'ping',
+            target: ipAddress,
+            label: label || ipAddress,
+            interval: interval,
+            timeout: timeout,
+            critical: critical,
+            logToFile: logToFile,
+            status: 'unknown',
+            lastPing: null,
+            responseTime: null,
+            successRate: null
+        };
+        
+        console.log('[PING-MONITOR] Adding ping monitor:', monitor);
+        this.addPingMonitorToList(monitor);
+        
+        // Clear form
+        document.getElementById('ping-ip-address').value = '';
+        document.getElementById('ping-label').value = '';
+        document.getElementById('ping-interval').value = '5';
+        document.getElementById('ping-timeout').value = '5';
+        document.getElementById('ping-critical').checked = false;
+        document.getElementById('ping-log-file').checked = true;
+        
+        this.showToast(`Added ping monitor for ${monitor.label}`, 'success');
+    }
+
+    addPingMonitorToList(monitor) {
+        const list = document.getElementById('ping-monitor-list');
+        const item = document.createElement('div');
+        item.className = 'ping-monitor-item';
+        item.dataset.monitorId = monitor.id;
+        
+        item.innerHTML = `
+            <div class="ping-monitor-header">
+                <div class="ping-monitor-info">
+                    <div class="ping-monitor-label">${monitor.label}</div>
+                    <div class="ping-monitor-target">${monitor.target}</div>
+                </div>
+                <div class="ping-monitor-status">
+                    <div class="ping-status-indicator ${monitor.status}">
+                        <i class="fas fa-circle"></i>
+                        <span class="ping-status-text">${this.getPingStatusText(monitor.status)}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="ping-monitor-details">
+                <div class="ping-detail">
+                    <label>Interval:</label>
+                    <span>${monitor.interval} min</span>
+                </div>
+                <div class="ping-detail">
+                    <label>Timeout:</label>
+                    <span>${monitor.timeout}s</span>
+                </div>
+                <div class="ping-detail">
+                    <label>Last Response:</label>
+                    <span class="ping-response-time">${monitor.responseTime ? monitor.responseTime + 'ms' : '--'}</span>
+                </div>
+                <div class="ping-detail">
+                    <label>Success Rate:</label>
+                    <span class="ping-success-rate">${monitor.successRate ? monitor.successRate + '%' : '--'}</span>
+                </div>
+                <div class="ping-detail">
+                    <label>Critical:</label>
+                    <span class="ping-critical">${monitor.critical ? 'Yes' : 'No'}</span>
+                </div>
+                <div class="ping-detail">
+                    <label>Logging:</label>
+                    <span class="ping-logging">${monitor.logToFile ? 'Enabled' : 'Disabled'}</span>
+                </div>
+            </div>
+            <div class="ping-monitor-actions">
+                <button class="btn btn-sm btn-secondary" onclick="installationApp.testPing('${monitor.target}')">
+                    <i class="fas fa-play"></i> Test Now
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="installationApp.editPingMonitor('${monitor.id}')">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="installationApp.removePingMonitor('${monitor.id}')">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        `;
+        
+        list.appendChild(item);
+    }
+
+    getPingStatusText(status) {
+        const statusMap = {
+            'unknown': 'Unknown',
+            'success': 'Responding',
+            'timeout': 'Timeout',
+            'error': 'Error',
+            'unreachable': 'Unreachable'
+        };
+        return statusMap[status] || status;
+    }
+
+    async testPing(target) {
+        this.showToast(`Testing ping to ${target}...`, 'info');
+        try {
+            const response = await this.apiCall('/api/monitoring/ping/test', {
+                method: 'POST',
+                body: JSON.stringify({ target, timeout: 5 })
+            });
+            
+            if (response.success) {
+                const result = response.data;
+                this.showToast(`Ping to ${target}: ${result.responseTime}ms (${result.status})`, 'success');
+            } else {
+                this.showToast(`Ping to ${target} failed: ${response.error}`, 'error');
+            }
+        } catch (error) {
+            this.showToast(`Ping test failed: ${error.message}`, 'error');
+        }
+    }
+
+    editPingMonitor(monitorId) {
+        // Find the monitor item
+        const item = document.querySelector(`[data-monitor-id="${monitorId}"]`);
+        if (!item) return;
+        
+        // TODO: Implement edit functionality
+        this.showToast('Ping monitor editing coming soon', 'info');
+    }
+
+    removePingMonitor(monitorId) {
+        if (!confirm('Are you sure you want to remove this ping monitor?')) {
+            return;
+        }
+        
+        const item = document.querySelector(`[data-monitor-id="${monitorId}"]`);
+        if (item) {
+            item.remove();
+            this.showToast('Ping monitor removed', 'success');
+        }
+    }
+
+    async viewPingLogs() {
+        try {
+            const response = await this.apiCall('/api/monitoring/ping/logs');
+            if (response.success) {
+                this.showPingLogsModal(response.data);
+            } else {
+                this.showToast('Failed to load ping logs', 'error');
+            }
+        } catch (error) {
+            this.showToast('Failed to load ping logs: ' + error.message, 'error');
+        }
+    }
+
+    showPingLogsModal(logs) {
+        // Remove any existing modal
+        const existingModal = document.getElementById('ping-logs-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modalHtml = `
+            <div id="ping-logs-modal" class="modal-overlay">
+                <div class="modal-content ping-logs-modal">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-file-alt"></i> Ping Monitoring Logs</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="ping-logs-container">
+                            <pre id="ping-logs-content">${logs.length > 0 ? logs.join('\n') : 'No ping logs available'}</pre>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="document.getElementById('ping-logs-modal').remove()">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    async exportPingLogs() {
+        try {
+            const response = await this.apiCall('/api/monitoring/ping/logs/export');
+            if (response.success) {
+                // Create and trigger download
+                const blob = new Blob([response.data.content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ping-logs-${new Date().toISOString().slice(0, 10)}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showToast('Ping logs exported successfully', 'success');
+            } else {
+                this.showToast('Failed to export ping logs', 'error');
+            }
+        } catch (error) {
+            this.showToast('Failed to export ping logs: ' + error.message, 'error');
+        }
+    }
+
+    async clearPingLogs() {
+        if (!confirm('Are you sure you want to clear all ping logs? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const response = await this.apiCall('/api/monitoring/ping/logs/clear', {
+                method: 'POST'
+            });
+            
+            if (response.success) {
+                this.showToast('Ping logs cleared successfully', 'success');
+            } else {
+                this.showToast('Failed to clear ping logs', 'error');
+            }
+        } catch (error) {
+            this.showToast('Failed to clear ping logs: ' + error.message, 'error');
         }
     }
 

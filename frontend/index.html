@@ -468,6 +468,9 @@
                     <button id="generate-script" class="btn btn-outline" title="Generate terminal commands to copy and run manually (Browser-safe option)">
                         <i class="fas fa-terminal"></i> Generate Terminal Commands
                     </button>
+                    <button id="generate-restore-script" class="btn btn-warning" title="Generate terminal script to restore all macOS settings back to defaults">
+                        <i class="fas fa-undo"></i> Generate Restore Script
+                    </button>
                 </div>
                         </section>
                     </div>
@@ -1473,6 +1476,88 @@
                                     <button id="add-app-monitor" class="btn btn-primary">
                                         <i class="fas fa-plus"></i> Add Application Monitor
                                     </button>
+                                </div>
+                            </div>
+
+                            <!-- Network Ping Monitoring -->
+                            <div class="network-ping-section">
+                                <h3><i class="fas fa-network-wired"></i> Network Ping Monitoring</h3>
+                                <p>Monitor network connectivity by pinging specific IP addresses on a regular interval. Useful for tracking internet connectivity and device availability.</p>
+                                
+                                <div class="ping-monitor-list" id="ping-monitor-list">
+                                    <!-- Dynamic ping entries will be added here -->
+                                </div>
+                                
+                                <div class="ping-monitor-add-section">
+                                    <h4><i class="fas fa-plus"></i> Add IP Address to Monitor</h4>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <label for="ping-ip-address">IP Address or Hostname</label>
+                                            <input type="text" id="ping-ip-address" placeholder="8.8.8.8 or google.com">
+                                            <small>IPv4 address or resolvable hostname</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="ping-label">Description</label>
+                                            <input type="text" id="ping-label" placeholder="Google DNS Server">
+                                            <small>Friendly name for this ping target</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="ping-interval">Ping Interval (minutes)</label>
+                                            <input type="number" id="ping-interval" min="1" max="60" value="5">
+                                            <small>How often to ping this target (1-60 minutes)</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="ping-timeout">Timeout (seconds)</label>
+                                            <input type="number" id="ping-timeout" min="1" max="30" value="5">
+                                            <small>How long to wait for ping response</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="ping-critical">Critical Target</label>
+                                            <div class="toggle-switch">
+                                                <input type="checkbox" id="ping-critical">
+                                                <span class="toggle-slider"></span>
+                                            </div>
+                                            <small>Send critical alerts if this target becomes unreachable</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="ping-log-file">Log Results to File</label>
+                                            <div class="toggle-switch">
+                                                <input type="checkbox" id="ping-log-file" checked>
+                                                <span class="toggle-slider"></span>
+                                            </div>
+                                            <small>Save ping results to log file for analysis</small>
+                                        </div>
+                                    </div>
+                                    <button id="add-ping-monitor" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Ping Monitor
+                                    </button>
+                                </div>
+                                
+                                <div class="ping-log-section">
+                                    <h4><i class="fas fa-file-alt"></i> Ping Log Settings</h4>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <label for="ping-log-retention">Log Retention (days)</label>
+                                            <input type="number" id="ping-log-retention" min="1" max="365" value="30">
+                                            <small>How long to keep ping log files</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="ping-log-location">Log Directory</label>
+                                            <input type="text" id="ping-log-location" value="~/logs/ping-monitoring" readonly>
+                                            <small>Directory where ping logs are stored</small>
+                                        </div>
+                                    </div>
+                                    <div class="ping-log-actions">
+                                        <button id="view-ping-logs" class="btn btn-secondary">
+                                            <i class="fas fa-eye"></i> View Recent Logs
+                                        </button>
+                                        <button id="export-ping-logs" class="btn btn-secondary">
+                                            <i class="fas fa-download"></i> Export Logs
+                                        </button>
+                                        <button id="clear-ping-logs" class="btn btn-warning">
+                                            <i class="fas fa-trash"></i> Clear Old Logs
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

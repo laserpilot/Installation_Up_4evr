@@ -4026,3 +4026,171 @@ input:checked + .slider:before {
         padding: 0.75rem;
     }
 }
+
+/* Ping Monitoring Styles */
+.network-ping-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.ping-monitor-list {
+    margin-bottom: var(--spacing-lg);
+}
+
+.ping-monitor-item {
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    transition: box-shadow 0.2s ease;
+}
+
+.ping-monitor-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ping-monitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.ping-monitor-info {
+    flex: 1;
+}
+
+.ping-monitor-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.ping-monitor-target {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
+.ping-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.ping-status-indicator.success {
+    background: var(--success-bg);
+    color: var(--success-color);
+}
+
+.ping-status-indicator.timeout,
+.ping-status-indicator.error,
+.ping-status-indicator.unreachable {
+    background: var(--error-bg);
+    color: var(--error-color);
+}
+
+.ping-status-indicator.unknown {
+    background: var(--warning-bg);
+    color: var(--warning-color);
+}
+
+.ping-status-indicator i {
+    font-size: 8px;
+}
+
+.ping-monitor-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--background-color);
+    border-radius: var(--border-radius-sm);
+}
+
+.ping-detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.ping-detail label {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.ping-detail span {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.ping-monitor-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.ping-monitor-add-section,
+.ping-log-section {
+    background: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.ping-log-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.ping-logs-modal .modal-content {
+    max-width: 800px;
+    width: 90vw;
+    max-height: 80vh;
+}
+
+.ping-logs-container {
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+}
+
+.ping-logs-container pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+/* Responsive adjustments for ping monitoring */
+@media (max-width: 768px) {
+    .ping-monitor-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+    }
+    
+    .ping-monitor-details {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .ping-monitor-actions {
+        justify-content: center;
+    }
+    
+    .ping-log-actions {
+        flex-direction: column;
+    }
+}
