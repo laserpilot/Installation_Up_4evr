@@ -2247,8 +2247,8 @@ class InstallationUp4evr {
         // Update alerts
         this.updateAlerts(data.alerts || []);
 
-        // Update system details with raw data
-        this.updateSystemDetails(data);
+        // Update system details with system data
+        this.updateSystemDetails(data.system || data);
     }
 
     updateMetric(metricId, value, unit) {
@@ -2384,13 +2384,14 @@ class InstallationUp4evr {
     }
 
     updateSystemDetails(data) {
-        // Display status - Add fallback since displays data not in API
+        // Display status - Fix to handle displays array structure from API
         const displayElement = document.getElementById('display-status');
         if (displayElement) {
-            if (data.displays) {
-                const displays = Object.values(data.displays);
+            if (data.displays && Array.isArray(data.displays)) {
+                const displays = data.displays;
                 const onlineDisplays = displays.filter(d => d.online).length;
-                displayElement.textContent = `${onlineDisplays}/${displays.length} displays online`;
+                const displayInfo = displays.map(d => `${d.name} (${d.resolution || 'Unknown resolution'})`).join(', ');
+                displayElement.textContent = `${onlineDisplays}/${displays.length} displays online: ${displayInfo}`;
             } else {
                 displayElement.textContent = 'Display monitoring not available';
             }
@@ -2409,16 +2410,14 @@ class InstallationUp4evr {
 
         // Uptime - Fix data path to handle object structure
         const uptimeElement = document.getElementById('uptime-status');
-        if (uptimeElement && data.system) {
-            if (data.system.uptime) {
+        if (uptimeElement) {
+            if (data.uptime) {
                 // Use formatted string if available, otherwise format the seconds
-                const uptime = data.system.uptime.formatted || this.formatUptime(data.system.uptime.seconds);
+                const uptime = data.uptime.formatted || this.formatUptime(data.uptime.seconds);
                 uptimeElement.textContent = uptime;
             } else {
                 uptimeElement.textContent = 'Uptime unavailable';
             }
-        } else if (uptimeElement) {
-            uptimeElement.textContent = 'System data unavailable';
         }
 
         // Monitored apps - Add fallback and handle missing data
@@ -3413,7 +3412,7 @@ class InstallationUp4evr {
         // Dashboard refresh button
         const refreshBtn = document.getElementById('dashboard-refresh');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.refreshDashboard());
+            refreshBtn.addEventListener('click', () => this.refreshDashboard(true));
         }
 
         // Setup wizard button
@@ -3471,7 +3470,7 @@ class InstallationUp4evr {
         console.log('[SYNC] System settings sync completed');
     }
 
-    async refreshDashboard() {
+    async refreshDashboard(showToast = false) {
         // Prevent multiple simultaneous refreshes
         if (this.dashboardRefreshing) {
             console.log('[DASHBOARD] Refresh already in progress, skipping duplicate call');
@@ -3494,7 +3493,10 @@ class InstallationUp4evr {
             // Force a refresh of monitoring data
             await this.monitoringData.refreshData();
 
-            this.showToast('Dashboard refreshed successfully', 'success');
+            // Only show toast for manual refreshes
+            if (showToast) {
+                this.showToast('Dashboard refreshed successfully', 'success');
+            }
         } catch (error) {
             console.error('Dashboard refresh failed:', error);
             this.showToast('Failed to refresh dashboard', 'error');
@@ -3559,8 +3561,8 @@ class InstallationUp4evr {
             // Get the system data from the response
             const systemData = data.system || data;
 
-            // Update CPU
-            this.updateHealthCard('cpu', systemData.cpu?.usage || 0, systemData.cpu?.status || 'unknown');
+            // Update CPU with enhanced data
+            this.updateCPUCard(systemData.cpu);
 
             // Update Memory with enhanced data
             this.updateMemoryCard(systemData.memory);
@@ -3593,6 +3595,38 @@ class InstallationUp4evr {
         if (statusEl) {
             statusEl.textContent = this.getStatusText(status);
             statusEl.className = `health-status ${status}`;
+        }
+    }
+
+    updateCPUCard(cpuData) {
+        if (!cpuData) {
+            this.updateHealthCard('cpu', 0, 'unknown');
+            return;
+        }
+
+        const valueEl = document.getElementById('dashboard-cpu-value');
+        const statusEl = document.getElementById('dashboard-cpu-status');
+
+        if (valueEl) {
+            // Show usage percentage and top processes
+            const usage = Math.round(cpuData.usage || 0);
+            let content = `${usage}%`;
+            
+            // Add top processes if available
+            if (cpuData.topProcesses && cpuData.topProcesses.length > 0) {
+                const topProcs = cpuData.topProcesses.slice(0, 3);
+                const procList = topProcs.map(proc => 
+                    `${proc.name}: ${proc.cpuPercent}%`
+                ).join(', ');
+                content += `<div class="cpu-details" style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">Top: ${procList}</div>`;
+            }
+            
+            valueEl.innerHTML = content;
+        }
+
+        if (statusEl) {
+            statusEl.textContent = this.getStatusText(cpuData.status || 'unknown');
+            statusEl.className = `health-status ${cpuData.status || 'unknown'}`;
         }
     }
 
@@ -3762,24 +3796,10 @@ class InstallationUp4evr {
     }
 
     setupDashboardAutoRefresh() {
-        // Auto-refresh when dashboard tab becomes active
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.target.id === 'dashboard-tab' && 
-                    mutation.target.classList.contains('active')) {
-                    // Dashboard became active, refresh data
-                    setTimeout(() => this.refreshDashboard(), 100);
-                }
-            });
-        });
-
-        const dashboardTab = document.getElementById('dashboard-tab');
-        if (dashboardTab) {
-            observer.observe(dashboardTab, { 
-                attributes: true, 
-                attributeFilter: ['class'] 
-            });
-        }
+        // Note: Dashboard refresh is now handled by tab switching in setupTabHandlers
+        // This method is kept for compatibility but no longer sets up MutationObserver
+        // to prevent duplicate refresh calls and toast messages
+        console.log('[DASHBOARD] Auto-refresh setup (handled by tab switching)');
     }
 
     // Setup Wizard Management Methods
