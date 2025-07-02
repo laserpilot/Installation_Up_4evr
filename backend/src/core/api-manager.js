@@ -367,12 +367,32 @@ class DataTransformer {
             return { usage: 0, status: 'unknown' };
         }
         
-        return {
+        // Preserve all enhanced monitoring data
+        const sanitized = {
             usage: typeof metric.usage === 'number' ? metric.usage : 0,
-            status: metric.status || 'unknown',
-            ...(metric.total && { total: metric.total }),
-            ...(metric.available && { available: metric.available })
+            status: metric.status || 'unknown'
         };
+        
+        // Preserve basic fields
+        if (metric.total !== undefined) sanitized.total = metric.total;
+        if (metric.used !== undefined) sanitized.used = metric.used;
+        if (metric.available !== undefined) sanitized.available = metric.available;
+        if (metric.free !== undefined) sanitized.free = metric.free;
+        
+        // Preserve enhanced memory data
+        if (metric.topProcesses) sanitized.topProcesses = metric.topProcesses;
+        if (metric.inactive !== undefined) sanitized.inactive = metric.inactive;
+        if (metric.wired !== undefined) sanitized.wired = metric.wired;
+        if (metric.active !== undefined) sanitized.active = metric.active;
+        
+        // Preserve enhanced disk data
+        if (metric.totalGB !== undefined) sanitized.totalGB = metric.totalGB;
+        if (metric.usedGB !== undefined) sanitized.usedGB = metric.usedGB;
+        if (metric.availableGB !== undefined) sanitized.availableGB = metric.availableGB;
+        if (metric.volumes) sanitized.volumes = metric.volumes;
+        if (metric.storageBreakdown) sanitized.storageBreakdown = metric.storageBreakdown;
+        
+        return sanitized;
     }
 
     static sanitizeApplicationList(apps) {

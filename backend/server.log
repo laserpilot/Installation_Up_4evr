@@ -1,0 +1,1901 @@
+
+> installation-up-4evr-backend@1.0.0 start
+> node server.js
+
+SERVER: Starting server execution...
+SERVER: Loading platform management system...
+SERVER: Platform manager loaded
+SERVER: Initializing platform manager...
+SERVER: Platform manager initialized.
+[PLATFORM] Initializing platform manager...
+[PLATFORM] Initializing for macos...
+[INFO] Configuration loaded from: /Users/laser/.installation-up-4evr/config.json
+[CONFIG-PROFILES] Profiles directory initialized
+[PLATFORM] Successfully initialized for macos
+[PLATFORM] Platform manager ready
+[INFO] Starting monitoring system...
+[INFO] Starting monitoring system { interval: 30000 }
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:26:16.553Z',
+  cpu: 7.43,
+  memory: 59.924480907307185,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:26:16.554Z',
+  uptime: 2.461565042,
+  status: 'good',
+  quickStats: { cpu: 7.43, memory: 59.924480907307185, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+📊 Monitoring system started
+🚀 Installation Up 4evr server running on http://localhost:3001
+Frontend available at: http://localhost:3001
+API endpoints available at: http://localhost:3001/api/*
+📊 Mode: platform (v1.0.0-alpha.1)
+🖥️  Platform: macos
+🔧 Features: systemConfiguration, processManagement, monitoring, configuration, macosSpecific
+✨ Platform abstraction active - ready for cross-platform expansion
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:26:44.222Z',
+  uptime: 30.130229584,
+  status: 'good',
+  quickStats: { cpu: 7.43, memory: 59.924480907307185, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:26:46.582Z',
+  cpu: 4.78,
+  memory: 59.30920840284172,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/system/settings/status (platform mode)
+[API] GET /api/system/settings/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:27:14.224Z',
+  uptime: 60.131525167,
+  status: 'good',
+  quickStats: { cpu: 4.78, memory: 59.30920840284172, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:27:16.572Z',
+  cpu: 7.7,
+  memory: 59.410357457586095,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:27:44.223Z',
+  uptime: 90.131439375,
+  status: 'good',
+  quickStats: { cpu: 7.7, memory: 59.410357457586095, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:27:46.518Z',
+  cpu: 6.78,
+  memory: 59.247818676860675,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:28:14.224Z',
+  uptime: 120.132110375,
+  status: 'good',
+  quickStats: { cpu: 6.78, memory: 59.247818676860675, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:28:16.589Z',
+  cpu: 7.55,
+  memory: 60.036520386760394,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/system/settings (platform mode)
+[API] GET /api/system/settings (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:28:44.227Z',
+  uptime: 150.134690834,
+  status: 'good',
+  quickStats: { cpu: 7.55, memory: 60.036520386760394, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:28:46.561Z',
+  cpu: 6.37,
+  memory: 59.60622151214699,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:29:14.228Z',
+  uptime: 180.135883584,
+  status: 'good',
+  quickStats: { cpu: 6.37, memory: 59.60622151214699, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:29:16.520Z',
+  cpu: 3.75,
+  memory: 60.529651515644524,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:29:44.228Z',
+  uptime: 210.136007542,
+  status: 'good',
+  quickStats: { cpu: 3.75, memory: 60.529651515644524, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:29:46.385Z',
+  cpu: 4.14,
+  memory: 58.99675350215689,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:30:14.231Z',
+  uptime: 240.138680084,
+  status: 'good',
+  quickStats: { cpu: 4.14, memory: 58.99675350215689, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:30:16.476Z',
+  cpu: 5.43,
+  memory: 60.72767257212366,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:30:44.232Z',
+  uptime: 270.140324417,
+  status: 'good',
+  quickStats: { cpu: 5.43, memory: 60.72767257212366, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:30:46.465Z',
+  cpu: 4.67,
+  memory: 59.4473752724353,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:31:14.234Z',
+  uptime: 300.141938917,
+  status: 'good',
+  quickStats: { cpu: 4.67, memory: 59.4473752724353, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:31:16.431Z',
+  cpu: 4.44,
+  memory: 58.788431894350154,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:31:44.234Z',
+  uptime: 330.141927834,
+  status: 'good',
+  quickStats: { cpu: 4.44, memory: 58.788431894350154, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:31:46.462Z',
+  cpu: 4.88,
+  memory: 58.795575635181606,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:32:14.236Z',
+  uptime: 360.144442334,
+  status: 'good',
+  quickStats: { cpu: 4.88, memory: 58.795575635181606, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:32:16.513Z',
+  cpu: 5.98,
+  memory: 58.88359512302285,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:32:44.236Z',
+  uptime: 390.144525542,
+  status: 'good',
+  quickStats: { cpu: 5.98, memory: 58.88359512302285, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:32:46.514Z',
+  cpu: 4.1,
+  memory: 60.088064063612066,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:33:14.236Z',
+  uptime: 420.144237959,
+  status: 'good',
+  quickStats: { cpu: 4.1, memory: 60.088064063612066, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:33:16.389Z',
+  cpu: 7.31,
+  memory: 59.246460380722375,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:33:44.238Z',
+  uptime: 450.146065125,
+  status: 'good',
+  quickStats: { cpu: 7.31, memory: 59.246460380722375, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:33:46.515Z',
+  cpu: 6.5,
+  memory: 58.46497195302829,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:34:14.262Z',
+  uptime: 480.149302875,
+  status: 'good',
+  quickStats: { cpu: 6.5, memory: 58.46497195302829, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:34:18.642Z',
+  cpu: 5.5,
+  memory: 59.16748479690358,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:34:44.268Z',
+  uptime: 510.1497845,
+  status: 'good',
+  quickStats: { cpu: 5.5, memory: 59.16748479690358, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:34:46.541Z',
+  cpu: 4.97,
+  memory: 59.34090820072567,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:35:14.269Z',
+  uptime: 540.150425709,
+  status: 'good',
+  quickStats: { cpu: 4.97, memory: 59.34090820072567, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:35:16.555Z',
+  cpu: 6.71,
+  memory: 60.3110651022035,
+  apps: 0
+}
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:35:44.271Z',
+  uptime: 570.152023209,
+  status: 'good',
+  quickStats: { cpu: 6.71, memory: 60.3110651022035, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:35:46.534Z',
+  cpu: 6.52,
+  memory: 58.92361503201737,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:36:14.272Z',
+  uptime: 600.152949042,
+  status: 'good',
+  quickStats: { cpu: 6.52, memory: 58.92361503201737, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:36:16.538Z',
+  cpu: 4.87,
+  memory: 59.25125686400573,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:36:44.276Z',
+  uptime: 630.156244209,
+  status: 'good',
+  quickStats: { cpu: 4.87, memory: 59.25125686400573, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:36:46.554Z',
+  cpu: 4.73,
+  memory: 58.32587025176873,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:37:14.277Z',
+  uptime: 660.157407917,
+  status: 'good',
+  quickStats: { cpu: 4.73, memory: 58.32587025176873, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:37:16.626Z',
+  cpu: 6.5,
+  memory: 58.503893253803575,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:37:44.278Z',
+  uptime: 690.1577265,
+  status: 'good',
+  quickStats: { cpu: 6.5, memory: 58.503893253803575, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:37:46.501Z',
+  cpu: 4.1,
+  memory: 60.049330749066,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:38:14.282Z',
+  uptime: 720.161716042,
+  status: 'good',
+  quickStats: { cpu: 4.1, memory: 60.049330749066, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:38:16.606Z',
+  cpu: 12.43,
+  memory: 59.24296189799736,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:38:44.282Z',
+  uptime: 750.161793875,
+  status: 'good',
+  quickStats: { cpu: 12.43, memory: 59.24296189799736, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:38:47.382Z',
+  cpu: 14.83,
+  memory: 58.732270010172236,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:39:14.284Z',
+  uptime: 780.163211584,
+  status: 'good',
+  quickStats: { cpu: 14.83, memory: 58.732270010172236, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:39:16.449Z',
+  cpu: 13.96,
+  memory: 59.120917571871836,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:39:44.285Z',
+  uptime: 810.164225834,
+  status: 'good',
+  quickStats: { cpu: 13.96, memory: 59.120917571871836, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:39:46.439Z',
+  cpu: 13.55,
+  memory: 56.971507785701405,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:40:14.286Z',
+  uptime: 840.164709584,
+  status: 'good',
+  quickStats: { cpu: 13.55, memory: 56.971507785701405, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:40:16.482Z',
+  cpu: 10.62,
+  memory: 59.12042215756579,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:40:44.290Z',
+  uptime: 870.168879334,
+  status: 'good',
+  quickStats: { cpu: 10.62, memory: 59.12042215756579, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:40:46.443Z',
+  cpu: 14.47,
+  memory: 58.20683045089997,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:41:14.291Z',
+  uptime: 900.169172,
+  status: 'good',
+  quickStats: { cpu: 14.47, memory: 58.20683045089997, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:41:16.442Z',
+  cpu: 16.64,
+  memory: 56.84765604425447,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:41:44.293Z',
+  uptime: 930.17114475,
+  status: 'good',
+  quickStats: { cpu: 16.64, memory: 56.84765604425447, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:41:46.621Z',
+  cpu: 13.21,
+  memory: 57.01750650761264,
+  apps: 0
+}
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:42:14.295Z',
+  uptime: 960.173091417,
+  status: 'good',
+  quickStats: { cpu: 13.21, memory: 57.01750650761264, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:42:16.433Z',
+  cpu: 16.58,
+  memory: 57.00413666178636,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:42:44.296Z',
+  uptime: 990.173858084,
+  status: 'good',
+  quickStats: { cpu: 16.58, memory: 57.00413666178636, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:42:46.483Z',
+  cpu: 10.33,
+  memory: 57.71574774860022,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:43:14.298Z',
+  uptime: 1020.175720042,
+  status: 'good',
+  quickStats: { cpu: 10.33, memory: 57.71574774860022, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:43:16.746Z',
+  cpu: 9.14,
+  memory: 57.68828260948927,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:43:44.300Z',
+  uptime: 1050.1769605,
+  status: 'good',
+  quickStats: { cpu: 9.14, memory: 57.68828260948927, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:43:46.587Z',
+  cpu: 9.61,
+  memory: 57.48164168206497,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:44:14.301Z',
+  uptime: 1080.178127167,
+  status: 'good',
+  quickStats: { cpu: 9.61, memory: 57.48164168206497, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:44:16.483Z',
+  cpu: 12.54,
+  memory: 43.57535197929162,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:44:44.304Z',
+  uptime: 1110.180413292,
+  status: 'good',
+  quickStats: { cpu: 12.54, memory: 43.57535197929162, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:44:46.534Z',
+  cpu: 16.71,
+  memory: 47.40471776595116,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:45:14.306Z',
+  uptime: 1140.183010667,
+  status: 'good',
+  quickStats: { cpu: 16.71, memory: 47.40471776595116, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:45:16.548Z',
+  cpu: 15.94,
+  memory: 49.20495018168561,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:45:44.309Z',
+  uptime: 1170.185177042,
+  status: 'good',
+  quickStats: { cpu: 15.94, memory: 49.20495018168561, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:45:46.511Z',
+  cpu: 13.86,
+  memory: 50.7358575550594,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:46:14.310Z',
+  uptime: 1200.1863825,
+  status: 'good',
+  quickStats: { cpu: 13.86, memory: 50.7358575550594, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:46:16.538Z',
+  cpu: 10.46,
+  memory: 52.727234940197235,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:46:44.313Z',
+  uptime: 1230.189245,
+  status: 'good',
+  quickStats: { cpu: 10.46, memory: 52.727234940197235, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:46:46.517Z',
+  cpu: 9.33,
+  memory: 53.182951940137556,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:47:14.314Z',
+  uptime: 1260.189431125,
+  status: 'good',
+  quickStats: { cpu: 9.33, memory: 53.182951940137556, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:47:16.494Z',
+  cpu: 11.95,
+  memory: 54.55144694016181,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:47:44.318Z',
+  uptime: 1290.19385025,
+  status: 'good',
+  quickStats: { cpu: 11.95, memory: 54.55144694016181, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:47:46.560Z',
+  cpu: 17.52,
+  memory: 54.232764633381215,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:48:14.321Z',
+  uptime: 1320.19591825,
+  status: 'good',
+  quickStats: { cpu: 17.52, memory: 54.232764633381215, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:48:16.522Z',
+  cpu: 15.17,
+  memory: 55.89567179171648,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:48:44.322Z',
+  uptime: 1350.1965765,
+  status: 'good',
+  quickStats: { cpu: 15.17, memory: 55.89567179171648, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:48:46.557Z',
+  cpu: 16.52,
+  memory: 57.721793209148785,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:49:14.322Z',
+  uptime: 1380.197085917,
+  status: 'good',
+  quickStats: { cpu: 16.52, memory: 57.721793209148785, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:49:16.591Z',
+  cpu: 9.16,
+  memory: 58.20100847148355,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:49:44.326Z',
+  uptime: 1410.200961625,
+  status: 'good',
+  quickStats: { cpu: 9.16, memory: 58.20100847148355, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:49:46.553Z',
+  cpu: 3.7,
+  memory: 57.73841220596406,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:50:14.329Z',
+  uptime: 1440.20352925,
+  status: 'good',
+  quickStats: { cpu: 3.7, memory: 57.73841220596406, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:50:16.563Z',
+  cpu: 2.86,
+  memory: 57.99599094431851,
+  apps: 0
+}
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:50:44.330Z',
+  uptime: 1470.204061,
+  status: 'good',
+  quickStats: { cpu: 2.86, memory: 57.99599094431851, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:50:46.577Z',
+  cpu: 3.25,
+  memory: 57.05398580980135,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:51:14.330Z',
+  uptime: 1500.203968042,
+  status: 'good',
+  quickStats: { cpu: 3.25, memory: 57.05398580980135, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:51:16.449Z',
+  cpu: 2.74,
+  memory: 56.82240696169478,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[DEBUG] Heartbeat sent {
+  installationId: 'f70ac1c6191a5a6b',
+  timestamp: '2025-07-02T00:51:44.336Z',
+  uptime: 1530.209463542,
+  status: 'good',
+  quickStats: { cpu: 2.74, memory: 56.82240696169478, apps: 0 }
+}
+[MONITORING] Heartbeat: f70ac1c6191a5a6b good
+[MONITORING] Data collected: {
+  timestamp: '2025-07-02T00:51:46.622Z',
+  cpu: 5.74,
+  memory: 58.4924754531525,
+  apps: 0
+}
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/status (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
+[API] GET /api/monitoring/applications (platform mode)
