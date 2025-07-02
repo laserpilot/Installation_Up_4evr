@@ -43,10 +43,31 @@ function applyNotificationConfig() {
 }
 
 export function initNotificationConfig() {
-    new ConfigSection('notification-config-section', {
-        load: loadNotificationConfig,
-        save: saveNotificationConfig,
-        reset: resetNotificationConfig,
-        apply: applyNotificationConfig
-    });
+    console.log('[INIT] Initializing Notification Config tab...');
+    
+    // Setup direct button listeners instead of using ConfigSection
+    setupNotificationConfigButtons();
+    
+    // Initialize with current config
+    loadNotificationConfig();
+}
+
+function setupNotificationConfigButtons() {
+    const loadBtn = document.getElementById('load-notification-config');
+    const saveBtn = document.getElementById('save-notification-config');
+    const resetBtn = document.getElementById('reset-notification-config');
+    const applyBtn = document.getElementById('apply-notification-config');
+    
+    if (loadBtn) {
+        loadBtn.addEventListener('click', loadNotificationConfig);
+    }
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveNotificationConfig);
+    }
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetNotificationConfig);
+    }
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyNotificationConfig);
+    }
 }

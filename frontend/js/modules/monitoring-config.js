@@ -43,10 +43,31 @@ function applyMonitoringConfig() {
 }
 
 export function initMonitoringConfig() {
-    new ConfigSection('monitoring-config-section', {
-        load: loadMonitoringConfig,
-        save: saveMonitoringConfig,
-        reset: resetMonitoringConfig,
-        apply: applyMonitoringConfig
-    });
+    console.log('[INIT] Initializing Monitoring Config tab...');
+    
+    // Setup direct button listeners instead of using ConfigSection
+    setupMonitoringConfigButtons();
+    
+    // Initialize with current config
+    loadMonitoringConfig();
+}
+
+function setupMonitoringConfigButtons() {
+    const loadBtn = document.getElementById('load-monitoring-config');
+    const saveBtn = document.getElementById('save-monitoring-config');
+    const resetBtn = document.getElementById('reset-monitoring-config');
+    const applyBtn = document.getElementById('apply-monitoring-config');
+    
+    if (loadBtn) {
+        loadBtn.addEventListener('click', loadMonitoringConfig);
+    }
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveMonitoringConfig);
+    }
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetMonitoringConfig);
+    }
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyMonitoringConfig);
+    }
 }
