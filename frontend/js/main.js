@@ -3,6 +3,8 @@
  * @description Main entry point for the Installation Up 4evr frontend.
  */
 
+console.log("main.js loaded and executing!"); // Added for debugging
+
 import { AuthSessionManager } from './modules/auth.js';
 import { MonitoringDataManager } from './modules/monitoring.js';
 import { UIManager } from './modules/UIManager.js';
@@ -10,6 +12,204 @@ import { initSystemPreferences } from './modules/system-preferences.js';
 import { initLaunchAgents } from './modules/launch-agents.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
 import { initNotificationConfig } from './modules/notifications-config.js';
+import { initInstallationSettings } from './modules/installation-settings.js';
+import { initServiceControl } from './modules/service-control.js';
+import { initConfiguration } from './modules/configuration.js';
+
+function initMonitoringTab() {
+    console.log('[INIT] Initializing Monitoring tab...');
+    
+    // Get the global monitoring data manager instance
+    const monitoringManager = window.app?.monitoringData;
+    if (!monitoringManager) {
+        console.error('[MONITORING] MonitoringDataManager not available');
+        return;
+    }
+
+    // Subscribe to monitoring updates
+    monitoringManager.subscribe(updateMonitoringDisplay);
+    
+    // Force initial update
+    const currentData = monitoringManager.getCurrentData();
+    if (currentData.lastUpdate) {
+        updateMonitoringDisplay(currentData);
+    }
+}
+
+function updateMonitoringDisplay(data) {
+    console.log('[MONITORING] Updating display with data:', data);
+    
+    // Update system metrics
+    const metrics = data.system;
+    if (metrics) {
+        // Update CPU
+        const cpuUsage = metrics.cpu?.usage || metrics.cpuUsage || 0;
+        updateMetricCard('cpu-usage', 'cpu-bar', cpuUsage, '%');
+        
+        // Update Memory
+        const memoryUsage = metrics.memory?.usage || metrics.memoryUsage || 0;
+        updateMetricCard('memory-usage', 'memory-bar', memoryUsage, '%');
+        
+        // Update Disk
+        let diskUsage = 0;
+        if (data.storage) {
+            diskUsage = Math.max(...Object.values(data.storage).map(disk => disk.usagePercent || 0));
+        }
+        updateMetricCard('disk-usage', 'disk-bar', diskUsage, '%');
+    }
+    
+    // Update health status
+    updateHealthStatus(data);
+    
+    // Update alerts
+    updateAlertsSection(data.alerts || []);
+    
+    // Update system details
+    updateSystemDetails(data);
+}
+
+function updateMetricCard(valueId, barId, value, unit) {
+    const valueElement = document.getElementById(valueId);
+    const barElement = document.getElementById(barId);
+    
+    if (valueElement) {
+        valueElement.textContent = `${value.toFixed(1)}${unit}`;
+    }
+    
+    if (barElement) {
+        barElement.style.width = `${Math.min(value, 100)}%`;
+        
+        // Add color coding
+        barElement.className = 'metric-fill';
+        if (value > 80) barElement.classList.add('critical');
+        else if (value > 60) barElement.classList.add('warning');
+        else barElement.classList.add('normal');
+    }
+}
+
+function updateHealthStatus(data) {
+    const indicator = document.getElementById('health-indicator');
+    const text = document.getElementById('health-text');
+    
+    if (!indicator || !text) return;
+    
+    const status = data.status || 'unknown';
+    
+    switch (status) {
+        case 'good':
+            indicator.textContent = '🟢';
+            text.textContent = 'System Healthy';
+            break;
+        case 'warning':
+            indicator.textContent = '🟡';
+            text.textContent = 'Minor Issues';
+            break;
+        case 'error':
+        case 'critical':
+            indicator.textContent = '🔴';
+            text.textContent = 'Critical Issues';
+            break;
+        default:
+            indicator.textContent = '🟡';
+            text.textContent = 'Checking...';
+    }
+}
+
+function updateAlertsSection(alerts) {
+    const container = document.getElementById('alerts-container');
+    if (!container) return;
+    
+    if (alerts.length === 0) {
+        container.innerHTML = '<p class="no-alerts">No active alerts</p>';
+        return;
+    }
+    
+    container.innerHTML = alerts.map(alert => `
+        <div class="alert alert-${alert.level || 'info'}">
+            <i class="fas fa-${getAlertIcon(alert.level)}"></i>
+            <div class="alert-content">
+                <strong>${alert.title || 'System Alert'}</strong>
+                <p>${alert.message || alert.description || 'No details available'}</p>
+                <small>${new Date(alert.timestamp || Date.now()).toLocaleString()}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateSystemDetails(data) {
+    // Update display status
+    updateDetailCard('display-status', data.displays);
+    
+    // Update network status
+    updateDetailCard('network-status', data.network);
+    
+    // Update uptime
+    updateDetailCard('uptime-status', data.system?.uptime);
+    
+    // Update monitored apps
+    updateDetailCard('apps-status', data.applications);
+}
+
+function updateDetailCard(elementId, data) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    switch (elementId) {
+        case 'display-status':
+            if (Array.isArray(data) && data.length > 0) {
+                element.innerHTML = data.map(display => 
+                    `<div>${display.name || 'Display'}: ${display.resolution || 'Unknown'}</div>`
+                ).join('');
+            } else {
+                element.textContent = 'No displays detected';
+            }
+            break;
+            
+        case 'network-status':
+            if (data) {
+                element.innerHTML = `
+                    <div>Status: ${data.connected ? 'Connected' : 'Disconnected'}</div>
+                    <div>IP: ${data.ip || 'Unknown'}</div>
+                `;
+            } else {
+                element.textContent = 'Network information unavailable';
+            }
+            break;
+            
+        case 'uptime-status':
+            if (data) {
+                const hours = Math.floor(data / 3600);
+                const days = Math.floor(hours / 24);
+                element.textContent = days > 0 ? `${days} days, ${hours % 24} hours` : `${hours} hours`;
+            } else {
+                element.textContent = 'Uptime unavailable';
+            }
+            break;
+            
+        case 'apps-status':
+            if (Array.isArray(data) && data.length > 0) {
+                const running = data.filter(app => app.isRunning).length;
+                element.innerHTML = `
+                    <div>${running}/${data.length} apps running</div>
+                    <div class="apps-list">${data.slice(0, 3).map(app => 
+                        `<span class="app-status ${app.isRunning ? 'running' : 'stopped'}">${app.name}</span>`
+                    ).join('')}</div>
+                `;
+            } else {
+                element.textContent = 'No monitored applications';
+            }
+            break;
+    }
+}
+
+function getAlertIcon(level) {
+    switch (level) {
+        case 'critical': return 'exclamation-circle';
+        case 'warning': return 'exclamation-triangle';
+        case 'info': return 'info-circle';
+        default: return 'bell';
+    }
+}
 
 class InstallationUp4evr {
     constructor() {
@@ -21,47 +221,92 @@ class InstallationUp4evr {
 
     async init() {
         console.log('[INIT] Initializing Installation Up 4evr...');
-        
+
         await this.uiManager.init();
 
         this.setupTabNavigation();
 
-        // Initialize all the modules
-        initSystemPreferences();
-        initLaunchAgents();
-        initMonitoringConfig();
-        initNotificationConfig();
-
+        // Start global monitoring
         this.monitoringData.startMonitoring();
+
+        // Initialize the default tab (Dashboard)
+        this.navigateToTab('dashboard');
     }
 
     setupTabNavigation() {
-        const tabs = document.querySelectorAll('.nav-link');
-        const tabContents = document.querySelectorAll('.tab-content');
-
+        const tabs = document.querySelectorAll('.sidebar-button');
         tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
                 e.preventDefault();
-                const targetId = tab.getAttribute('href').substring(1);
+                const targetId = tab.getAttribute('data-tab');
                 this.navigateToTab(targetId);
             });
         });
     }
 
     navigateToTab(tabId) {
-        const tabs = document.querySelectorAll('.nav-link');
-        const tabContents = document.querySelectorAll('.tab-content');
+        console.log(`[NAV] Navigating to tab: ${tabId}`);
         
-        tabs.forEach(t => t.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
+        const tabs = document.querySelectorAll('.sidebar-button');
+        const tabContents = document.querySelectorAll('.tab-pane');
 
-        const newActiveTab = document.querySelector(`a[href="#${tabId}"]`);
-        const newActiveContent = document.getElementById(tabId);
+        // Deactivate all tabs and content panes
+        tabs.forEach(t => {
+            t.classList.remove('active');
+            console.log(`[NAV] Deactivated button:`, t.getAttribute('data-tab'));
+        });
+        tabContents.forEach(c => {
+            c.classList.remove('active');
+            // Also remove any inline display styles that might override CSS
+            c.style.display = '';
+            console.log(`[NAV] Deactivated content:`, c.id);
+        });
 
-        if (newActiveTab) newActiveTab.classList.add('active');
-        if (newActiveContent) newActiveContent.classList.add('active');
+        // Activate the selected tab button and content pane
+        const newActiveTabButton = document.querySelector(`.sidebar-button[data-tab="${tabId}"]`);
+        const newActiveContent = document.getElementById(`${tabId}-tab`);
+
+        console.log(`[NAV] Found button:`, newActiveTabButton);
+        console.log(`[NAV] Found content:`, newActiveContent);
+
+        if (newActiveTabButton) {
+            newActiveTabButton.classList.add('active');
+            console.log(`[NAV] Activated button for tab: ${tabId}`);
+        } else {
+            console.error(`[NAV] Button not found for tab: ${tabId}`);
+        }
+        
+        if (newActiveContent) {
+            newActiveContent.classList.add('active');
+            console.log(`[NAV] Activated content for tab: ${tabId}`);
+        } else {
+            console.error(`[NAV] Content not found for tab: ${tabId}, looking for ID: ${tabId}-tab`);
+        }
+
+        // Dynamically initialize module for the activated tab
+        const initializer = this.moduleInitializers[tabId];
+        if (initializer) {
+            console.log(`[INIT] Initializing module for tab: ${tabId}`);
+            initializer();
+        } else {
+            console.warn(`[INIT] No initializer found for tab: ${tabId}`);
+        }
     }
 }
+
+// Add module initializers to the InstallationUp4evr class prototype
+InstallationUp4evr.prototype.moduleInitializers = {
+    'dashboard': () => { /* Dashboard logic is primarily handled by MonitoringDataManager */ },
+    'setup-wizard': () => { /* Setup Wizard logic will be added here */ },
+    'system-prefs': initSystemPreferences,
+    'launch-agents': initLaunchAgents,
+    'monitoring': () => { initMonitoringTab(); },
+    'monitoring-config': initMonitoringConfig,
+    'installation-settings': initInstallationSettings,
+    'service-control': initServiceControl,
+    'configuration': initConfiguration,
+    'notifications': initNotificationConfig
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new InstallationUp4evr();
