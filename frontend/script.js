@@ -4040,7 +4040,7 @@ class InstallationUp4evr {
                 return acc;
             }, {});
 
-            // Filter to essential settings only (required settings)
+            // Filter to essential settings (required settings)
             const essentialSettings = Object.entries(allSettings)
                 .filter(([key, setting]) => setting.required)
                 .map(([key, setting]) => ({
@@ -4049,24 +4049,77 @@ class InstallationUp4evr {
                     description: setting.description,
                     status: statusLookup[key]?.status || 'unknown',
                     statusIcon: statusLookup[key]?.statusIcon || '🟡',
-                    statusText: statusLookup[key]?.statusText || 'Unknown'
+                    statusText: statusLookup[key]?.statusText || 'Unknown',
+                    required: true
+                }));
+                
+            // Get optional settings for full parity with advanced system preferences
+            const optionalSettings = Object.entries(allSettings)
+                .filter(([key, setting]) => !setting.required)
+                .map(([key, setting]) => ({
+                    setting: key,
+                    name: setting.name,
+                    description: setting.description,
+                    status: statusLookup[key]?.status || 'unknown',
+                    statusIcon: statusLookup[key]?.statusIcon || '🟡',
+                    statusText: statusLookup[key]?.statusText || 'Unknown',
+                    required: false
                 }));
 
-            container.innerHTML = essentialSettings.map(setting => `
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-name">${setting.name}</div>
-                        <div class="setting-description">Configure for 24/7 installation use</div>
-                    </div>
-                    <div class="setting-toggle">
-                        <label class="switch">
-                            <input type="checkbox" ${setting.status === 'applied' ? 'checked' : ''} 
-                                   data-setting="${setting.setting}">
-                            <span class="slider"></span>
-                        </label>
+            // Create HTML with both required and optional settings sections
+            let html = `
+                <div class="wizard-settings-section">
+                    <h4><i class="fas fa-exclamation-circle text-red"></i> Required Settings</h4>
+                    <p>These settings are essential for reliable 24/7 operation:</p>
+                    <div class="settings-group">
+                        ${essentialSettings.map(setting => `
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <div class="setting-name">${setting.name}</div>
+                                    <div class="setting-description">${setting.description}</div>
+                                    <div class="setting-status">
+                                        ${setting.statusIcon} ${setting.statusText}
+                                    </div>
+                                </div>
+                                <div class="setting-toggle">
+                                    <label class="switch">
+                                        <input type="checkbox" ${setting.status === 'applied' ? 'checked' : 'checked'} 
+                                               data-setting="${setting.setting}" data-required="true">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
-            `).join('');
+                
+                <div class="wizard-settings-section">
+                    <h4><i class="fas fa-plus-circle text-blue"></i> Optional Settings</h4>
+                    <p>Additional settings to enhance the installation experience:</p>
+                    <div class="settings-group">
+                        ${optionalSettings.map(setting => `
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <div class="setting-name">${setting.name}</div>
+                                    <div class="setting-description">${setting.description}</div>
+                                    <div class="setting-status">
+                                        ${setting.statusIcon} ${setting.statusText}
+                                    </div>
+                                </div>
+                                <div class="setting-toggle">
+                                    <label class="switch">
+                                        <input type="checkbox" ${setting.status === 'applied' ? 'checked' : ''} 
+                                               data-setting="${setting.setting}" data-required="false">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
 
         } catch (error) {
             console.error('Failed to load essential settings:', error);
