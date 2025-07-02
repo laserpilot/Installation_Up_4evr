@@ -48,8 +48,13 @@ export function initMonitoringConfig() {
     // Setup direct button listeners instead of using ConfigSection
     setupMonitoringConfigButtons();
     
-    // Initialize with current config
+    // Setup additional interactions
+    setupRefreshButton();
+    setupStatusDisplay();
+    
+    // Initialize with current config and status
     loadMonitoringConfig();
+    refreshSystemStatus();
 }
 
 function setupMonitoringConfigButtons() {
@@ -69,5 +74,70 @@ function setupMonitoringConfigButtons() {
     }
     if (applyBtn) {
         applyBtn.addEventListener('click', applyMonitoringConfig);
+    }
+}
+
+function setupRefreshButton() {
+    const refreshBtn = document.getElementById('refresh-system-status');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshSystemStatus);
+    }
+}
+
+function setupStatusDisplay() {
+    // Set up periodic status updates for the monitoring config tab
+    setInterval(refreshSystemStatus, 10000); // Update every 10 seconds
+}
+
+async function refreshSystemStatus() {
+    try {
+        const response = await apiCall('/api/monitoring/status');
+        updateStatusCards(response);
+    } catch (error) {
+        console.error('Failed to refresh system status:', error);
+        showToast('Failed to refresh system status', 'error');
+    }
+}
+
+function updateStatusCards(data) {
+    // Update CPU status
+    updateStatusCard('cpu', data.system?.cpu || 0);
+    
+    // Update Memory status  
+    updateStatusCard('memory', data.system?.memory || 0);
+    
+    // Update Disk status
+    updateStatusCard('disk', data.system?.disk || 0);
+    
+    // Update Temperature status
+    updateStatusCard('temperature', data.system?.temperature || 0);
+}
+
+function updateStatusCard(type, value) {
+    const valueElement = document.getElementById(`current-${type}`);
+    const indicatorElement = document.getElementById(`${type}-indicator`);
+    const trendElement = document.getElementById(`${type}-trend`);
+    
+    if (valueElement) {
+        if (type === 'temperature') {
+            valueElement.textContent = `${Math.round(value)}°C`;
+        } else {
+            valueElement.textContent = `${Math.round(value)}%`;
+        }
+    }
+    
+    if (indicatorElement) {
+        if (value > 80) {
+            indicatorElement.textContent = '🔴';
+        } else if (value > 60) {
+            indicatorElement.textContent = '🟡';
+        } else {
+            indicatorElement.textContent = '🟢';
+        }
+    }
+    
+    if (trendElement) {
+        // Add trend indication (simplified)
+        trendElement.textContent = value > 50 ? '📈' : '📉';
     }
 }
