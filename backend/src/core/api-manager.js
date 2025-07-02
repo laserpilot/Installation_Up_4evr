@@ -385,12 +385,16 @@ class DataTransformer {
         if (metric.wired !== undefined) sanitized.wired = metric.wired;
         if (metric.active !== undefined) sanitized.active = metric.active;
         
+        // Preserve CPU data
+        if (metric.cores !== undefined) sanitized.cores = metric.cores;
+        
         // Preserve enhanced disk data
         if (metric.totalGB !== undefined) sanitized.totalGB = metric.totalGB;
         if (metric.usedGB !== undefined) sanitized.usedGB = metric.usedGB;
         if (metric.availableGB !== undefined) sanitized.availableGB = metric.availableGB;
         if (metric.volumes) sanitized.volumes = metric.volumes;
         if (metric.storageBreakdown) sanitized.storageBreakdown = metric.storageBreakdown;
+        if (metric.mainVolume !== undefined) sanitized.mainVolume = metric.mainVolume;
         
         return sanitized;
     }

@@ -237,31 +237,107 @@ class MacOSProcessManager extends ProcessManagerInterface {
 
     async getAutoStartEntries() {
         try {
-            const files = await fs.readdir(this.launchAgentsDir);
-            const up4evrAgents = files.filter(file => 
-                file.startsWith('com.installation-up-4evr.') && file.endsWith('.plist')
-            );
-
+            // Get all launch agents from multiple directories
+            const userAgentsDir = this.launchAgentsDir;
+            const systemAgentsDir = '/Library/LaunchAgents';
+            const systemDaemonsDir = '/Library/LaunchDaemons';
+            
             const entries = [];
-            for (const file of up4evrAgents) {
-                try {
-                    const plistPath = path.join(this.launchAgentsDir, file);
-                    const content = await fs.readFile(plistPath, 'utf8');
-                    
-                    // Parse basic info from plist
-                    const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
-                    const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
-                    
-                    entries.push({
-                        name: file.replace('.plist', ''),
-                        label: labelMatch ? labelMatch[1] : 'Unknown',
-                        program: programMatch ? programMatch[1] : 'Unknown',
-                        plistPath,
-                        loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : '')
-                    });
-                } catch (parseError) {
-                    console.warn(`Failed to parse launch agent ${file}:`, parseError.message);
+            
+            // Check user launch agents
+            try {
+                const userFiles = await fs.readdir(userAgentsDir);
+                const userPlists = userFiles.filter(file => file.endsWith('.plist'));
+                
+                for (const file of userPlists) {
+                    try {
+                        const plistPath = path.join(userAgentsDir, file);
+                        const content = await fs.readFile(plistPath, 'utf8');
+                        
+                        // Parse basic info from plist
+                        const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
+                        const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
+                        
+                        entries.push({
+                            name: file.replace('.plist', ''),
+                            label: labelMatch ? labelMatch[1] : 'Unknown',
+                            program: programMatch ? programMatch[1] : 'Unknown',
+                            plistPath,
+                            type: 'User Agent',
+                            loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : ''),
+                            managedByTool: file.startsWith('com.installation-up-4evr.')
+                        });
+                    } catch (parseError) {
+                        console.warn(`Failed to parse user launch agent ${file}:`, parseError.message);
+                    }
                 }
+            } catch (userError) {
+                console.warn('Could not read user launch agents:', userError.message);
+            }
+            
+            // Check system launch agents (read-only)
+            try {
+                const systemFiles = await fs.readdir(systemAgentsDir);
+                const systemPlists = systemFiles.filter(file => file.endsWith('.plist'));
+                
+                for (const file of systemPlists.slice(0, 10)) { // Limit to first 10 to avoid overwhelming
+                    try {
+                        const plistPath = path.join(systemAgentsDir, file);
+                        const content = await fs.readFile(plistPath, 'utf8');
+                        
+                        // Parse basic info from plist
+                        const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
+                        const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
+                        
+                        entries.push({
+                            name: file.replace('.plist', ''),
+                            label: labelMatch ? labelMatch[1] : 'Unknown',
+                            program: programMatch ? programMatch[1] : 'Unknown',
+                            plistPath,
+                            type: 'System Agent',
+                            loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : ''),
+                            managedByTool: false
+                        });
+                    } catch (parseError) {
+                        console.warn(`Failed to parse system launch agent ${file}:`, parseError.message);
+                    }
+                }
+            } catch (systemError) {
+                console.warn('Could not read system launch agents:', systemError.message);
+            }
+            
+            // Also get running launch agents from launchctl list
+            try {
+                const { stdout } = await execAsync('launchctl list');
+                const lines = stdout.split('\n').slice(1); // Skip header
+                
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    
+                    const parts = line.trim().split(/\s+/);
+                    if (parts.length >= 3) {
+                        const pid = parts[0];
+                        const status = parts[1];
+                        const label = parts[2];
+                        
+                        // Only add if not already in our list
+                        if (!entries.find(e => e.label === label)) {
+                            entries.push({
+                                name: label,
+                                label: label,
+                                program: 'Unknown',
+                                plistPath: 'System managed',
+                                type: 'Running Service',
+                                loaded: pid !== '-',
+                                pid: pid !== '-' ? parseInt(pid) : null,
+                                status: parseInt(status),
+                                managedByTool: false
+                            });
+                        }
+                    }
+                }
+            } catch (launchctlError) {
+                console.warn('Could not get launchctl list:', launchctlError.message);
             }
 
             return entries;

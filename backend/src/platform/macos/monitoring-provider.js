@@ -41,15 +41,19 @@ class MacOSMonitoringProvider {
             // Get CPU core count
             const { stdout: coreCount } = await execAsync('sysctl -n hw.ncpu');
             const cores = parseInt(coreCount.trim());
+            
+            // Get top CPU-using processes
+            const topProcesses = await this.getTopCPUProcesses();
 
             return {
                 usage,
                 cores,
+                topProcesses,
                 status: usage > 90 ? 'critical' : usage > 70 ? 'warning' : 'good'
             };
         } catch (error) {
             console.error('Failed to get CPU usage:', error);
-            return { usage: 0, cores: 0, status: 'unknown' };
+            return { usage: 0, cores: 0, topProcesses: [], status: 'unknown' };
         }
     }
 
@@ -153,32 +157,89 @@ class MacOSMonitoringProvider {
     }
 
     /**
+     * Get top CPU-using processes
+     */
+    async getTopCPUProcesses(limit = 5) {
+        try {
+            // Use ps command to get CPU usage by process, sorted by CPU usage
+            const { stdout } = await execAsync('ps -axo pid,comm,%cpu -r | head -n ' + (limit + 1));
+            const lines = stdout.trim().split('\n').slice(1); // Skip header
+            
+            const processes = [];
+            for (const line of lines) {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length >= 3) {
+                    const pid = parseInt(parts[0]);
+                    const name = parts[1];
+                    const cpuPercent = parseFloat(parts[2]);
+                    
+                    // Only include processes with meaningful CPU usage
+                    if (cpuPercent > 0) {
+                        processes.push({
+                            pid,
+                            name: name.replace(/^.*\//, ''), // Remove path, keep just process name
+                            cpuPercent: cpuPercent
+                        });
+                    }
+                }
+            }
+            
+            return processes;
+        } catch (error) {
+            console.error('Failed to get top CPU processes:', error);
+            return [];
+        }
+    }
+
+    /**
      * Get disk usage
      */
     async getDiskUsage() {
         try {
             // Get comprehensive disk information
             const volumes = await this.getAllVolumeInfo();
-            const rootVolume = volumes.find(v => v.mountPoint === '/') || volumes[0];
             
-            if (!rootVolume) {
-                throw new Error('No root volume found');
+            // Find the main storage volume - prioritize Data volume or largest volume
+            let mainVolume = volumes.find(v => v.mountPoint === '/System/Volumes/Data');
+            
+            if (!mainVolume) {
+                // Fallback to largest volume by total size
+                mainVolume = volumes.reduce((largest, current) => {
+                    return (current.totalGB > (largest?.totalGB || 0)) ? current : largest;
+                }, null);
+            }
+            
+            if (!mainVolume) {
+                // Last fallback to root volume
+                mainVolume = volumes.find(v => v.mountPoint === '/') || volumes[0];
+            }
+            
+            if (!mainVolume) {
+                throw new Error('No suitable volume found for disk usage calculation');
             }
 
             // Get additional disk space information using system_profiler for more accuracy
             const storageInfo = await this.getStorageBreakdown();
+            
+            // Calculate overall usage from storage breakdown if available
+            let calculatedUsage = mainVolume.usage;
+            if (storageInfo && storageInfo.totalSize && storageInfo.freeSpace) {
+                const usedSpace = storageInfo.totalSize - storageInfo.freeSpace;
+                calculatedUsage = Math.round((usedSpace / storageInfo.totalSize) * 100);
+            }
 
             return {
-                usage: rootVolume.usage,
-                total: rootVolume.total,
-                used: rootVolume.used,
-                available: rootVolume.available,
-                totalGB: rootVolume.totalGB,
-                usedGB: rootVolume.usedGB,
-                availableGB: rootVolume.availableGB,
+                usage: calculatedUsage,
+                total: mainVolume.total,
+                used: mainVolume.used,
+                available: mainVolume.available,
+                totalGB: mainVolume.totalGB,
+                usedGB: mainVolume.usedGB,
+                availableGB: mainVolume.availableGB,
                 volumes: volumes,
                 storageBreakdown: storageInfo,
-                status: rootVolume.usage > 90 ? 'critical' : rootVolume.usage > 80 ? 'warning' : 'good'
+                mainVolume: mainVolume ? mainVolume.mountPoint : 'unknown',
+                status: calculatedUsage > 90 ? 'critical' : calculatedUsage > 80 ? 'warning' : 'good'
             };
         } catch (error) {
             console.error('Failed to get disk usage:', error);
@@ -203,7 +264,8 @@ class MacOSMonitoringProvider {
                     const used = parts[2];
                     const available = parts[3];
                     const usageStr = parts[4];
-                    const mountPoint = parts.slice(5).join(' ');
+                    // Mount point is the last field in df output
+                    const mountPoint = parts[parts.length - 1];
                     
                     const usage = parseFloat(usageStr.replace('%', ''));
                     
@@ -428,13 +490,25 @@ class MacOSMonitoringProvider {
                 data.SPDisplaysDataType.forEach((graphicsCard, cardIndex) => {
                     if (graphicsCard.spdisplays_ndrvs && Array.isArray(graphicsCard.spdisplays_ndrvs)) {
                         graphicsCard.spdisplays_ndrvs.forEach((display, displayIndex) => {
+                            // Extract resolution from available fields
+                            let resolution = 'Unknown';
+                            if (display._spdisplays_resolution) {
+                                resolution = display._spdisplays_resolution;
+                            } else if (display.spdisplays_pixelresolution) {
+                                resolution = display.spdisplays_pixelresolution;
+                            } else if (display._spdisplays_pixels) {
+                                resolution = display._spdisplays_pixels;
+                            }
+                            
                             displays.push({
                                 id: `display_${cardIndex}_${displayIndex}`,
                                 name: display._name || `Display ${displayIndex + 1}`,
                                 online: display.spdisplays_online === 'spdisplays_yes',
-                                resolution: display.spdisplays_resolution || 'Unknown',
-                                pixelDepth: display.spdisplays_pixeldepth || 'Unknown',
-                                mirror: display.spdisplays_mirror || 'Off'
+                                resolution: resolution,
+                                pixelDepth: display.spdisplays_pixeldepth || display.spdisplays_display_type || 'Unknown',
+                                mirror: display.spdisplays_mirror || 'spdisplays_off',
+                                connectionType: display.spdisplays_connection_type || 'Unknown',
+                                isMain: display.spdisplays_main === 'spdisplays_yes'
                             });
                         });
                     }
