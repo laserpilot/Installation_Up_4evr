@@ -12,6 +12,7 @@ import { initSystemPreferences } from './modules/system-preferences.js';
 import { initLaunchAgents } from './modules/launch-agents.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
 import { initNotificationConfig } from './modules/notifications-config.js';
+import { initNotifications } from './modules/notifications.js';
 import { initInstallationSettings } from './modules/installation-settings.js';
 import { initServiceControl } from './modules/service-control.js';
 import { initConfiguration } from './modules/configuration.js';
@@ -305,7 +306,7 @@ InstallationUp4evr.prototype.moduleInitializers = {
     'installation-settings': initInstallationSettings,
     'service-control': initServiceControl,
     'configuration': initConfiguration,
-    'notifications': initNotificationConfig
+    'notifications': initNotifications
 };
 
 document.addEventListener('DOMContentLoaded', () => {
