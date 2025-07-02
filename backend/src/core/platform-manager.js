@@ -3,6 +3,7 @@
  * Main orchestrator for the platform abstraction layer
  */
 
+const path = require('path');
 const { PlatformFactory } = require('./interfaces');
 const MonitoringCore = require('./monitoring/monitoring-core');
 const ConfigManager = require('./config-manager');
@@ -182,11 +183,20 @@ class PlatformManager {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
-            const { appPath, name, description, options = {} } = data;
-            if (!appPath || !name) {
-                throw new Error('App path and name are required');
+            const { appPath, options = {} } = data;
+            if (!appPath) {
+                throw new Error('App path is required');
             }
-            const result = await this.processManager.createAutoStartEntry(appPath, name, description, options);
+            
+            // Create options object for process manager
+            const processOptions = {
+                ...options,
+                // Add name and description if provided, or use defaults
+                name: options.name || data.name || path.basename(appPath, '.app'),
+                description: options.description || data.description || `Up4evr auto-start for ${path.basename(appPath)}`
+            };
+            
+            const result = await this.processManager.createAutoStartEntry(appPath, processOptions);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
@@ -196,11 +206,20 @@ class PlatformManager {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
-            const { appPath, name, description, options = {} } = data;
-            if (!appPath || !name) {
-                throw new Error('App path and name are required');
+            const { appPath, options = {} } = data;
+            if (!appPath) {
+                throw new Error('App path is required');
             }
-            const result = await this.processManager.createAutoStartEntry(appPath, name, description, options);
+            
+            // Create options object for process manager
+            const processOptions = {
+                ...options,
+                // Add name and description if provided, or use defaults
+                name: options.name || data.name || path.basename(appPath, '.app'),
+                description: options.description || data.description || `Up4evr auto-start for ${path.basename(appPath)}`
+            };
+            
+            const result = await this.processManager.createAutoStartEntry(appPath, processOptions);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);

@@ -19,6 +19,43 @@ class MacOSProcessManager extends ProcessManagerInterface {
         this.launchAgentsDir = path.join(os.homedir(), 'Library', 'LaunchAgents');
     }
 
+    /**
+     * Get the executable path from a .app bundle
+     */
+    async getExecutablePath(appPath) {
+        // If it's not a .app bundle, return as-is
+        if (!appPath.endsWith('.app')) {
+            return appPath;
+        }
+
+        const appName = path.basename(appPath, '.app');
+        const executablePath = path.join(appPath, 'Contents', 'MacOS', appName);
+        
+        try {
+            await fs.access(executablePath);
+            return executablePath;
+        } catch (error) {
+            // Try to find the actual executable in MacOS folder
+            const macOSDir = path.join(appPath, 'Contents', 'MacOS');
+            try {
+                const files = await fs.readdir(macOSDir);
+                const executables = files.filter(file => !file.startsWith('.'));
+                
+                if (executables.length > 0) {
+                    return path.join(macOSDir, executables[0]);
+                }
+            } catch (dirError) {
+                // If we can't find the executable, fall back to using the app path
+                console.warn(`Could not find executable in ${appPath}, using app path`);
+                return appPath;
+            }
+            
+            // Fall back to app path if we can't find the executable
+            console.warn(`Executable not found at ${executablePath}, using app path`);
+            return appPath;
+        }
+    }
+
     async startApplication(appPath, options = {}) {
         try {
             const { background = true, arguments: args = [] } = options;
@@ -170,10 +207,13 @@ class MacOSProcessManager extends ProcessManagerInterface {
             const launchAgentName = `com.installation-up-4evr.${name.toLowerCase().replace(/\s+/g, '-')}`;
             const plistPath = path.join(this.launchAgentsDir, `${launchAgentName}.plist`);
 
+            // Get the correct executable path for .app bundles
+            const executablePath = await this.getExecutablePath(appPath);
+
             // Create launch agent plist
             const plistContent = this.generateLaunchAgentPlist({
                 label: launchAgentName,
-                program: appPath,
+                program: executablePath,
                 description,
                 startInterval,
                 keepAlive,
@@ -194,6 +234,8 @@ class MacOSProcessManager extends ProcessManagerInterface {
                 message: `Auto-start entry created for ${name}`,
                 launchAgentName,
                 plistPath,
+                appPath,
+                executablePath,
                 loaded: true
             };
         } catch (error) {
@@ -257,11 +299,13 @@ class MacOSProcessManager extends ProcessManagerInterface {
                         // Parse basic info from plist
                         const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
                         const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
+                        const descriptionMatch = content.match(/<key>ServiceDescription<\/key>\s*<string>([^<]+)<\/string>/);
                         
                         entries.push({
                             name: file.replace('.plist', ''),
                             label: labelMatch ? labelMatch[1] : 'Unknown',
                             program: programMatch ? programMatch[1] : 'Unknown',
+                            description: descriptionMatch ? descriptionMatch[1] : null,
                             plistPath,
                             type: 'User Agent',
                             loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : ''),
@@ -288,11 +332,13 @@ class MacOSProcessManager extends ProcessManagerInterface {
                         // Parse basic info from plist
                         const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
                         const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
+                        const descriptionMatch = content.match(/<key>ServiceDescription<\/key>\s*<string>([^<]+)<\/string>/);
                         
                         entries.push({
                             name: file.replace('.plist', ''),
                             label: labelMatch ? labelMatch[1] : 'Unknown',
                             program: programMatch ? programMatch[1] : 'Unknown',
+                            description: descriptionMatch ? descriptionMatch[1] : null,
                             plistPath,
                             type: 'System Agent',
                             loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : ''),
