@@ -52,8 +52,11 @@
                         <button class="sidebar-button" data-tab="system-prefs">
                             <i class="fas fa-cog"></i> System Configuration
                         </button>
-                        <button class="sidebar-button" data-tab="launch-agents">
+                        <button class="sidebar-button macos-only" data-tab="launch-agents">
                             <i class="fas fa-rocket"></i> Launch Agents
+                        </button>
+                        <button class="sidebar-button windows-only" data-tab="services" style="display:none;">
+                            <i class="fas fa-cogs"></i> Services
                         </button>
                         <button class="sidebar-button" data-tab="monitoring">
                             <i class="fas fa-chart-line"></i> System Monitoring
@@ -476,9 +479,9 @@
                     </div>
 
                     <!-- Launch Agents Tab -->
-                    <div id="launch-agents-tab" class="tab-pane">
+                    <div id="launch-agents-tab" class="tab-pane macos-only">
                         <section class="card">
-                <h2><i class="fas fa-rocket"></i> Launch Agents</h2>
+                <h2 id="launch-agents-title"><i class="fas fa-rocket"></i> Launch Agents</h2>
                 <p>Create launch agents to keep your apps running forever</p>
                 
                 <!-- Drag and Drop Zone -->
@@ -569,6 +572,15 @@
                         <!-- Populated by JavaScript -->
                     </div>
                 </div>
+                        </section>
+                    </div>
+
+                    <!-- Services Tab (for Windows) -->
+                    <div id="services-tab" class="tab-pane windows-only" style="display:none;">
+                        <section class="card">
+                            <h2><i class="fas fa-cogs"></i> Services</h2>
+                            <p>Manage Windows services to keep your apps running forever</p>
+                            <p class="text-center">Windows Services management UI will be implemented here.</p>
                         </section>
                     </div>
 
@@ -1826,6 +1838,6 @@
     <!-- Toast Notifications -->
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="script.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

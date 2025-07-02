@@ -1,0 +1,70 @@
+/**
+ * @file monitoring.js
+ * @description Monitoring-related API routes for Installation Up 4evr.
+ */
+
+const express = require('express');
+const router = express.Router();
+
+module.exports = (platformManager) => {
+
+    /**
+     * @swagger
+     * /api/monitoring/status:
+     *   get:
+     *     summary: Get monitoring status
+     *     responses:
+     *       200:
+     *         description: The monitoring status.
+     */
+    router.get('/status', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/status', 'GET');
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/applications:
+     *   get:
+     *     summary: Get monitored applications
+     *     responses:
+     *       200:
+     *         description: A list of monitored applications.
+     */
+    router.get('/applications', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/applications', 'GET');
+            if (result.success) {
+                res.json(result.data || []);
+            } else {
+                res.status(500).json({ error: result.error || 'Failed to get applications data' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/app-health:
+     *   get:
+     *     summary: Get application health
+     *     responses:
+     *       200:
+     *         description: The application health.
+     */
+    router.get('/app-health', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/app-health', 'GET');
+            res.json(result.data);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    return router;
+};
