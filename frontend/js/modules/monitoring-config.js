@@ -248,7 +248,9 @@ window.addAgentToMonitoring = function(agentId, agentName, agentPath) {
         console.error('Failed to add agent to monitoring:', error);
         showToast('Failed to add agent to monitoring', 'error');
     }
-};\n\nfunction setupStatusDisplay() {
+};
+
+function setupStatusDisplay() {
     // Use unified auto-refresh with 10-second interval for monitoring config
     monitoringDisplay.setupAutoRefresh(refreshSystemStatus, {
         refreshInterval: 10000
