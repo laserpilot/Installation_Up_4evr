@@ -51,6 +51,7 @@ export function initMonitoringConfig() {
     // Setup additional interactions
     setupRefreshButton();
     setupStatusDisplay();
+    setupThresholdControls();
     
     // Initialize with current config and status
     loadMonitoringConfig();
@@ -140,4 +141,89 @@ function updateStatusCard(type, value) {
         // Add trend indication (simplified)
         trendElement.textContent = value > 50 ? '📈' : '📉';
     }
+}
+
+function setupThresholdControls() {
+    // Setup synchronization between sliders and number inputs
+    const thresholdTypes = ['cpu', 'memory', 'disk', 'temperature'];
+    const thresholdLevels = ['warning', 'critical'];
+    
+    thresholdTypes.forEach(type => {
+        thresholdLevels.forEach(level => {
+            const sliderId = `${type}-${level}-slider`;
+            const inputId = `${type}-${level}-input`;
+            
+            const slider = document.getElementById(sliderId);
+            const input = document.getElementById(inputId);
+            
+            if (slider && input) {
+                // Sync slider to input
+                slider.addEventListener('input', () => {
+                    input.value = slider.value;
+                    onThresholdChange(type, level, slider.value);
+                });
+                
+                // Sync input to slider
+                input.addEventListener('input', () => {
+                    slider.value = input.value;
+                    onThresholdChange(type, level, input.value);
+                });
+                
+                // Validate input range
+                input.addEventListener('blur', () => {
+                    const min = parseInt(input.min);
+                    const max = parseInt(input.max);
+                    let value = parseInt(input.value);
+                    
+                    if (isNaN(value) || value < min) {
+                        value = min;
+                    } else if (value > max) {
+                        value = max;
+                    }
+                    
+                    input.value = value;
+                    slider.value = value;
+                    onThresholdChange(type, level, value);
+                });
+            }
+        });
+    });
+}
+
+function onThresholdChange(type, level, value) {
+    console.log(`[THRESHOLD] ${type} ${level} threshold changed to ${value}%`);
+    
+    // Update visual indicators
+    updateThresholdIndicator(type, level, value);
+    
+    // Save threshold to configuration (could be enhanced to auto-save)
+    saveThresholdValue(type, level, value);
+}
+
+function updateThresholdIndicator(type, level, value) {
+    // Add visual feedback for threshold changes
+    const slider = document.getElementById(`${type}-${level}-slider`);
+    if (slider) {
+        // Add a brief highlight effect
+        slider.style.boxShadow = '0 0 5px rgba(0, 123, 255, 0.5)';
+        setTimeout(() => {
+            slider.style.boxShadow = '';
+        }, 300);
+    }
+}
+
+function saveThresholdValue(type, level, value) {
+    // Store threshold values for later saving
+    if (!window.thresholdSettings) {
+        window.thresholdSettings = {};
+    }
+    
+    if (!window.thresholdSettings[type]) {
+        window.thresholdSettings[type] = {};
+    }
+    
+    window.thresholdSettings[type][level] = parseInt(value);
+    
+    // Could implement auto-save or show "unsaved changes" indicator
+    showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} ${level} threshold set to ${value}%`, 'info');
 }

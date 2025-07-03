@@ -30,10 +30,93 @@ function initMonitoringTab() {
     // Subscribe to monitoring updates
     monitoringManager.subscribe(updateMonitoringDisplay);
     
+    // Setup monitoring controls
+    setupMonitoringControls(monitoringManager);
+    
     // Force initial update
     const currentData = monitoringManager.getCurrentData();
     if (currentData.lastUpdate) {
         updateMonitoringDisplay(currentData);
+    }
+}
+
+function setupMonitoringControls(monitoringManager) {
+    // Refresh button
+    const refreshBtn = document.getElementById('refresh-monitoring');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            console.log('[MONITORING] Manual refresh requested');
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            
+            try {
+                await monitoringManager.refreshData();
+                showToast('Monitoring data refreshed', 'success');
+            } catch (error) {
+                showToast('Failed to refresh monitoring data', 'error');
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
+            }
+        });
+    }
+
+    // Export button
+    const exportBtn = document.getElementById('export-monitoring-data');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            exportMonitoringData(monitoringManager);
+        });
+    }
+
+    // Settings button - navigate to monitoring config
+    const settingsBtn = document.getElementById('monitoring-settings');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+            navigateToTab('monitoring-config');
+        });
+    }
+}
+
+function exportMonitoringData(monitoringManager) {
+    try {
+        const data = monitoringManager.getCurrentData();
+        const exportData = {
+            timestamp: new Date().toISOString(),
+            system: data.system,
+            applications: data.applications,
+            displays: data.displays,
+            network: data.network,
+            alerts: data.alerts,
+            status: data.status,
+            lastUpdate: data.lastUpdate,
+            metadata: {
+                exportedBy: 'Installation Up 4evr',
+                version: '1.0.0-alpha.1',
+                platform: navigator.platform
+            }
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+            type: 'application/json' 
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        const filename = `monitoring-data-${new Date().toISOString().split('T')[0]}.json`;
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        URL.revokeObjectURL(url);
+        showToast(`Monitoring data exported as ${filename}`, 'success');
+    } catch (error) {
+        console.error('[MONITORING] Export failed:', error);
+        showToast('Failed to export monitoring data', 'error');
     }
 }
 

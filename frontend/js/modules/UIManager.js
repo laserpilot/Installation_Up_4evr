@@ -3,7 +3,7 @@
  * @description Manages the UI based on the detected platform.
  */
 
-import { apiCall } from './utils/api.js';
+import { apiCall } from '../utils/api.js';
 
 export class UIManager {
     constructor() {
@@ -13,7 +13,8 @@ export class UIManager {
     async init() {
         try {
             const platformInfo = await apiCall('/api/platform');
-            this.platform = platformInfo.platform;
+            console.log('[UI MANAGER] Raw platformInfo response:', platformInfo);
+            this.platform = platformInfo.data.platform; // Assuming platform is nested under 'data'
             console.log(`[UI MANAGER] Detected platform: ${this.platform}`);
             this.loadPlatformSpecificUI();
         } catch (error) {

@@ -5,6 +5,7 @@
 
 import { apiCall } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
+import { setValue, getValue, setCheckbox, getCheckbox } from '../utils/form-helpers.js';
 
 export function initConfiguration() {
     console.log('[INIT] Initializing Configuration tab...');
@@ -253,27 +254,4 @@ function setupActionButtons() {
     }
 }
 
-// Utility functions for form manipulation
-function setValue(id, value) {
-    const element = document.getElementById(id);
-    if (element) {
-        element.value = value;
-    }
-}
-
-function getValue(id) {
-    const element = document.getElementById(id);
-    return element ? element.value : '';
-}
-
-function setCheckbox(id, checked) {
-    const element = document.getElementById(id);
-    if (element) {
-        element.checked = checked;
-    }
-}
-
-function getCheckbox(id) {
-    const element = document.getElementById(id);
-    return element ? element.checked : false;
-}
+// Utility functions are now imported from form-helpers.js

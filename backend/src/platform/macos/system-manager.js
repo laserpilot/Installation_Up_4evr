@@ -647,6 +647,85 @@ echo "Review the output above for any errors."
         const requiredKeys = Object.keys(this.getRequiredSettings());
         return this.applySettings(requiredKeys);
     }
+
+    /**
+     * Generate terminal commands for manual execution
+     * @returns {Object} Commands string for manual execution
+     */
+    async generateCommands() {
+        const commands = [];
+        commands.push('#!/bin/bash');
+        commands.push('# Installation Up 4evr - System Preferences Configuration');
+        commands.push('# Generated on: ' + new Date().toISOString());
+        commands.push('');
+        commands.push('echo "Installing Up 4evr - System Preferences Configuration"');
+        commands.push('echo "==========================================="');
+        commands.push('');
+
+        // Add all settings commands
+        for (const [key, setting] of Object.entries(this.settings)) {
+            commands.push(`echo "Configuring ${setting.name}..."`);
+            commands.push(setting.command);
+            commands.push('');
+        }
+
+        commands.push('echo "Configuration complete!"');
+        commands.push('echo "You may need to restart for all changes to take effect."');
+
+        return {
+            success: true,
+            data: {
+                commands: commands.join('\n'),
+                count: Object.keys(this.settings).length,
+                timestamp: new Date().toISOString()
+            }
+        };
+    }
+
+    /**
+     * Generate restore script to revert all settings
+     * @returns {Object} Restore commands string
+     */
+    async generateRestore() {
+        const commands = [];
+        commands.push('#!/bin/bash');
+        commands.push('# Installation Up 4evr - System Preferences Restore Script');
+        commands.push('# Generated on: ' + new Date().toISOString());
+        commands.push('');
+        commands.push('echo "⚠️  WARNING: This will restore all system settings to defaults"');
+        commands.push('echo "Press Ctrl+C to cancel or Enter to continue..."');
+        commands.push('read -p "Continue? (y/N) " -n 1 -r');
+        commands.push('echo');
+        commands.push('if [[ ! $REPLY =~ ^[Yy]$ ]]; then');
+        commands.push('    echo "Restore cancelled."');
+        commands.push('    exit 0');
+        commands.push('fi');
+        commands.push('');
+        commands.push('echo "Restoring Installation Up 4evr System Settings..."');
+        commands.push('echo "==============================================="');
+        commands.push('');
+
+        // Add revert commands for all settings
+        for (const [key, setting] of Object.entries(this.settings)) {
+            if (setting.revert) {
+                commands.push(`echo "Restoring ${setting.name}..."`);
+                commands.push(setting.revert);
+                commands.push('');
+            }
+        }
+
+        commands.push('echo "Restore complete!"');
+        commands.push('echo "You may need to restart for all changes to take effect."');
+
+        return {
+            success: true,
+            data: {
+                commands: commands.join('\n'),
+                count: Object.keys(this.settings).filter(s => this.settings[s].revert).length,
+                timestamp: new Date().toISOString()
+            }
+        };
+    }
 }
 
 module.exports = MacOSSystemManager;

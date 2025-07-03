@@ -468,6 +468,334 @@ class MacOSProcessManager extends ProcessManagerInterface {
             return false;
         }
     }
+
+    /**
+     * Test a launch agent to verify it works correctly
+     */
+    async testLaunchAgent(label) {
+        try {
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+            
+            // Check if plist file exists
+            try {
+                await fs.access(plistPath);
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Launch agent plist not found: ${plistPath}`,
+                    data: { warnings: ['Plist file does not exist'] }
+                };
+            }
+
+            // Check if agent is loaded
+            const isLoaded = await this.isLaunchAgentLoaded(label);
+            
+            // Test loading the plist syntax
+            try {
+                const { stdout, stderr } = await execAsync(`plutil -lint "${plistPath}"`);
+                const warnings = [];
+                
+                if (!isLoaded) {
+                    warnings.push('Launch agent is not currently loaded');
+                }
+                
+                // Try to get agent status
+                let agentStatus = 'unknown';
+                try {
+                    const { stdout: statusOutput } = await execAsync(`launchctl list | grep "${label}"`);
+                    if (statusOutput.trim()) {
+                        agentStatus = 'running';
+                    }
+                } catch (error) {
+                    agentStatus = 'stopped';
+                }
+
+                return {
+                    success: true,
+                    message: 'Launch agent test completed',
+                    data: {
+                        output: `Plist syntax: Valid\nAgent loaded: ${isLoaded ? 'Yes' : 'No'}\nAgent status: ${agentStatus}`,
+                        warnings: warnings.length > 0 ? warnings : undefined,
+                        agentLoaded: isLoaded,
+                        agentStatus
+                    }
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: 'Plist file has syntax errors',
+                    data: { 
+                        output: error.message,
+                        warnings: ['Plist file is malformed']
+                    }
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to test launch agent: ${error.message}`,
+                data: { output: error.message }
+            };
+        }
+    }
+
+    /**
+     * Export a launch agent plist file for download
+     */
+    async exportLaunchAgent(label) {
+        try {
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+            
+            try {
+                const content = await fs.readFile(plistPath, 'utf8');
+                return {
+                    success: true,
+                    message: 'Launch agent exported successfully',
+                    data: {
+                        content,
+                        filename: `${label}.plist`,
+                        plistContent: content
+                    }
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Failed to read plist file: ${error.message}`
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to export launch agent: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * View a launch agent plist content
+     */
+    async viewLaunchAgent(label) {
+        try {
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+            
+            try {
+                const content = await fs.readFile(plistPath, 'utf8');
+                return {
+                    success: true,
+                    data: {
+                        content,
+                        path: plistPath
+                    }
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Failed to read plist file: ${error.message}`
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to view launch agent: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * Update a launch agent plist content
+     */
+    async updateLaunchAgent(label, content) {
+        try {
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+            
+            // Validate plist content by trying to parse it
+            try {
+                // Create a temporary file to test the content
+                const tempPath = path.join(os.tmpdir(), `test-${Date.now()}.plist`);
+                await fs.writeFile(tempPath, content);
+                
+                // Test the plist syntax
+                await execAsync(`plutil -lint "${tempPath}"`);
+                
+                // Clean up temp file
+                await fs.unlink(tempPath);
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Invalid plist content: ${error.message}`
+                };
+            }
+
+            // Check if agent is currently loaded
+            const wasLoaded = await this.isLaunchAgentLoaded(label);
+            
+            // If loaded, unload it first
+            if (wasLoaded) {
+                try {
+                    await execAsync(`launchctl unload "${plistPath}"`);
+                } catch (error) {
+                    console.warn(`Warning: Could not unload agent before update: ${error.message}`);
+                }
+            }
+            
+            // Write the new content
+            await fs.writeFile(plistPath, content);
+            
+            // Reload if it was previously loaded
+            if (wasLoaded) {
+                try {
+                    await execAsync(`launchctl load "${plistPath}"`);
+                } catch (error) {
+                    return {
+                        success: false,
+                        message: `Plist updated but failed to reload: ${error.message}`
+                    };
+                }
+            }
+            
+            return {
+                success: true,
+                message: 'Launch agent updated successfully',
+                data: { reloaded: wasLoaded }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to update launch agent: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * Start a launch agent
+     */
+    async startLaunchAgent(label) {
+        try {
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+            
+            // Check if plist exists
+            try {
+                await fs.access(plistPath);
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Launch agent plist not found: ${plistPath}`
+                };
+            }
+            
+            // Load the launch agent
+            const { stdout, stderr } = await execAsync(`launchctl load "${plistPath}"`);
+            
+            return {
+                success: true,
+                message: `Launch agent ${label} started successfully`,
+                data: { output: stdout }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to start launch agent: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * Stop a launch agent
+     */
+    async stopLaunchAgent(label) {
+        try {
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+            
+            // Unload the launch agent
+            const { stdout, stderr } = await execAsync(`launchctl unload "${plistPath}"`);
+            
+            return {
+                success: true,
+                message: `Launch agent ${label} stopped successfully`,
+                data: { output: stdout }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to stop launch agent: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * Restart a launch agent
+     */
+    async restartLaunchAgent(label) {
+        try {
+            // Stop first
+            const stopResult = await this.stopLaunchAgent(label);
+            if (!stopResult.success) {
+                console.warn(`Warning during stop: ${stopResult.message}`);
+            }
+            
+            // Wait a moment
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Start again
+            const startResult = await this.startLaunchAgent(label);
+            
+            return {
+                success: startResult.success,
+                message: startResult.success ? 
+                    `Launch agent ${label} restarted successfully` : 
+                    startResult.message,
+                data: { 
+                    stopOutput: stopResult.data?.output,
+                    startOutput: startResult.data?.output 
+                }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to restart launch agent: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * Remove/delete a launch agent
+     */
+    async removeLaunchAgent(label) {
+        try {
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+            
+            // Check if plist exists
+            try {
+                await fs.access(plistPath);
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Launch agent plist not found: ${plistPath}`
+                };
+            }
+            
+            // Stop the agent first if it's running
+            try {
+                await this.stopLaunchAgent(label);
+            } catch (error) {
+                console.warn(`Warning: Could not stop agent before removal: ${error.message}`);
+            }
+            
+            // Delete the plist file
+            await fs.unlink(plistPath);
+            
+            return {
+                success: true,
+                message: `Launch agent ${label} deleted successfully`,
+                data: { removedFile: plistPath }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to delete launch agent: ${error.message}`
+            };
+        }
+    }
 }
 
 module.exports = MacOSProcessManager;

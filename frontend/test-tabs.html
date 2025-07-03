@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Functionality Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #testResults { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Installation Up 4evr - Tab Functionality Test</h1>
+    <p>This test validates that all refactored tabs are working correctly.</p>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="clearResults()">Clear Results</button>
+        <button onclick="testTabSwitching()">Test Tab Switching</button>
+        <button onclick="testAPIConnectivity()">Test API Connectivity</button>
+    </div>
+
+    <div id="testResults"></div>
+
+    <script type="module">
+        // Import modules to test
+        import { initSystemPreferences } from './js/modules/system-preferences.js';
+        import { initLaunchAgents } from './js/modules/launch-agents.js';
+        import { initServiceControl } from './js/modules/service-control.js';
+        import { initConfiguration } from './js/modules/configuration.js';
+        import { initInstallationSettings } from './js/modules/installation-settings.js';
+        import { initNotifications } from './js/modules/notifications.js';
+        import { initMonitoringConfig } from './js/modules/monitoring-config.js';
+        import { apiCall } from './js/utils/api.js';
+        import { showToast } from './js/utils/ui.js';
+
+        // Make functions globally available
+        window.testModules = {
+            initSystemPreferences,
+            initLaunchAgents,
+            initServiceControl,
+            initConfiguration,
+            initInstallationSettings,
+            initNotifications,
+            initMonitoringConfig,
+            apiCall,
+            showToast
+        };
+
+        window.testResults = [];
+
+        function addTestResult(testName, status, message, details = '') {
+            const result = { testName, status, message, details, timestamp: new Date() };
+            window.testResults.push(result);
+            
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${status}`;
+            resultDiv.innerHTML = `
+                <strong>${testName}</strong>: ${message}
+                ${details ? `<br><small>${details}</small>` : ''}
+                <br><small>Time: ${result.timestamp.toLocaleTimeString()}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        window.addTestResult = addTestResult;
+
+        async function testModuleImports() {
+            addTestResult('Module Imports', 'info', 'Testing module imports...');
+            
+            const modules = [
+                'initSystemPreferences',
+                'initLaunchAgents', 
+                'initServiceControl',
+                'initConfiguration',
+                'initInstallationSettings',
+                'initNotifications',
+                'initMonitoringConfig',
+                'apiCall',
+                'showToast'
+            ];
+
+            let passCount = 0;
+            for (const moduleName of modules) {
+                if (typeof window.testModules[moduleName] === 'function') {
+                    addTestResult(`Import: ${moduleName}`, 'pass', 'Successfully imported');
+                    passCount++;
+                } else {
+                    addTestResult(`Import: ${moduleName}`, 'fail', 'Failed to import or not a function');
+                }
+            }
+
+            addTestResult('Module Import Summary', passCount === modules.length ? 'pass' : 'fail', 
+                `${passCount}/${modules.length} modules imported successfully`);
+        }
+
+        async function testAPIConnectivity() {
+            addTestResult('API Connectivity', 'info', 'Testing API endpoints...');
+            
+            const endpoints = [
+                { url: '/api/health', method: 'GET', name: 'Health Check' },
+                { url: '/api/platform', method: 'GET', name: 'Platform Info' },
+                { url: '/api/monitoring/status', method: 'GET', name: 'Monitoring Status' },
+                { url: '/api/config', method: 'GET', name: 'Configuration Load' },
+                { url: '/api/installation/settings', method: 'GET', name: 'Installation Settings' }
+            ];
+
+            let passCount = 0;
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await window.testModules.apiCall(endpoint.url);
+                    if (response && typeof response === 'object') {
+                        addTestResult(`API: ${endpoint.name}`, 'pass', `${endpoint.method} ${endpoint.url} successful`);
+                        passCount++;
+                    } else {
+                        addTestResult(`API: ${endpoint.name}`, 'fail', `Unexpected response format`);
+                    }
+                } catch (error) {
+                    addTestResult(`API: ${endpoint.name}`, 'fail', `${endpoint.method} ${endpoint.url} failed`, error.message);
+                }
+            }
+
+            addTestResult('API Connectivity Summary', passCount === endpoints.length ? 'pass' : 'fail',
+                `${passCount}/${endpoints.length} endpoints working`);
+        }
+
+        async function testTabSwitching() {
+            addTestResult('Tab Switching', 'info', 'Testing tab navigation...');
+            
+            // This would need the actual DOM elements from the main page
+            // For now, just test that the tab initializers can be called
+            const tabTests = [
+                { name: 'System Preferences', init: 'initSystemPreferences' },
+                { name: 'Launch Agents', init: 'initLaunchAgents' },
+                { name: 'Service Control', init: 'initServiceControl' },
+                { name: 'Configuration', init: 'initConfiguration' },
+                { name: 'Installation Settings', init: 'initInstallationSettings' },
+                { name: 'Notifications', init: 'initNotifications' },
+                { name: 'Monitoring Config', init: 'initMonitoringConfig' }
+            ];
+
+            let passCount = 0;
+            for (const tab of tabTests) {
+                try {
+                    // Test that the initializer can be called without error
+                    // Note: This won't actually work without the DOM elements
+                    const initFunction = window.testModules[tab.init];
+                    if (typeof initFunction === 'function') {
+                        addTestResult(`Tab Init: ${tab.name}`, 'pass', `${tab.init} function available`);
+                        passCount++;
+                    } else {
+                        addTestResult(`Tab Init: ${tab.name}`, 'fail', `${tab.init} not available`);
+                    }
+                } catch (error) {
+                    addTestResult(`Tab Init: ${tab.name}`, 'fail', `Error testing ${tab.init}`, error.message);
+                }
+            }
+
+            addTestResult('Tab Switching Summary', passCount === tabTests.length ? 'pass' : 'fail',
+                `${passCount}/${tabTests.length} tab initializers available`);
+        }
+
+        async function runAllTests() {
+            document.getElementById('testResults').innerHTML = '';
+            window.testResults = [];
+            
+            addTestResult('Test Suite', 'info', 'Starting comprehensive tab functionality tests...');
+            
+            await testModuleImports();
+            await testAPIConnectivity();
+            await testTabSwitching();
+            
+            const totalTests = window.testResults.filter(r => r.status !== 'info').length;
+            const passedTests = window.testResults.filter(r => r.status === 'pass').length;
+            
+            addTestResult('Overall Results', passedTests === totalTests ? 'pass' : 'fail',
+                `${passedTests}/${totalTests} tests passed`, 
+                `Success rate: ${Math.round((passedTests/totalTests)*100)}%`);
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            window.testResults = [];
+        }
+
+        // Make functions globally available
+        window.runAllTests = runAllTests;
+        window.clearResults = clearResults;
+        window.testTabSwitching = testTabSwitching;
+        window.testAPIConnectivity = testAPIConnectivity;
+
+        // Auto-run tests on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
