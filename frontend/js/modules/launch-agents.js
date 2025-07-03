@@ -10,6 +10,7 @@ import { createAgentCard } from '../components/LaunchAgentCard.js';
 let allAgents = [];
 let agentStatusList = [];
 let currentAppPath = null;
+let statusUpdateInterval = null;
 
 async function loadLaunchAgents() {
     try {
@@ -38,11 +39,77 @@ function renderLaunchAgents() {
     }
 
     container.innerHTML = agents.map(agent => {
-        const status = agentStatusList.find(s => s.label === agent.label) || {};
+        const statusData = agentStatusList.find(s => s.label === agent.label || s.name === agent.label) || {};
+        // Convert status format to match frontend expectations
+        const status = {
+            isRunning: statusData.status === 'running' && statusData.loaded,
+            pid: statusData.pid || 'N/A',
+            lastExitStatus: statusData.lastExitStatus || 'N/A'
+        };
         return createAgentCard(agent, status);
     }).join('');
 
     addLaunchAgentActionListeners();
+}
+
+async function updateAgentStatus() {
+    try {
+        const statusResponse = await apiCall('/api/launch-agents/status');
+        agentStatusList = statusResponse?.data || statusResponse || [];
+        
+        // Update existing cards without full re-render
+        updateExistingAgentCards();
+    } catch (error) {
+        console.error('Failed to update agent status:', error);
+    }
+}
+
+function updateExistingAgentCards() {
+    const agentCards = document.querySelectorAll('.agent-card');
+    
+    agentCards.forEach(card => {
+        const label = card.dataset.label;
+        const statusData = agentStatusList.find(s => s.label === label || s.name === label) || {};
+        const isRunning = statusData.status === 'running' && statusData.loaded;
+        
+        // Update status class
+        card.classList.toggle('status-running', isRunning);
+        card.classList.toggle('status-stopped', !isRunning);
+        
+        // Update status text and indicator
+        const statusSpan = card.querySelector('.agent-status span:last-child');
+        if (statusSpan) {
+            statusSpan.textContent = isRunning ? 'Running' : 'Stopped';
+        }
+        
+        // Update PID and exit status
+        const pidSpan = card.querySelector('.agent-info span:first-child');
+        if (pidSpan) {
+            pidSpan.textContent = `PID: ${statusData.pid || 'N/A'}`;
+        }
+        
+        const exitSpan = card.querySelector('.agent-info span:last-child');
+        if (exitSpan) {
+            exitSpan.textContent = `Exit: ${statusData.lastExitStatus || 'N/A'}`;
+        }
+    });
+}
+
+function startRealtimeStatusUpdates() {
+    // Clear any existing interval
+    stopRealtimeStatusUpdates();
+    
+    // Update status every 5 seconds
+    statusUpdateInterval = setInterval(updateAgentStatus, 5000);
+    console.log('[LAUNCH-AGENTS] Started real-time status updates');
+}
+
+function stopRealtimeStatusUpdates() {
+    if (statusUpdateInterval) {
+        clearInterval(statusUpdateInterval);
+        statusUpdateInterval = null;
+        console.log('[LAUNCH-AGENTS] Stopped real-time status updates');
+    }
 }
 
 function addLaunchAgentActionListeners() {
@@ -273,7 +340,13 @@ export function initLaunchAgents() {
     setTimeout(() => {
         loadMasterConfigAgents();
     }, 500);
+    
+    // Start real-time status updates
+    startRealtimeStatusUpdates();
 }
+
+// Export functions for external use (tab switching)
+export { startRealtimeStatusUpdates, stopRealtimeStatusUpdates };
 
 function showTestResults(label, result) {
     const modal = document.createElement('div');

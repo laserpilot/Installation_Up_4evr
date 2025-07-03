@@ -249,6 +249,15 @@ app.post('/api/installation/test', async (req, res) => {
     }
 });
 
+app.post('/api/installation/settings/reset', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/reset', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Setup Wizard API endpoints
 app.get('/api/setup-wizard/system-check', async (req, res) => {
     try {
