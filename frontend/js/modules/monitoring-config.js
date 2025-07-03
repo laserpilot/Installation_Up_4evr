@@ -266,47 +266,43 @@ async function refreshSystemStatus() {
 }
 
 function updateStatusCards(data) {
-    // Update status cards using unified display manager
+    // Update simple status cards directly (not using complex metric cards)
     const system = data.system || {};
     
     // Update CPU status
     if (system.cpu) {
-        monitoringDisplay.updateMetricCard({
-            metricId: 'current-cpu',
-            value: system.cpu.usage || 0,
-            unit: '%',
-            type: 'cpu'
-        });
+        updateStatusCard('current-cpu', 'cpu-indicator', system.cpu.usage || 0, '%', 'cpu');
     }
     
     // Update Memory status  
     if (system.memory) {
-        monitoringDisplay.updateMetricCard({
-            metricId: 'current-memory',
-            value: system.memory.usage || 0,
-            unit: '%',
-            type: 'memory'
-        });
+        updateStatusCard('current-memory', 'memory-indicator', system.memory.usage || 0, '%', 'memory');
     }
     
     // Update Disk status
     if (system.disk) {
-        monitoringDisplay.updateMetricCard({
-            metricId: 'current-disk',
-            value: system.disk.usage || 0,
-            unit: '%',
-            type: 'disk'
-        });
+        updateStatusCard('current-disk', 'disk-indicator', system.disk.usage || 0, '%', 'disk');
     }
     
-    // Update Temperature status
-    if (system.temperature) {
-        monitoringDisplay.updateMetricCard({
-            metricId: 'current-temperature',
-            value: system.temperature || 0,
-            unit: '°C',
-            type: 'temperature'
-        });
+    // Update Temperature status (temperature data not available in current API)
+    updateStatusCard('current-temperature', 'temperature-indicator', 'N/A', '', 'temperature');
+}
+
+function updateStatusCard(valueId, indicatorId, value, unit, type) {
+    // Update the value display
+    const valueElement = document.getElementById(valueId);
+    if (valueElement) {
+        const displayValue = typeof value === 'number' ? 
+            `${value.toFixed(1)}${unit}` : value;
+        valueElement.textContent = displayValue;
+    }
+    
+    // Update the status indicator
+    const indicatorElement = document.getElementById(indicatorId);
+    if (indicatorElement && typeof value === 'number') {
+        const level = monitoringDisplay.getMetricLevel(type, value);
+        const icon = monitoringDisplay.getStatusIcon(level);
+        indicatorElement.textContent = icon;
     }
 }
 
