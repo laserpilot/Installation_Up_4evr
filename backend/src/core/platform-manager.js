@@ -1309,28 +1309,45 @@ class PlatformManager {
 
     getDefaultInstallationSettings() {
         return {
-            // Camera and projection settings
+            // Creative Technology Sensor Settings (matching frontend expectations)
             camera: {
+                threshold: 25,
+                timeout: 30,
+                fps: 30,
+                // Extended system settings
                 enabled: false,
                 deviceId: 'default',
-                resolution: '1920x1080',
-                frameRate: 30
+                resolution: '1920x1080'
             },
-            projection: {
-                enabled: false,
-                displayId: 'primary',
-                resolution: '1920x1080',
-                orientation: 'landscape'
+            capacitive: {
+                threshold: 50,
+                debounce: 100,
+                activePins: [0, 1]
             },
-            // Audio settings
             audio: {
+                threshold: 60,
+                sampleRate: 44100,
+                bufferSize: 1024,
+                // Extended system settings
                 inputEnabled: false,
                 outputEnabled: true,
                 inputDevice: 'default',
                 outputDevice: 'default',
                 volume: 80
             },
-            // Network settings
+            proximity: {
+                threshold: 75,
+                maxDistance: 100,
+                units: 'cm'
+            },
+            customParameters: {},
+            // Comprehensive Installation Settings (for system configuration)
+            projection: {
+                enabled: false,
+                displayId: 'primary',
+                resolution: '1920x1080',
+                orientation: 'landscape'
+            },
             network: {
                 wifi: {
                     enabled: true,
@@ -1346,7 +1363,6 @@ class PlatformManager {
                     gateway: ''
                 }
             },
-            // Application settings
             application: {
                 autoStart: true,
                 fullscreen: true,
@@ -1355,14 +1371,12 @@ class PlatformManager {
                 mouseEnabled: false,
                 keyboardEnabled: false
             },
-            // Display settings
             display: {
                 brightness: 100,
                 timeout: 0, // Never sleep
                 rotation: 0,
                 mirroring: false
             },
-            // Installation metadata
             installation: {
                 name: 'Installation Setup',
                 location: '',
@@ -1391,16 +1405,61 @@ class PlatformManager {
         // Run basic tests on installation settings
         const tests = [];
         
-        // Test camera settings
-        if (settings.camera?.enabled) {
+        // Test creative technology sensor settings
+        if (settings.camera?.threshold !== undefined) {
+            const threshold = settings.camera.threshold;
             tests.push({
-                name: 'Camera Test',
-                status: 'success', // Would actually test camera access
-                message: 'Camera configuration appears valid'
+                name: 'Camera Threshold Test',
+                status: (threshold >= 0 && threshold <= 100) ? 'success' : 'warning',
+                message: `Camera threshold: ${threshold}% ${(threshold >= 0 && threshold <= 100) ? '(valid range)' : '(outside 0-100% range)'}`
             });
         }
 
-        // Test projection settings  
+        if (settings.capacitive?.threshold !== undefined) {
+            const threshold = settings.capacitive.threshold;
+            tests.push({
+                name: 'Capacitive Sensor Test',
+                status: (threshold >= 0 && threshold <= 100) ? 'success' : 'warning',
+                message: `Capacitive threshold: ${threshold}% with ${settings.capacitive.activePins?.length || 0} active pins`
+            });
+        }
+
+        if (settings.audio?.threshold !== undefined) {
+            const threshold = settings.audio.threshold;
+            tests.push({
+                name: 'Audio Threshold Test',
+                status: (threshold >= 0 && threshold <= 100) ? 'success' : 'warning',
+                message: `Audio threshold: ${threshold}% at ${settings.audio.sampleRate || 44100}Hz sample rate`
+            });
+        }
+
+        if (settings.proximity?.threshold !== undefined) {
+            const threshold = settings.proximity.threshold;
+            tests.push({
+                name: 'Proximity Sensor Test',
+                status: (threshold >= 0 && threshold <= 100) ? 'success' : 'warning',
+                message: `Proximity threshold: ${threshold}% with max distance ${settings.proximity.maxDistance || 100}${settings.proximity.units || 'cm'}`
+            });
+        }
+
+        // Test custom parameters
+        if (settings.customParameters && Object.keys(settings.customParameters).length > 0) {
+            tests.push({
+                name: 'Custom Parameters Test',
+                status: 'success',
+                message: `${Object.keys(settings.customParameters).length} custom parameter(s) defined`
+            });
+        }
+
+        // Test system-level settings
+        if (settings.camera?.enabled) {
+            tests.push({
+                name: 'Camera System Test',
+                status: 'success', // Would actually test camera access
+                message: `Camera enabled: ${settings.camera.resolution || '1920x1080'} at ${settings.camera.fps || 30}fps`
+            });
+        }
+
         if (settings.projection?.enabled) {
             tests.push({
                 name: 'Projection Test',
@@ -1409,7 +1468,6 @@ class PlatformManager {
             });
         }
 
-        // Test network settings
         if (settings.network?.wifi?.enabled && settings.network.wifi.ssid) {
             tests.push({
                 name: 'WiFi Test',
@@ -1418,10 +1476,9 @@ class PlatformManager {
             });
         }
 
-        // Test audio settings
         if (settings.audio?.outputEnabled) {
             tests.push({
-                name: 'Audio Test', 
+                name: 'Audio System Test', 
                 status: 'success', // Would actually test audio devices
                 message: 'Audio output configuration appears valid'
             });

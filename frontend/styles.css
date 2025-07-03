@@ -2469,6 +2469,108 @@ input:checked + .toggle-slider:before {
     font-size: 0.8rem;
 }
 
+/* Button Action styles for launch agent cards */
+.btn-action {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    background: var(--secondary-color);
+    color: white;
+    transition: all 0.3s ease;
+    min-width: 36px;
+    height: 36px;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    opacity: 0.9;
+}
+
+.btn-action:active {
+    transform: translateY(0);
+}
+
+.btn-action[title*="Start"] {
+    background: var(--success-color);
+}
+
+.btn-action[title*="Stop"] {
+    background: var(--danger-color);
+}
+
+.btn-action[title*="Restart"] {
+    background: var(--warning-color);
+}
+
+.btn-action[title*="Test"] {
+    background: var(--info-color);
+}
+
+.btn-action[title*="Delete"] {
+    background: var(--danger-color);
+}
+
+/* Launch Agent Status Indicators */
+.agent-card.status-running .status-indicator {
+    background: var(--success-color);
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    display: inline-block;
+}
+
+.agent-card.status-stopped .status-indicator {
+    background: var(--danger-color);
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    display: inline-block;
+}
+
+.agent-card.status-running {
+    border-left: 4px solid var(--success-color);
+}
+
+.agent-card.status-stopped {
+    border-left: 4px solid var(--danger-color);
+}
+
+/* Setup Wizard System Check Status Classes */
+.check-status.status-passed {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+.check-status.status-warning {
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.check-status.status-error {
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
+.text-green {
+    color: var(--success-color) !important;
+}
+
+.text-yellow {
+    color: var(--warning-color) !important;
+}
+
+.text-red {
+    color: var(--danger-color) !important;
+}
+
 /* Agent Test Modal */
 .test-results-container {
     margin-top: var(--spacing-md);

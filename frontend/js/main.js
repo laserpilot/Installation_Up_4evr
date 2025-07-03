@@ -10,7 +10,7 @@ import { MonitoringDataManager } from './modules/monitoring.js';
 import { UIManager } from './modules/UIManager.js';
 import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initSystemPreferences } from './modules/system-preferences.js';
-import { initLaunchAgents } from './modules/launch-agents.js';
+import { initLaunchAgents, startRealtimeStatusUpdates, stopRealtimeStatusUpdates } from './modules/launch-agents.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
 import { initNotificationConfig } from './modules/notifications-config.js';
 import { initNotifications } from './modules/notifications.js';
@@ -304,6 +304,13 @@ class InstallationUp4evr {
             console.log(`[NAV] Activated content for tab: ${tabId}`);
         } else {
             console.error(`[NAV] Content not found for tab: ${tabId}, looking for ID: ${tabId}-tab`);
+        }
+
+        // Handle real-time updates for launch agents tab
+        if (tabId === 'launch-agents') {
+            startRealtimeStatusUpdates();
+        } else {
+            stopRealtimeStatusUpdates();
         }
 
         // Dynamically initialize module for the activated tab
