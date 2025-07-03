@@ -172,9 +172,13 @@ async function generateTerminalCommands() {
             
             document.body.appendChild(modal);
             
+            // Add show class for animation
+            setTimeout(() => modal.classList.add('show'), 10);
+            
             // Add event listeners
             modal.querySelector('.modal-close').addEventListener('click', () => {
-                document.body.removeChild(modal);
+                modal.classList.remove('show');
+                setTimeout(() => document.body.removeChild(modal), 200);
             });
             
             modal.querySelector('#copy-commands').addEventListener('click', () => {
@@ -186,7 +190,8 @@ async function generateTerminalCommands() {
             
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
-                    document.body.removeChild(modal);
+                    modal.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(modal), 200);
                 }
             });
         }
@@ -231,9 +236,13 @@ async function generateRestoreScript() {
             
             document.body.appendChild(modal);
             
+            // Add show class for animation
+            setTimeout(() => modal.classList.add('show'), 10);
+            
             // Add event listeners
             modal.querySelector('.modal-close').addEventListener('click', () => {
-                document.body.removeChild(modal);
+                modal.classList.remove('show');
+                setTimeout(() => document.body.removeChild(modal), 200);
             });
             
             modal.querySelector('#copy-restore-commands').addEventListener('click', () => {
@@ -245,7 +254,8 @@ async function generateRestoreScript() {
             
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
-                    document.body.removeChild(modal);
+                    modal.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(modal), 200);
                 }
             });
         }

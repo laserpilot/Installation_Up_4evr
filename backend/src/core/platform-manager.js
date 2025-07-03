@@ -82,6 +82,11 @@ class PlatformManager {
             return APIResponse.success(status);
         });
 
+        this.api.registerRoute('/system/settings/verify', 'POST', async () => {
+            const status = await this.systemManager.verifySettings();
+            return APIResponse.success(status);
+        });
+
         this.api.registerRoute('/system/settings/apply', 'POST', async (data) => {
             const { settings } = data;
             if (!Array.isArray(settings)) {
@@ -91,6 +96,15 @@ class PlatformManager {
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.partial(result, { message: 'Some settings failed to apply' });
+        });
+
+        this.api.registerRoute('/system/settings/apply-required', 'POST', async () => {
+            const allSettings = this.systemManager.getSettings();
+            const requiredSettings = Object.keys(allSettings).filter(key => allSettings[key].required);
+            const result = await this.systemManager.applySettings(requiredSettings);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.partial(result, { message: 'Some required settings failed to apply' });
         });
 
         this.api.registerRoute('/system/settings/revert', 'POST', async (data) => {
