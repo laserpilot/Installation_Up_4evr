@@ -66,5 +66,77 @@ module.exports = (platformManager) => {
         }
     });
 
+    /**
+     * @swagger
+     * /api/monitoring/config:
+     *   get:
+     *     summary: Get monitoring configuration
+     *     responses:
+     *       200:
+     *         description: The monitoring configuration.
+     */
+    router.get('/config', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/config', 'GET');
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/config:
+     *   post:
+     *     summary: Save monitoring configuration
+     *     responses:
+     *       200:
+     *         description: Configuration saved successfully.
+     */
+    router.post('/config', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/config', 'POST', req.body);
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/config/reset:
+     *   post:
+     *     summary: Reset monitoring configuration to defaults
+     *     responses:
+     *       200:
+     *         description: Configuration reset successfully.
+     */
+    router.post('/config/reset', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/config/reset', 'POST');
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/config/apply:
+     *   post:
+     *     summary: Apply monitoring configuration changes
+     *     responses:
+     *       200:
+     *         description: Configuration applied successfully.
+     */
+    router.post('/config/apply', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/config/apply', 'POST', req.body);
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     return router;
 };

@@ -63,6 +63,7 @@ const configRoutes = require('./routes/config')(platformManager);
 const platformRoutes = require('./routes/platform')(platformManager);
 const healthRoutes = require('./routes/health')(platformManager);
 const validationRoutes = require('./routes/validation')(platformManager);
+const notificationRoutes = require('./routes/notifications')(platformManager);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/system', systemRoutes);
@@ -72,6 +73,7 @@ app.use('/api/config', configRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/validation', validationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Legacy compatibility routes for system-prefs (redirect to new system routes)
 app.get('/api/system-prefs/settings', async (req, res) => {
@@ -159,6 +161,61 @@ app.post('/api/installation/settings', async (req, res) => {
 app.post('/api/installation/test', async (req, res) => {
     try {
         const result = await platformManager.handleAPIRequest('/installation/settings/test', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Setup Wizard API endpoints
+app.get('/api/setup-wizard/system-check', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/setup-wizard/system-check', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/setup-wizard/essential-settings', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/setup-wizard/essential-settings', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/setup-wizard/apply-settings', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/setup-wizard/apply-settings', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/setup-wizard/run-tests', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/setup-wizard/run-tests', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/setup-wizard/verification', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/setup-wizard/verification', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/setup-wizard/summary', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/setup-wizard/summary', 'GET');
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });

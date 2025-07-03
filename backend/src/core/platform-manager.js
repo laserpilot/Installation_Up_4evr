@@ -854,6 +854,40 @@ class PlatformManager {
             });
         });
 
+        // Notification routes
+        this.api.registerRoute('/notifications/config', 'GET', async () => {
+            const config = this.getNotificationConfig();
+            return APIResponse.success({ config });
+        });
+
+        this.api.registerRoute('/notifications/config', 'POST', async (data) => {
+            const { config } = data;
+            if (!config) {
+                throw new Error('Notification configuration is required');
+            }
+            
+            await this.saveNotificationConfig(config);
+            return APIResponse.success({ 
+                message: 'Notification configuration saved successfully',
+                config: config
+            });
+        });
+
+        this.api.registerRoute('/notifications/test/slack', 'POST', async (data) => {
+            const result = await this.testSlackNotification(data);
+            return APIResponse.success(result);
+        });
+
+        this.api.registerRoute('/notifications/test/discord', 'POST', async (data) => {
+            const result = await this.testDiscordNotification(data);
+            return APIResponse.success(result);
+        });
+
+        this.api.registerRoute('/notifications/test/webhook', 'POST', async (data) => {
+            const result = await this.testWebhookNotification(data);
+            return APIResponse.success(result);
+        });
+
         // Validation Workflow routes
         this.api.registerRoute('/validation/tests', 'GET', async () => {
             const tests = this.validation.getAvailableTests();
@@ -902,6 +936,150 @@ class PlatformManager {
                 version: '1.0.0-alpha.1',
                 initialized: this.initialized,
                 features: this.getAvailableFeatures()
+            });
+        });
+
+        // Setup Wizard API routes
+        this.api.registerRoute('/setup-wizard/system-check', 'GET', async () => {
+            return APIResponse.success({
+                systemChecks: [
+                    {
+                        id: 'sip-status',
+                        name: 'System Integrity Protection',
+                        status: 'checking',
+                        description: 'Verifying SIP status for system modifications',
+                        required: true
+                    },
+                    {
+                        id: 'disk-space',
+                        name: 'Available Disk Space',
+                        status: 'checking',
+                        description: 'Checking available disk space for logging and caching',
+                        required: true
+                    },
+                    {
+                        id: 'permissions',
+                        name: 'Administrative Permissions',
+                        status: 'checking',
+                        description: 'Verifying ability to modify system settings',
+                        required: true
+                    },
+                    {
+                        id: 'network',
+                        name: 'Network Connectivity',
+                        status: 'checking',
+                        description: 'Testing network connectivity for remote monitoring',
+                        required: false
+                    }
+                ]
+            });
+        });
+
+        this.api.registerRoute('/setup-wizard/essential-settings', 'GET', async () => {
+            const systemSettings = await this.systemManager.getSystemSettings();
+            const essentialSettings = systemSettings.filter(setting => setting.category === 'required');
+            
+            return APIResponse.success({
+                essentialSettings: essentialSettings.map(setting => ({
+                    id: setting.id,
+                    name: setting.name,
+                    description: setting.description,
+                    current: setting.status === 'compliant',
+                    recommended: true,
+                    category: setting.category
+                }))
+            });
+        });
+
+        this.api.registerRoute('/setup-wizard/apply-settings', 'POST', async (data) => {
+            const { selectedSettings } = data;
+            const results = [];
+            
+            for (const settingId of selectedSettings) {
+                try {
+                    const result = await this.systemManager.applySystemSetting(settingId);
+                    results.push({
+                        id: settingId,
+                        success: result.success,
+                        message: result.message || 'Setting applied successfully'
+                    });
+                } catch (error) {
+                    results.push({
+                        id: settingId,
+                        success: false,
+                        message: error.message || 'Failed to apply setting'
+                    });
+                }
+            }
+            
+            return APIResponse.success({
+                results,
+                totalApplied: results.filter(r => r.success).length,
+                totalFailed: results.filter(r => !r.success).length
+            });
+        });
+
+        this.api.registerRoute('/setup-wizard/run-tests', 'POST', async (data) => {
+            const validationResults = await this.validation.runValidation();
+            
+            return APIResponse.success({
+                testResults: validationResults.map(result => ({
+                    id: result.id,
+                    name: result.name,
+                    passed: result.passed,
+                    message: result.message,
+                    critical: result.critical || false
+                })),
+                overallStatus: validationResults.every(r => r.passed) ? 'passed' : 'failed',
+                criticalFailures: validationResults.filter(r => !r.passed && r.critical).length
+            });
+        });
+
+        this.api.registerRoute('/setup-wizard/verification', 'GET', async () => {
+            const healthScore = await this.healthScoring.calculateScore();
+            const systemStatus = await this.systemManager.getSystemStatus();
+            
+            return APIResponse.success({
+                verificationChecks: [
+                    {
+                        id: 'health-score',
+                        name: 'Overall Health Score',
+                        status: healthScore.overallScore > 80 ? 'passed' : 'warning',
+                        value: healthScore.overallScore,
+                        message: `System health score: ${healthScore.overallScore}%`
+                    },
+                    {
+                        id: 'system-settings',
+                        name: 'System Settings',
+                        status: systemStatus.settingsCompliant ? 'passed' : 'failed',
+                        message: systemStatus.settingsCompliant ? 'All settings configured' : 'Some settings need attention'
+                    },
+                    {
+                        id: 'monitoring',
+                        name: 'Monitoring System',
+                        status: this.monitoring?.isRunning() ? 'passed' : 'failed',
+                        message: this.monitoring?.isRunning() ? 'Monitoring active' : 'Monitoring not started'
+                    }
+                ]
+            });
+        });
+
+        this.api.registerRoute('/setup-wizard/summary', 'GET', async () => {
+            const healthScore = await this.healthScoring.calculateScore();
+            const systemStatus = await this.systemManager.getSystemStatus();
+            
+            return APIResponse.success({
+                summary: {
+                    healthScore: healthScore.overallScore,
+                    settingsConfigured: systemStatus.settingsCompliant,
+                    monitoringActive: this.monitoring?.isRunning() || false,
+                    recommendedNextSteps: [
+                        'Configure notification channels',
+                        'Set up application monitoring',
+                        'Test system reboot behavior',
+                        'Review logging configuration'
+                    ]
+                }
             });
         });
     }
@@ -1231,6 +1409,172 @@ class PlatformManager {
             summary: `${tests.length} tests completed`,
             timestamp: new Date().toISOString()
         };
+    }
+
+    // Notification methods
+    getNotificationConfig() {
+        const defaultConfig = {
+            slack: {
+                enabled: false,
+                webhookUrl: '',
+                channel: '#alerts',
+                username: 'Installation Up 4evr',
+                icon: ':computer:'
+            },
+            discord: {
+                enabled: false,
+                webhookUrl: '',
+                username: 'Installation Up 4evr',
+                avatarUrl: ''
+            },
+            webhook: {
+                enabled: false,
+                url: '',
+                method: 'POST',
+                headers: {},
+                format: 'json'
+            }
+        };
+        
+        const existingConfig = this.config.get('notifications');
+        
+        // Handle legacy format conversion
+        if (existingConfig && existingConfig.channels) {
+            // Convert from legacy format to new format
+            const convertedConfig = {
+                slack: {
+                    enabled: existingConfig.channels.slack?.enabled || false,
+                    webhookUrl: existingConfig.channels.slack?.webhook || '',
+                    channel: '#alerts',
+                    username: 'Installation Up 4evr',
+                    icon: ':computer:'
+                },
+                discord: {
+                    enabled: existingConfig.channels.discord?.enabled || false,
+                    webhookUrl: existingConfig.channels.discord?.webhook || '',
+                    username: 'Installation Up 4evr',
+                    avatarUrl: ''
+                },
+                webhook: {
+                    enabled: existingConfig.channels.webhook?.enabled || false,
+                    url: existingConfig.channels.webhook?.urls?.[0] || '',
+                    method: 'POST',
+                    headers: {},
+                    format: 'json'
+                }
+            };
+            return convertedConfig;
+        }
+        
+        return existingConfig || defaultConfig;
+    }
+
+    async saveNotificationConfig(config) {
+        try {
+            await this.config.update('notifications', config);
+            return {
+                success: true,
+                message: 'Notification configuration saved successfully',
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            console.error('Failed to save notification config:', error);
+            throw new Error(`Failed to save notification config: ${error.message}`);
+        }
+    }
+
+    async testSlackNotification(data) {
+        const { config, message } = data;
+        
+        if (!config || !config.webhookUrl) {
+            return {
+                success: false,
+                message: 'Slack webhook URL is required'
+            };
+        }
+
+        try {
+            // In demo mode, simulate sending Slack notification
+            console.log('[NOTIFICATIONS] Slack test:', {
+                webhook: config.webhookUrl,
+                channel: config.channel,
+                message: message
+            });
+
+            return {
+                success: true,
+                message: 'Slack test notification sent successfully',
+                note: 'Demo mode: actual Slack integration requires webhook implementation'
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Slack test failed: ${error.message}`
+            };
+        }
+    }
+
+    async testDiscordNotification(data) {
+        const { config, message } = data;
+        
+        if (!config || !config.webhookUrl) {
+            return {
+                success: false,
+                message: 'Discord webhook URL is required'
+            };
+        }
+
+        try {
+            // In demo mode, simulate sending Discord notification
+            console.log('[NOTIFICATIONS] Discord test:', {
+                webhook: config.webhookUrl,
+                username: config.username,
+                message: message
+            });
+
+            return {
+                success: true,
+                message: 'Discord test notification sent successfully',
+                note: 'Demo mode: actual Discord integration requires webhook implementation'
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Discord test failed: ${error.message}`
+            };
+        }
+    }
+
+    async testWebhookNotification(data) {
+        const { config, message } = data;
+        
+        if (!config || !config.url) {
+            return {
+                success: false,
+                message: 'Webhook URL is required'
+            };
+        }
+
+        try {
+            // In demo mode, simulate sending webhook notification
+            console.log('[NOTIFICATIONS] Webhook test:', {
+                url: config.url,
+                method: config.method,
+                format: config.format,
+                message: message
+            });
+
+            return {
+                success: true,
+                message: 'Webhook test notification sent successfully',
+                note: 'Demo mode: actual webhook integration requires HTTP implementation'
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: `Webhook test failed: ${error.message}`
+            };
+        }
     }
 
     async shutdown() {
