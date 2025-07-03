@@ -11,6 +11,7 @@ let allAgents = [];
 let agentStatusList = [];
 let currentAppPath = null;
 let statusUpdateInterval = null;
+let currentMode = 'app'; // 'app' or 'web'
 
 async function loadLaunchAgents() {
     try {
@@ -305,7 +306,259 @@ async function loadMasterConfigAgents() {
     }
 }
 
+// Web Application Launch Agent Functions
+function switchCreationMode(mode) {
+    currentMode = mode;
+    
+    // Update tab states
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.mode === mode);
+    });
+    
+    // Show/hide mode content
+    document.getElementById('app-mode').style.display = mode === 'app' ? 'block' : 'none';
+    document.getElementById('web-mode').style.display = mode === 'web' ? 'block' : 'none';
+    
+    // Reset app info if switching away from app mode
+    if (mode !== 'app') {
+        document.getElementById('app-info').style.display = 'none';
+        currentAppPath = null;
+    }
+}
+
+function handleBrowserPathChange() {
+    const select = document.getElementById('browser-path');
+    const customInput = document.getElementById('custom-browser-path');
+    
+    if (select.value === 'custom') {
+        customInput.style.display = 'block';
+        customInput.required = true;
+    } else {
+        customInput.style.display = 'none';
+        customInput.required = false;
+    }
+}
+
+function autoPopulateWebAppName() {
+    const urlInput = document.getElementById('web-app-url');
+    const nameInput = document.getElementById('web-app-name');
+    
+    if (urlInput.value && !nameInput.value) {
+        try {
+            const url = new URL(urlInput.value);
+            const hostname = url.hostname.replace('www.', '');
+            const appName = hostname.split('.')[0];
+            nameInput.value = appName.charAt(0).toUpperCase() + appName.slice(1) + ' App';
+        } catch (e) {
+            // Invalid URL, ignore
+        }
+    }
+}
+
+async function createWebLaunchAgent() {
+    try {
+        // Validate form
+        const url = document.getElementById('web-app-url').value;
+        const name = document.getElementById('web-app-name').value;
+        const browserSelect = document.getElementById('browser-path');
+        const customBrowserPath = document.getElementById('custom-browser-path').value;
+        
+        if (!url || !name) {
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Validate URL
+        try {
+            new URL(url);
+        } catch (e) {
+            showToast('Please enter a valid URL', 'error');
+            return;
+        }
+        
+        const browserPath = browserSelect.value === 'custom' ? customBrowserPath : browserSelect.value;
+        if (!browserPath) {
+            showToast('Please select or specify a browser path', 'error');
+            return;
+        }
+        
+        // Get options
+        const kioskMode = document.getElementById('web-kiosk-mode').checked;
+        const disableDevTools = document.getElementById('web-disable-dev-tools').checked;
+        const disableExtensions = document.getElementById('web-disable-extensions').checked;
+        const incognitoMode = document.getElementById('web-incognito-mode').checked;
+        
+        showLoading('Creating web application launch agent...');
+        
+        const response = await apiCall('/api/launch-agents/create-web', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name,
+                url,
+                browserPath,
+                options: {
+                    kioskMode,
+                    disableDevTools,
+                    disableExtensions,
+                    incognitoMode,
+                    keepAlive: true,
+                    runAtLoad: true
+                }
+            })
+        });
+        
+        if (response.success) {
+            showToast(`Web app launch agent created: ${name}`, 'success');
+            
+            // Clear form
+            document.getElementById('web-app-url').value = '';
+            document.getElementById('web-app-name').value = '';
+            document.getElementById('web-kiosk-mode').checked = true;
+            document.getElementById('web-disable-dev-tools').checked = true;
+            document.getElementById('web-disable-extensions').checked = true;
+            document.getElementById('web-incognito-mode').checked = false;
+            
+            // Reload agents list
+            loadLaunchAgents();
+        } else {
+            showToast(`Failed to create web app launch agent: ${response.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Failed to create web launch agent:', error);
+        showToast('Failed to create web launch agent', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function previewWebCommand() {
+    try {
+        const url = document.getElementById('web-app-url').value;
+        const browserSelect = document.getElementById('browser-path');
+        const customBrowserPath = document.getElementById('custom-browser-path').value;
+        
+        if (!url) {
+            showToast('Please enter a URL first', 'error');
+            return;
+        }
+        
+        const browserPath = browserSelect.value === 'custom' ? customBrowserPath : browserSelect.value;
+        if (!browserPath) {
+            showToast('Please select a browser first', 'error');
+            return;
+        }
+        
+        // Build command arguments
+        const args = [];
+        
+        if (document.getElementById('web-kiosk-mode').checked) {
+            args.push('--kiosk');
+        }
+        
+        if (document.getElementById('web-disable-dev-tools').checked) {
+            args.push('--disable-dev-tools');
+        }
+        
+        if (document.getElementById('web-disable-extensions').checked) {
+            args.push('--disable-extensions');
+        }
+        
+        if (document.getElementById('web-incognito-mode').checked) {
+            args.push('--incognito');
+        }
+        
+        args.push('--no-first-run');
+        args.push('--disable-default-apps');
+        args.push('--disable-popup-blocking');
+        args.push(url);
+        
+        const command = `"${browserPath}" ${args.join(' ')}`;
+        
+        showCommandPreview(command, url, browserPath);
+    } catch (error) {
+        console.error('Failed to preview command:', error);
+        showToast('Failed to preview command', 'error');
+    }
+}
+
+function showCommandPreview(command, url, browserPath) {
+    const modal = document.createElement('div');
+    modal.className = 'command-preview-modal';
+    
+    modal.innerHTML = `
+        <div class="command-preview-content">
+            <div class="command-preview-header">
+                <h3><i class="fas fa-eye"></i> Browser Command Preview</h3>
+                <button class="command-preview-close">&times;</button>
+            </div>
+            
+            <div class="command-info">
+                <h4><i class="fas fa-info-circle"></i> Command Details</h4>
+                <ul>
+                    <li><strong>URL:</strong> ${url}</li>
+                    <li><strong>Browser:</strong> ${browserPath}</li>
+                    <li><strong>Mode:</strong> ${document.getElementById('web-kiosk-mode').checked ? 'Kiosk (Full Screen)' : 'Windowed'}</li>
+                </ul>
+            </div>
+            
+            <h4>Generated Command:</h4>
+            <div class="command-display">${command}</div>
+            
+            <div class="command-info">
+                <h4><i class="fas fa-lightbulb"></i> What This Does</h4>
+                <ul>
+                    <li>Launches the specified browser with the given URL</li>
+                    <li>Applies kiosk mode options for full-screen display</li>
+                    <li>Disables user interface elements for installation use</li>
+                    <li>Will restart automatically if the browser crashes</li>
+                </ul>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-primary command-preview-close">
+                    <i class="fas fa-check"></i> Looks Good
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Handle close
+    modal.querySelectorAll('.command-preview-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+            modal.remove();
+        });
+    });
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Close on escape
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+}
+
 export function initLaunchAgents() {
+    // Mode switching
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const mode = e.target.dataset.mode;
+            switchCreationMode(mode);
+        });
+    });
+
+    // Desktop app mode
     document.getElementById('create-launch-agent').addEventListener('click', createLaunchAgent);
     document.getElementById('install-launch-agent').addEventListener('click', installLaunchAgent);
 
@@ -333,6 +586,14 @@ export function initLaunchAgents() {
             document.getElementById('app-name').textContent = currentAppPath;
         }
     });
+
+    // Web app mode
+    document.getElementById('browser-path').addEventListener('change', handleBrowserPathChange);
+    document.getElementById('create-web-launch-agent').addEventListener('click', createWebLaunchAgent);
+    document.getElementById('preview-web-command').addEventListener('click', previewWebCommand);
+    
+    // Auto-populate web app name from URL
+    document.getElementById('web-app-url').addEventListener('input', autoPopulateWebAppName);
 
     loadLaunchAgents();
     

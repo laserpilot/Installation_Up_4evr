@@ -221,6 +221,16 @@ app.post('/api/launch-agents/export', async (req, res) => {
     }
 });
 
+// Web Application Launch Agent
+app.post('/api/launch-agents/create-web', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/create-web', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Installation Settings API Routes
 app.get('/api/installation/settings', async (req, res) => {
     try {
