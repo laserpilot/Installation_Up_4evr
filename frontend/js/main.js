@@ -8,6 +8,7 @@ console.log("main.js loaded and executing!"); // Added for debugging
 import { AuthSessionManager } from './modules/auth.js';
 import { MonitoringDataManager } from './modules/monitoring.js';
 import { UIManager } from './modules/UIManager.js';
+import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initSystemPreferences } from './modules/system-preferences.js';
 import { initLaunchAgents } from './modules/launch-agents.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
@@ -43,25 +44,10 @@ function initMonitoringTab() {
 }
 
 function setupMonitoringControls(monitoringManager) {
-    // Refresh button
-    const refreshBtn = document.getElementById('refresh-monitoring');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', async () => {
-            console.log('[MONITORING] Manual refresh requested');
-            refreshBtn.disabled = true;
-            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-            
-            try {
-                await monitoringManager.refreshData();
-                showToast('Monitoring data refreshed', 'success');
-            } catch (error) {
-                showToast('Failed to refresh monitoring data', 'error');
-            } finally {
-                refreshBtn.disabled = false;
-                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
-            }
-        });
-    }
+    // Use unified refresh button setup
+    monitoringDisplay.setupRefreshButton('refresh-monitoring', async () => {
+        await monitoringManager.refreshData();
+    });
 
     // Export button
     const exportBtn = document.getElementById('export-monitoring-data');
@@ -125,102 +111,63 @@ function exportMonitoringData(monitoringManager) {
 function updateMonitoringDisplay(data) {
     console.log('[MONITORING] Updating display with data:', data);
     
-    // Update system metrics
+    // Update system metrics using unified display manager
     const metrics = data.system;
     if (metrics) {
-        // Update CPU
-        const cpuUsage = metrics.cpu?.usage || metrics.cpuUsage || 0;
-        updateMetricCard('cpu-usage', 'cpu-bar', cpuUsage, '%');
+        // Update CPU with top processes
+        monitoringDisplay.updateMetricCard({
+            metricId: 'cpu-usage',
+            value: metrics.cpu?.usage || metrics.cpuUsage || 0,
+            unit: '%',
+            type: 'cpu',
+            showProcesses: true,
+            processes: metrics.cpu?.topProcesses || []
+        });
         
-        // Update Memory
-        const memoryUsage = metrics.memory?.usage || metrics.memoryUsage || 0;
-        updateMetricCard('memory-usage', 'memory-bar', memoryUsage, '%');
+        // Update Memory with top processes
+        monitoringDisplay.updateMetricCard({
+            metricId: 'memory-usage',
+            value: metrics.memory?.usage || metrics.memoryUsage || 0,
+            unit: '%',
+            type: 'memory',
+            showProcesses: true,
+            processes: metrics.memory?.topProcesses || []
+        });
         
-        // Update Disk
+        // Update Disk with details
         let diskUsage = 0;
         if (data.storage) {
             diskUsage = Math.max(...Object.values(data.storage).map(disk => disk.usagePercent || 0));
         }
-        updateMetricCard('disk-usage', 'disk-bar', diskUsage, '%');
+        monitoringDisplay.updateMetricCard({
+            metricId: 'disk-usage',
+            value: diskUsage,
+            unit: '%',
+            type: 'disk',
+            diskDetails: metrics.disk ? {
+                total: metrics.disk.total || 'Unknown',
+                used: metrics.disk.used || 'Unknown',
+                available: metrics.disk.available || 'Unknown'
+            } : null
+        });
     }
     
-    // Update health status
-    updateHealthStatus(data);
+    // Update health status using unified manager
+    const healthData = data.system ? 
+        monitoringDisplay.defaultConfig.getHealthStatus?.(data) || 
+        { status: data.status || 'unknown', issues: [] } : 
+        { status: 'unknown', issues: [] };
     
-    // Update alerts
-    updateAlertsSection(data.alerts || []);
+    monitoringDisplay.updateHealthStatus('health-status', healthData.status, healthData.issues);
+    
+    // Update alerts using unified display
+    monitoringDisplay.updateAlertsSection('alerts-container', data.alerts || []);
     
     // Update system details
     updateSystemDetails(data);
 }
 
-function updateMetricCard(valueId, barId, value, unit) {
-    const valueElement = document.getElementById(valueId);
-    const barElement = document.getElementById(barId);
-    
-    if (valueElement) {
-        valueElement.textContent = `${value.toFixed(1)}${unit}`;
-    }
-    
-    if (barElement) {
-        barElement.style.width = `${Math.min(value, 100)}%`;
-        
-        // Add color coding
-        barElement.className = 'metric-fill';
-        if (value > 80) barElement.classList.add('critical');
-        else if (value > 60) barElement.classList.add('warning');
-        else barElement.classList.add('normal');
-    }
-}
-
-function updateHealthStatus(data) {
-    const indicator = document.getElementById('health-indicator');
-    const text = document.getElementById('health-text');
-    
-    if (!indicator || !text) return;
-    
-    const status = data.status || 'unknown';
-    
-    switch (status) {
-        case 'good':
-            indicator.textContent = '🟢';
-            text.textContent = 'System Healthy';
-            break;
-        case 'warning':
-            indicator.textContent = '🟡';
-            text.textContent = 'Minor Issues';
-            break;
-        case 'error':
-        case 'critical':
-            indicator.textContent = '🔴';
-            text.textContent = 'Critical Issues';
-            break;
-        default:
-            indicator.textContent = '🟡';
-            text.textContent = 'Checking...';
-    }
-}
-
-function updateAlertsSection(alerts) {
-    const container = document.getElementById('alerts-container');
-    if (!container) return;
-    
-    if (alerts.length === 0) {
-        container.innerHTML = '<p class="no-alerts">No active alerts</p>';
-        return;
-    }
-    
-    container.innerHTML = alerts.map(alert => `
-        <div class="alert alert-${alert.level || 'info'}">
-            <i class="fas fa-${getAlertIcon(alert.level)}"></i>
-            <div class="alert-content">
-                <strong>${alert.title || 'System Alert'}</strong>
-                <p>${alert.message || alert.description || 'No details available'}</p>
-                <small>${new Date(alert.timestamp || Date.now()).toLocaleString()}</small>
-            </div>
-        </div>
-    `).join('');
-}
+// Old metric display functions replaced by unified MonitoringDisplayManager
 
 function updateSystemDetails(data) {
     // Update display status
@@ -288,14 +235,7 @@ function updateDetailCard(elementId, data) {
     }
 }
 
-function getAlertIcon(level) {
-    switch (level) {
-        case 'critical': return 'exclamation-circle';
-        case 'warning': return 'exclamation-triangle';
-        case 'info': return 'info-circle';
-        default: return 'bell';
-    }
-}
+// Utility functions moved to unified MonitoringDisplayManager
 
 class InstallationUp4evr {
     constructor() {
