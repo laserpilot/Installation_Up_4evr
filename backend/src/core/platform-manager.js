@@ -424,6 +424,120 @@ class PlatformManager {
             return APIResponse.success({ message: 'Thresholds updated' });
         });
 
+        // Monitoring configuration routes
+        this.api.registerRoute('/monitoring/config', 'GET', async () => {
+            const config = {
+                thresholds: this.monitoring.alertThresholds,
+                interval: this.config.get('monitoring.interval') || 30000,
+                autoRestart: this.config.get('monitoring.autoRestart') || false,
+                notifications: this.config.get('monitoring.notifications') || true,
+                applications: Array.from(this.monitoring.watchedApplications.entries()).map(([name, config]) => ({
+                    name,
+                    ...config
+                }))
+            };
+            return APIResponse.success({ config });
+        });
+
+        this.api.registerRoute('/monitoring/config', 'POST', async (data) => {
+            const { config } = data;
+            if (!config) {
+                throw new Error('Configuration data is required');
+            }
+
+            // Update thresholds if provided
+            if (config.thresholds) {
+                this.monitoring.updateThresholds(config.thresholds);
+                await this.config.updateMonitoringThresholds(config.thresholds);
+            }
+
+            // Update other config settings
+            if (config.interval !== undefined) {
+                await this.config.update('monitoring.interval', config.interval);
+            }
+            if (config.autoRestart !== undefined) {
+                await this.config.update('monitoring.autoRestart', config.autoRestart);
+            }
+            if (config.notifications !== undefined) {
+                await this.config.update('monitoring.notifications', config.notifications);
+            }
+
+            // Update watched applications if provided
+            if (config.applications && Array.isArray(config.applications)) {
+                // Clear existing applications
+                this.monitoring.watchedApplications.clear();
+                
+                // Add new applications
+                config.applications.forEach(app => {
+                    if (app.name && app.path) {
+                        this.monitoring.addApplication(app.name, app.path, {
+                            shouldBeRunning: app.shouldBeRunning !== false,
+                            ...app
+                        });
+                    }
+                });
+            }
+
+            return APIResponse.success({ message: 'Monitoring configuration saved successfully' });
+        });
+
+        this.api.registerRoute('/monitoring/config/reset', 'POST', async () => {
+            // Reset to default thresholds
+            const defaultThresholds = {
+                cpuUsage: 90,
+                memoryUsage: 90,
+                diskUsage: 90,
+                temperatureCpu: 85,
+                appRestarts: 5
+            };
+            
+            this.monitoring.updateThresholds(defaultThresholds);
+            await this.config.updateMonitoringThresholds(defaultThresholds);
+            await this.config.update('monitoring.interval', 30000);
+            await this.config.update('monitoring.autoRestart', false);
+            await this.config.update('monitoring.notifications', true);
+
+            return APIResponse.success({ 
+                message: 'Monitoring configuration reset to defaults',
+                config: {
+                    thresholds: defaultThresholds,
+                    interval: 30000,
+                    autoRestart: false,
+                    notifications: true
+                }
+            });
+        });
+
+        this.api.registerRoute('/monitoring/config/apply', 'POST', async (data) => {
+            const { config } = data;
+            if (!config) {
+                throw new Error('Configuration data is required');
+            }
+
+            // Apply the configuration immediately
+            let restartRequired = false;
+
+            // Check if monitoring interval changed
+            const currentInterval = this.config.get('monitoring.interval') || 30000;
+            if (config.interval && config.interval !== currentInterval) {
+                restartRequired = true;
+            }
+
+            // Save configuration first
+            await this.handleAPIRequest('/monitoring/config', 'POST', { config });
+
+            // Restart monitoring if interval changed
+            if (restartRequired && config.interval) {
+                this.monitoring.stopMonitoring();
+                await this.monitoring.startMonitoring(config.interval);
+            }
+
+            return APIResponse.success({ 
+                message: 'Monitoring configuration applied successfully',
+                restartRequired 
+            });
+        });
+
         // Configuration routes
         this.api.registerRoute('/config', 'GET', async () => {
             const config = this.config.get();
@@ -607,6 +721,47 @@ class PlatformManager {
                 message: 'Service installation not yet implemented',
                 status: 'manual_required',
                 instructions: 'Please use PM2 or similar process manager for production deployment'
+            });
+        });
+
+        // System Control routes (aliases for service routes for UI compatibility)
+        this.api.registerRoute('/system/status', 'GET', async () => {
+            const status = this.getServiceStatus();
+            return APIResponse.success(status);
+        });
+
+        this.api.registerRoute('/system/start', 'POST', async () => {
+            // Note: This is mostly for UI feedback - service is already running if this endpoint is hit
+            return APIResponse.success({ 
+                message: 'Service is already running',
+                status: 'running',
+                pid: process.pid
+            });
+        });
+
+        this.api.registerRoute('/system/stop', 'POST', async () => {
+            // Graceful shutdown with delay to allow response
+            setTimeout(() => {
+                console.log('[SYSTEM] Graceful shutdown requested');
+                process.exit(0);
+            }, 1000);
+            
+            return APIResponse.success({ 
+                message: 'System shutdown initiated',
+                status: 'stopping' 
+            });
+        });
+
+        this.api.registerRoute('/system/restart', 'POST', async () => {
+            // Note: In production, this would typically use PM2 or similar process manager
+            setTimeout(() => {
+                console.log('[SYSTEM] Restart requested');
+                process.exit(0); // Let process manager restart
+            }, 1000);
+            
+            return APIResponse.success({ 
+                message: 'System restart initiated',
+                status: 'restarting' 
             });
         });
 

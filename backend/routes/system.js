@@ -198,5 +198,81 @@ module.exports = (platformManager) => {
         }
     });
 
+    /**
+     * @swagger
+     * /api/system/status:
+     *   get:
+     *     summary: Get system service status
+     *     description: Get the current status of the backend service including PID and uptime.
+     *     responses:
+     *       200:
+     *         description: System service status information.
+     */
+    router.get('/status', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/status', 'GET');
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/system/restart:
+     *   post:
+     *     summary: Restart the backend service
+     *     description: Restart the backend service gracefully.
+     *     responses:
+     *       200:
+     *         description: Service restart initiated successfully.
+     */
+    router.post('/restart', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/restart', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/system/stop:
+     *   post:
+     *     summary: Stop the backend service
+     *     description: Stop the backend service gracefully.
+     *     responses:
+     *       200:
+     *         description: Service stop initiated successfully.
+     */
+    router.post('/stop', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/stop', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/system/start:
+     *   post:
+     *     summary: Start the backend service
+     *     description: Start the backend service if it's currently stopped.
+     *     responses:
+     *       200:
+     *         description: Service start initiated successfully.
+     */
+    router.post('/start', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/start', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     return router;
 };
