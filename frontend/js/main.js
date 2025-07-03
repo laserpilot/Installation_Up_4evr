@@ -17,6 +17,7 @@ import { initInstallationSettings } from './modules/installation-settings.js';
 import { initServiceControl } from './modules/service-control.js';
 import { initConfiguration } from './modules/configuration.js';
 import { initSetupWizard } from './modules/setup-wizard.js';
+import { initDashboard } from './modules/dashboard.js';
 
 function initMonitoringTab() {
     console.log('[INIT] Initializing Monitoring tab...');
@@ -381,7 +382,7 @@ class InstallationUp4evr {
 
 // Add module initializers to the InstallationUp4evr class prototype
 InstallationUp4evr.prototype.moduleInitializers = {
-    'dashboard': () => { /* Dashboard logic is primarily handled by MonitoringDataManager */ },
+    'dashboard': initDashboard,
     'setup-wizard': initSetupWizard,
     'system-prefs': initSystemPreferences,
     'launch-agents': initLaunchAgents,
