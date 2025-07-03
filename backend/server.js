@@ -139,6 +139,79 @@ app.get('/api/system-prefs/generate-restore', async (req, res) => {
     }
 });
 
+// Launch Agents API Routes
+app.get('/api/launch-agents/list', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/list', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/launch-agents/status', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/status', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/create', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/create', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/install', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/install', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/remove', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/remove', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/app-info', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/app-info', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/test', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/test', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/export', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/export', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Installation Settings API Routes
 app.get('/api/installation/settings', async (req, res) => {
     try {
