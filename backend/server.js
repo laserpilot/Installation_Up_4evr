@@ -137,6 +137,34 @@ app.get('/api/system-prefs/generate-restore', async (req, res) => {
     }
 });
 
+// Installation Settings API Routes
+app.get('/api/installation/settings', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/settings', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/test', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/test', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 // Error handling middleware
 app.use((error, req, res, next) => {
