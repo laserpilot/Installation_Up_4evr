@@ -155,19 +155,29 @@ async function refreshDashboardData() {
 function updateSystemMetrics(systemData) {
     // CPU Usage
     const cpuValue = systemData.cpu?.usage || 0;
+    const cpuTopProcesses = systemData.cpu?.topProcesses || [];
     updateMetricCard('cpu', cpuValue, '%', cpuValue > 80 ? 'high' : cpuValue > 60 ? 'medium' : 'low');
+    updateTopProcesses('cpu', cpuTopProcesses);
     
     // Memory Usage  
     const memoryValue = systemData.memory?.usage || 0;
+    const memoryTopProcesses = systemData.memory?.topProcesses || [];
     updateMetricCard('memory', memoryValue, '%', memoryValue > 90 ? 'high' : memoryValue > 70 ? 'medium' : 'low');
+    updateTopProcesses('memory', memoryTopProcesses);
     
     // Disk Usage
     const diskValue = systemData.disk?.usage || 0;
+    const diskDetails = {
+        total: systemData.disk?.total || 'Unknown',
+        used: systemData.disk?.used || 'Unknown', 
+        available: systemData.disk?.available || 'Unknown'
+    };
     updateMetricCard('disk', diskValue, '%', diskValue > 90 ? 'high' : diskValue > 80 ? 'medium' : 'low');
+    updateDiskDetails(diskDetails);
     
     // System Uptime
-    const uptimeValue = systemData.uptime || 0;
-    const uptimeFormatted = formatUptime(uptimeValue);
+    const uptimeValue = systemData.uptime?.seconds || 0;
+    const uptimeFormatted = systemData.uptime?.formatted || formatUptime(uptimeValue);
     updateMetricCard('uptime', uptimeFormatted, '', 'low', uptimeValue > 0 ? 'Active' : 'Unknown');
 }
 
@@ -192,6 +202,44 @@ function updateMetricCard(metric, value, unit, level, customStatus) {
         statusElement.textContent = customStatus || getStatusText(level);
         statusElement.className = `metric-status status-${level}`;
     }
+}
+
+function updateTopProcesses(metric, topProcesses) {
+    const processContainer = document.getElementById(`dashboard-${metric}-processes`);
+    if (!processContainer) return;
+    
+    if (!topProcesses || topProcesses.length === 0) {
+        processContainer.innerHTML = '<div class="no-processes">No process data available</div>';
+        return;
+    }
+    
+    // Show top 3 processes
+    const top3 = topProcesses.slice(0, 3);
+    
+    processContainer.innerHTML = top3.map(process => {
+        const processName = process.name || `PID ${process.pid}`;
+        const usage = metric === 'cpu' ? 
+            `${process.cpuPercent?.toFixed(1)}%` : 
+            `${process.memoryMB}MB`;
+        
+        return `
+            <div class="process-item">
+                <span class="process-name">${processName}</span>
+                <span class="process-usage">${usage}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateDiskDetails(diskDetails) {
+    const diskDetailsContainer = document.getElementById('dashboard-disk-details');
+    if (!diskDetailsContainer) return;
+    
+    diskDetailsContainer.innerHTML = `
+        <div class="disk-details">
+            ${diskDetails.total} drive, ${diskDetails.used} used, ${diskDetails.available} free
+        </div>
+    `;
 }
 
 function updateApplications(applications) {
