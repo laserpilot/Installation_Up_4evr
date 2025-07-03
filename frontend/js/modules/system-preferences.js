@@ -50,19 +50,17 @@ function addCheckboxListeners(container) {
 
             if (e.target.checked) {
                 if (isDangerSetting) {
+                    e.target.checked = false; // Uncheck immediately
                     const settingName = settingItem.querySelector('h4').textContent.replace('⚠️', '').trim();
-                    const confirmed = confirm(
-                        `⚠️ DANGER ZONE SETTING ⚠️\n\n` +
-                        `You are about to enable: "${settingName}"\n\n` +
-                        `This setting may compromise system security or stability. ` +
-                        `Only proceed if you understand the risks and have proper backups.\n\n` +
-                        `Continue with this dangerous setting?`
-                    );
+                    const settingDescription = settingItem.querySelector('p').textContent;
                     
-                    if (!confirmed) {
-                        e.target.checked = false;
-                        return;
-                    }
+                    showExpertWarningModal(settingId, settingName, settingDescription, () => {
+                        // Only check after confirmation
+                        e.target.checked = true;
+                        selectedSettings.add(settingId);
+                        settingItem.classList.add('selected');
+                    });
+                    return;
                 }
                 
                 selectedSettings.add(settingId);
@@ -344,6 +342,160 @@ async function loadMasterConfigState() {
         console.warn('[SYSTEM-PREFS] Failed to load master config state:', error);
         // Continue without master config integration
     }
+}
+
+// Expert Warning Modal System
+function showExpertWarningModal(settingId, settingName, settingDescription, onConfirm) {
+    const existingModal = document.querySelector('.expert-warning-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'expert-warning-modal';
+    
+    // Define risk information for different danger settings
+    const riskInfo = {
+        disableGatekeeper: {
+            risks: [
+                'Allows unsigned applications to run without warning',
+                'Increases risk of malware installation',
+                'May void system security compliance',
+                'Could allow malicious code execution'
+            ],
+            severity: 'CRITICAL SECURITY RISK'
+        },
+        allowAppsAnywhere: {
+            risks: [
+                'Bypasses all application signature verification',
+                'Extremely high malware risk',
+                'May violate organizational security policies',
+                'Could compromise system integrity'
+            ],
+            severity: 'EXTREME SECURITY RISK'
+        },
+        disableCrashReporter: {
+            risks: [
+                'Requires disabling System Integrity Protection (SIP)',
+                'May hide critical application failures',
+                'Could mask security vulnerabilities',
+                'System becomes less debuggable'
+            ],
+            severity: 'SYSTEM INTEGRITY RISK'
+        }
+    };
+
+    const currentRisk = riskInfo[settingId] || {
+        risks: [
+            'May compromise system security',
+            'Could affect system stability',
+            'May have unintended side effects',
+            'Requires advanced system knowledge'
+        ],
+        severity: 'SECURITY RISK'
+    };
+
+    modal.innerHTML = `
+        <div class="expert-warning-content">
+            <div class="expert-warning-header">
+                <div class="expert-warning-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h2 class="expert-warning-title">⚠️ EXPERT / DANGER ZONE</h2>
+                    <p class="expert-warning-subtitle">${currentRisk.severity}</p>
+                </div>
+            </div>
+            
+            <div class="expert-warning-body">
+                <p>You are about to enable a dangerous system setting:</p>
+                <p class="setting-name-highlight">${settingName}</p>
+                <p><strong>Description:</strong> ${settingDescription}</p>
+                
+                <div class="risk-list">
+                    <h4><i class="fas fa-exclamation-circle"></i> Potential Risks:</h4>
+                    <ul>
+                        ${currentRisk.risks.map(risk => `<li>${risk}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="confirmation-section">
+                    <p class="confirmation-text">⚠️ Only proceed if you:</p>
+                    <div class="confirmation-checkbox">
+                        <input type="checkbox" id="understand-risks">
+                        <label for="understand-risks">Understand the security implications and risks</label>
+                    </div>
+                    <div class="confirmation-checkbox">
+                        <input type="checkbox" id="have-backups">
+                        <label for="have-backups">Have current system backups and recovery plan</label>
+                    </div>
+                    <div class="confirmation-checkbox">
+                        <input type="checkbox" id="accept-responsibility">
+                        <label for="accept-responsibility">Accept full responsibility for any system issues</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="expert-warning-actions">
+                <button class="btn-expert-cancel">
+                    <i class="fas fa-times"></i> Cancel (Recommended)
+                </button>
+                <button class="btn-expert-proceed" id="proceed-button" disabled>
+                    <i class="fas fa-exclamation-triangle"></i> I Accept the Risks
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Handle checkbox validation
+    const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
+    const proceedButton = modal.querySelector('#proceed-button');
+    
+    function updateProceedButton() {
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        if (allChecked) {
+            proceedButton.disabled = false;
+            proceedButton.classList.add('enabled');
+        } else {
+            proceedButton.disabled = true;
+            proceedButton.classList.remove('enabled');
+        }
+    }
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateProceedButton);
+    });
+
+    // Handle button clicks
+    modal.querySelector('.btn-expert-cancel').addEventListener('click', () => {
+        modal.remove();
+    });
+
+    modal.querySelector('.btn-expert-proceed').addEventListener('click', () => {
+        if (!proceedButton.disabled) {
+            modal.remove();
+            onConfirm();
+            showToast(`Enabled dangerous setting: ${settingName}`, 'warning');
+        }
+    });
+
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+
+    // Close on escape key
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
 }
 
 export function initSystemPreferences() {

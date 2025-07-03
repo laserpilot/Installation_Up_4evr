@@ -329,6 +329,20 @@ class PlatformManager {
                 APIResponse.error(result);
         });
 
+        this.api.registerRoute('/launch-agents/create-web', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Web application launch agents only available on macOS' });
+            }
+            const { name, url, browserPath, options = {} } = data;
+            if (!name || !url || !browserPath) {
+                throw new Error('Name, URL, and browser path are required');
+            }
+            const result = await this.processManager.createWebAppLaunchAgent(name, url, browserPath, options);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
         this.api.registerRoute('/launch-agents/view', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
@@ -1112,6 +1126,32 @@ class PlatformManager {
                     ]
                 }
             });
+        });
+
+        this.api.registerRoute('/setup-wizard/log-action', 'POST', async (data) => {
+            const { action, step, selectedCount, totalCount, timestamp } = data;
+            
+            // Simple logging for wizard analytics
+            console.log(`[SETUP-WIZARD] Action: ${action}, Step: ${step}, Selected: ${selectedCount}/${totalCount}, Time: ${timestamp}`);
+            
+            // In production, this could be sent to analytics service
+            const logEntry = {
+                action,
+                step,
+                selectedCount,
+                totalCount,
+                timestamp,
+                userAgent: 'setup-wizard',
+                platform: this.platform
+            };
+            
+            // Store in memory for session (could be persisted to file/database)
+            if (!this.wizardAnalytics) {
+                this.wizardAnalytics = [];
+            }
+            this.wizardAnalytics.push(logEntry);
+            
+            return APIResponse.success({ logged: true, entry: logEntry });
         });
     }
 

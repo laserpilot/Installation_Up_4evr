@@ -19,6 +19,21 @@ function createSettingItem(setting, status) {
     const statusClass = getStatusClass(status.status);
     const isDangerZone = setting.category === 'danger';
     const dangerClass = isDangerZone ? 'danger-setting' : '';
+    
+    // Educational tooltip content for dangerous settings
+    const tooltips = {
+        disableGatekeeper: 'This setting removes Apple\'s Gatekeeper protection. Gatekeeper prevents unsigned and potentially malicious software from running. Disabling it significantly increases security risks.',
+        allowAppsAnywhere: 'This bypasses all macOS app verification. Extremely dangerous as it allows any code to run without checks. Only use in controlled environments with trusted software.',
+        disableCrashReporter: 'This prevents crash reports from appearing but requires disabling System Integrity Protection. May hide critical issues and make debugging impossible.'
+    };
+    
+    const tooltipContent = tooltips[setting.id] || (isDangerZone ? 'This is an advanced setting that may compromise system security. Proceed with caution and ensure you understand the implications.' : '');
+    const tooltipHTML = isDangerZone ? `
+        <span class="setting-tooltip">
+            <i class="fas fa-info-circle tooltip-icon"></i>
+            <div class="tooltip-content">${tooltipContent}</div>
+        </span>
+    ` : '';
 
     return `
         <div class="setting-item ${statusClass} ${dangerClass}" data-setting-id="${setting.id}" data-category="${setting.category}">
@@ -27,7 +42,7 @@ function createSettingItem(setting, status) {
                 <span class="checkbox-custom"></span>
                 <div class="setting-content">
                     <div class="setting-header">
-                        <h4>${setting.name} <span class="status-emoji">${status.statusIcon}</span></h4>
+                        <h4>${setting.name}${tooltipHTML} <span class="status-emoji">${status.statusIcon}</span></h4>
                         <span class="status-text">${status.statusText}</span>
                     </div>
                     <p>${setting.description}</p>

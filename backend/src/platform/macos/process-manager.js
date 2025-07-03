@@ -297,11 +297,12 @@ class MacOSProcessManager extends ProcessManagerInterface {
                         const content = await fs.readFile(plistPath, 'utf8');
                         
                         // Parse basic info from plist
+                        const webAppInfo = this.extractWebAppInfo(content);
                         const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
                         const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
                         const descriptionMatch = content.match(/<key>ServiceDescription<\/key>\s*<string>([^<]+)<\/string>/);
                         
-                        entries.push({
+                        const entry = {
                             name: file.replace('.plist', ''),
                             label: labelMatch ? labelMatch[1] : 'Unknown',
                             program: programMatch ? programMatch[1] : 'Unknown',
@@ -310,7 +311,15 @@ class MacOSProcessManager extends ProcessManagerInterface {
                             type: 'User Agent',
                             loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : ''),
                             managedByTool: file.startsWith('com.installation-up-4evr.')
-                        });
+                        };
+                        
+                        // Add web app information if this is a web app launch agent
+                        if (webAppInfo) {
+                            entry.webApp = webAppInfo;
+                            entry.type = 'Web Application';
+                        }
+                        
+                        entries.push(entry);
                     } catch (parseError) {
                         console.warn(`Failed to parse user launch agent ${file}:`, parseError.message);
                     }

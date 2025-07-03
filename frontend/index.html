@@ -336,6 +336,9 @@
                                             <button class="btn btn-secondary" id="wizard-back-2">
                                                 <i class="fas fa-arrow-left"></i> Back
                                             </button>
+                                            <button class="btn btn-warning" id="wizard-skip-settings" title="Skip system configuration and continue with current settings">
+                                                <i class="fas fa-forward"></i> Skip This Step
+                                            </button>
                                             <button class="btn btn-primary" id="wizard-apply-settings">
                                                 <i class="fas fa-check"></i> Apply Settings
                                             </button>
@@ -491,19 +494,103 @@
                     <div id="launch-agents-tab" class="tab-pane macos-only">
                         <section class="card">
                 <h2 id="launch-agents-title"><i class="fas fa-rocket"></i> Launch Agents</h2>
-                <p>Create launch agents to keep your apps running forever</p>
+                <p>Create launch agents to keep your apps and web applications running forever</p>
                 
-                <!-- Drag and Drop Zone -->
-                <div class="drop-zone" id="app-drop-zone">
-                    <div class="drop-zone-content">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h3>Drag & Drop Your App Here</h3>
-                        <p>Or click to browse for .app files</p>
-                        <input type="file" id="app-file-input" accept=".app" style="display: none;">
+                <!-- Creation Mode Selector -->
+                <div class="creation-mode-selector">
+                    <div class="mode-tabs">
+                        <button class="mode-tab active" data-mode="app">
+                            <i class="fas fa-desktop"></i> Desktop Apps
+                        </button>
+                        <button class="mode-tab" data-mode="web">
+                            <i class="fas fa-globe"></i> Web Applications
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Desktop App Mode -->
+                <div class="creation-mode" id="app-mode" style="display: block;">
+                    <!-- Drag and Drop Zone -->
+                    <div class="drop-zone" id="app-drop-zone">
+                        <div class="drop-zone-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Drag & Drop Your App Here</h3>
+                            <p>Or click to browse for .app files</p>
+                            <input type="file" id="app-file-input" accept=".app" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Web App Mode -->
+                <div class="creation-mode" id="web-mode" style="display: none;">
+                    <div class="web-app-creator">
+                        <div class="web-app-form">
+                            <h3><i class="fas fa-globe"></i> Create Web Application Launch Agent</h3>
+                            <p>Launch web applications in Chrome kiosk mode for installations</p>
+                            
+                            <div class="form-group">
+                                <label for="web-app-url">Web Application URL:</label>
+                                <input type="url" id="web-app-url" placeholder="https://example.com" required>
+                                <small class="help-text">Enter the full URL of the web application to launch</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="web-app-name">Application Name:</label>
+                                <input type="text" id="web-app-name" placeholder="My Web App" required>
+                                <small class="help-text">Friendly name for the launch agent</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="browser-path">Browser Path:</label>
+                                <select id="browser-path">
+                                    <option value="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome">Google Chrome</option>
+                                    <option value="/Applications/Chromium.app/Contents/MacOS/Chromium">Chromium</option>
+                                    <option value="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge">Microsoft Edge</option>
+                                    <option value="custom">Custom Browser Path...</option>
+                                </select>
+                                <input type="text" id="custom-browser-path" placeholder="/path/to/browser" style="display: none; margin-top: 8px;">
+                                <small class="help-text">Select the browser to use for kiosk mode</small>
+                            </div>
+                            
+                            <div class="web-options">
+                                <h4><i class="fas fa-cog"></i> Kiosk Mode Options</h4>
+                                <div class="options-grid">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="web-kiosk-mode" checked>
+                                        <span class="checkbox-custom"></span>
+                                        Full Screen Kiosk Mode
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="web-disable-dev-tools" checked>
+                                        <span class="checkbox-custom"></span>
+                                        Disable Developer Tools
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="web-disable-extensions" checked>
+                                        <span class="checkbox-custom"></span>
+                                        Disable Extensions
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="web-incognito-mode">
+                                        <span class="checkbox-custom"></span>
+                                        Incognito/Private Mode
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="action-buttons">
+                                <button id="create-web-launch-agent" class="btn btn-primary" title="Create launch agent for this web application">
+                                    <i class="fas fa-plus"></i> Create Web App Launch Agent
+                                </button>
+                                <button id="preview-web-command" class="btn btn-outline" title="Preview the browser command that will be used">
+                                    <i class="fas fa-eye"></i> Preview Command
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- App Info Display -->
+                <!-- App Info Display (Desktop Mode) -->
                 <div id="app-info" class="app-info" style="display: none;">
                     <div class="app-display">
                         <div class="app-icon">

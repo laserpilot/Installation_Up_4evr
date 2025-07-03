@@ -39,22 +39,94 @@ export function initSetupWizard() {
         });
     }
 
-    // Navigation function (defined here to access showStep)
-    window.navigateWizard = function(direction) {
+    // Enhanced navigation function with better error handling
+    window.navigateWizard = function(direction, options = {}) {
+        const { skipValidation = false, showNotification = true } = options;
+        
+        // Validate current step before proceeding (unless skipping validation)
+        if (!skipValidation && direction === 'next') {
+            const validation = validateCurrentStep();
+            if (!validation.canProceed) {
+                showToast(validation.message, 'warning');
+                return false;
+            }
+        }
+        
+        const previousStep = currentStep;
+        
         if (direction === 'next' && currentStep < totalSteps) {
             currentStep++;
         } else if (direction === 'back' && currentStep > 1) {
             currentStep--;
+        } else {
+            if (showNotification) {
+                const message = direction === 'next' ? 'You are already on the last step' : 'You are already on the first step';
+                showToast(message, 'info');
+            }
+            return false;
         }
+        
         showStep(currentStep);
         
-        // Load summary data when reaching final step
-        if (currentStep === totalSteps) {
-            loadWizardSummary();
+        // Load dynamic content based on step
+        loadStepContent(currentStep);
+        
+        if (showNotification) {
+            const stepNames = ['', 'Welcome', 'System Check', 'Essential Settings', 'Application Setup', 'Testing', 'Complete'];
+            showToast(`Step ${currentStep}: ${stepNames[currentStep] || 'Unknown'}`, 'info');
         }
         
-        showToast(`Navigated to Step ${currentStep}`, 'info');
+        return true;
     };
+    
+    // Step validation function
+    function validateCurrentStep() {
+        switch (currentStep) {
+            case 2: // System Check
+                const failedChecks = document.querySelectorAll('.system-check-item .check-status.status-error');
+                if (failedChecks.length > 0) {
+                    return {
+                        canProceed: false,
+                        message: `Please resolve ${failedChecks.length} failed system check(s) before continuing`
+                    };
+                }
+                return { canProceed: true };
+                
+            case 3: // Essential Settings
+                // Allow proceeding even with unselected settings (user can skip)
+                return { canProceed: true };
+                
+            case 4: // Application Setup
+                // Check if at least one application method is configured
+                const hasApp = document.getElementById('wizard-app-drop')?.dataset.appPath;
+                const hasWebUrl = document.getElementById('wizard-web-url')?.value;
+                if (!hasApp && !hasWebUrl) {
+                    return {
+                        canProceed: false,
+                        message: 'Please configure at least one application (desktop app or web URL) before continuing'
+                    };
+                }
+                return { canProceed: true };
+                
+            default:
+                return { canProceed: true };
+        }
+    }
+    
+    // Load content for specific steps
+    function loadStepContent(stepNumber) {
+        switch (stepNumber) {
+            case 2:
+                loadSystemCheck();
+                break;
+            case 3:
+                loadEssentialSettings();
+                break;
+            case 6:
+                loadWizardSummary();
+                break;
+        }
+    }
 
     // Attach event listeners to wizard navigation buttons
     document.getElementById('start-guided-setup')?.addEventListener('click', () => {
@@ -82,6 +154,9 @@ export function initSetupWizard() {
     // Specific action buttons
     document.getElementById('wizard-apply-settings')?.addEventListener('click', async () => {
         await applyEssentialSettings();
+    });
+    document.getElementById('wizard-skip-settings')?.addEventListener('click', async () => {
+        await skipEssentialSettings();
     });
     document.getElementById('wizard-run-tests')?.addEventListener('click', async () => {
         await runWizardTests();
@@ -259,20 +334,35 @@ async function loadEssentialSettings() {
     }
 }
 
-// Apply essential settings
+// Apply essential settings with enhanced error handling
 async function applyEssentialSettings() {
     const selectedSettings = Array.from(document.querySelectorAll('.setting-checkbox:checked'))
         .map(checkbox => checkbox.dataset.settingId);
     
     if (selectedSettings.length === 0) {
-        showToast('No settings selected to apply', 'info');
-        window.navigateWizard('next');
+        const result = await showConfirmDialog(
+            'No Settings Selected',
+            'You haven\'t selected any settings to apply. Do you want to skip this step or go back to select settings?',
+            {
+                confirmText: 'Skip Step',
+                cancelText: 'Go Back',
+                type: 'warning'
+            }
+        );
+        
+        if (result) {
+            await skipEssentialSettings();
+        }
         return;
     }
     
-    const button = document.getElementById('wizard-apply-settings');
-    button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying Settings...';
+    const applyButton = document.getElementById('wizard-apply-settings');
+    const skipButton = document.getElementById('wizard-skip-settings');
+    
+    // Disable both buttons during operation
+    applyButton.disabled = true;
+    skipButton.disabled = true;
+    applyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying Settings...';
     
     try {
         const response = await fetch('/api/setup-wizard/apply-settings', {
@@ -281,26 +371,217 @@ async function applyEssentialSettings() {
             body: JSON.stringify({ selectedSettings })
         });
         
-        if (!response.ok) throw new Error('Failed to apply settings');
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText}`);
+        }
         
         const data = await response.json();
         
         if (data.success) {
-            showToast(`Applied ${data.data.totalApplied} settings successfully`, 'success');
-            if (data.data.totalFailed > 0) {
-                showToast(`${data.data.totalFailed} settings failed to apply`, 'warning');
+            const appliedCount = data.data?.totalApplied || selectedSettings.length;
+            const failedCount = data.data?.totalFailed || 0;
+            
+            showToast(`Successfully applied ${appliedCount} system setting(s)`, 'success');
+            
+            if (failedCount > 0) {
+                showToast(`Warning: ${failedCount} setting(s) failed to apply. You may need to configure them manually.`, 'warning');
             }
-            window.navigateWizard('next');
+            
+            // Update step status and proceed
+            markStepCompleted(3, 'applied');
+            window.navigateWizard('next', { skipValidation: true });
         } else {
-            throw new Error(data.error || 'Failed to apply settings');
+            throw new Error(data.message || data.error || 'Failed to apply settings');
         }
     } catch (error) {
         console.error('Error applying settings:', error);
-        showToast('Failed to apply settings: ' + error.message, 'error');
+        
+        const userFriendlyMessage = error.message.includes('fetch') 
+            ? 'Unable to connect to the server. Please check your connection and try again.'
+            : `Failed to apply settings: ${error.message}`;
+            
+        showToast(userFriendlyMessage, 'error');
+        
+        // Show retry option
+        const retry = await showConfirmDialog(
+            'Settings Application Failed',
+            `${userFriendlyMessage}\n\nWould you like to try again?`,
+            {
+                confirmText: 'Retry',
+                cancelText: 'Skip for Now',
+                type: 'error'
+            }
+        );
+        
+        if (retry) {
+            // Retry the operation
+            setTimeout(() => applyEssentialSettings(), 1000);
+            return;
+        } else {
+            // User chose to skip, proceed anyway
+            await skipEssentialSettings();
+            return;
+        }
     } finally {
-        button.disabled = false;
-        button.innerHTML = '<i class="fas fa-check"></i> Apply Settings';
+        // Re-enable buttons
+        applyButton.disabled = false;
+        skipButton.disabled = false;
+        applyButton.innerHTML = '<i class="fas fa-check"></i> Apply Settings';
     }
+}
+
+// Skip essential settings with user confirmation
+async function skipEssentialSettings() {
+    const selectedCount = document.querySelectorAll('.setting-checkbox:checked').length;
+    const totalCount = document.querySelectorAll('.setting-checkbox').length;
+    
+    let confirmMessage;
+    if (selectedCount === 0) {
+        confirmMessage = `You are about to skip system configuration entirely. Your installation may not be optimized for 24/7 operation.\n\nAre you sure you want to continue without applying any system settings?`;
+    } else {
+        confirmMessage = `You have ${selectedCount} settings selected but unapplied. Skipping will leave your system configuration unchanged.\n\nAre you sure you want to skip this step?`;
+    }
+    
+    const confirmed = await showConfirmDialog(
+        'Skip System Configuration',
+        confirmMessage,
+        {
+            confirmText: 'Yes, Skip This Step',
+            cancelText: 'Cancel',
+            type: 'warning'
+        }
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    const skipButton = document.getElementById('wizard-skip-settings');
+    const applyButton = document.getElementById('wizard-apply-settings');
+    
+    skipButton.disabled = true;
+    applyButton.disabled = true;
+    skipButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Skipping...';
+    
+    try {
+        // Log the skip action for analytics
+        await fetch('/api/setup-wizard/log-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'skip_essential_settings',
+                step: 3,
+                selectedCount,
+                totalCount,
+                timestamp: new Date().toISOString()
+            })
+        }).catch(() => {/* Ignore logging errors */});
+        
+        showToast('Skipped system configuration. You can configure settings later from the System Preferences tab.', 'info');
+        
+        // Mark step as skipped and proceed
+        markStepCompleted(3, 'skipped');
+        window.navigateWizard('next', { skipValidation: true });
+        
+    } catch (error) {
+        console.error('Error during skip operation:', error);
+        // Even if logging fails, still proceed
+        markStepCompleted(3, 'skipped');
+        window.navigateWizard('next', { skipValidation: true });
+    } finally {
+        skipButton.disabled = false;
+        applyButton.disabled = false;
+        skipButton.innerHTML = '<i class="fas fa-forward"></i> Skip This Step';
+    }
+}
+
+// Mark step as completed with status
+function markStepCompleted(stepNumber, status = 'completed') {
+    const stepElement = document.querySelector(`.wizard-progress .step:nth-child(${stepNumber})`);
+    if (stepElement) {
+        stepElement.classList.add('completed', `status-${status}`);
+        
+        // Add status indicator
+        const statusIcon = status === 'skipped' 
+            ? '<i class="fas fa-forward" title="Skipped"></i>'
+            : '<i class="fas fa-check" title="Completed"></i>';
+        
+        const existingIcon = stepElement.querySelector('.status-icon');
+        if (existingIcon) {
+            existingIcon.innerHTML = statusIcon;
+        } else {
+            stepElement.innerHTML += `<span class="status-icon">${statusIcon}</span>`;
+        }
+    }
+}
+
+// Enhanced confirmation dialog
+async function showConfirmDialog(title, message, options = {}) {
+    const {
+        confirmText = 'Confirm',
+        cancelText = 'Cancel',
+        type = 'info'
+    } = options;
+    
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay confirm-dialog';
+        
+        const iconClass = {
+            'warning': 'fas fa-exclamation-triangle text-warning',
+            'error': 'fas fa-exclamation-circle text-danger',
+            'info': 'fas fa-info-circle text-primary'
+        }[type] || 'fas fa-question-circle';
+        
+        modal.innerHTML = `
+            <div class="modal-content confirm-content">
+                <div class="confirm-header">
+                    <i class="${iconClass}"></i>
+                    <h3>${title}</h3>
+                </div>
+                <div class="confirm-body">
+                    <p>${message.replace(/\n/g, '<br>')}</p>
+                </div>
+                <div class="confirm-actions">
+                    <button class="btn btn-secondary confirm-cancel">${cancelText}</button>
+                    <button class="btn btn-primary confirm-ok">${confirmText}</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const cleanup = () => modal.remove();
+        
+        modal.querySelector('.confirm-cancel').addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+        
+        modal.querySelector('.confirm-ok').addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+        
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                cleanup();
+                resolve(false);
+            }
+        });
+        
+        // Close on escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                document.removeEventListener('keydown', escapeHandler);
+                resolve(false);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    });
 }
 
 // Run wizard tests
