@@ -1081,6 +1081,13 @@ body {
     min-width: fit-content;
 }
 
+.process-usage {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.8rem;
+    min-width: fit-content;
+}
+
 /* Disk Details Display */
 .disk-details {
     margin-top: var(--spacing-md);
