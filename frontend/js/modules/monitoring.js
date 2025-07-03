@@ -87,13 +87,13 @@ export class MonitoringDataManager {
             ]);
 
             this.data = {
-                system: systemData?.data?.system || systemData?.system || null,
-                storage: systemData?.data?.storage || systemData?.storage || null,
-                displays: systemData?.data?.displays || systemData?.displays || [],
-                network: systemData?.data?.network || systemData?.network || null,
+                system: systemData?.system || null,
+                storage: systemData?.storage || null,
+                displays: systemData?.displays || [],
+                network: systemData?.network || null,
                 applications: appsData?.data || appsData || [],
-                alerts: systemData?.data?.notifications || systemData?.notifications || [],
-                status: systemData?.data?.status || systemData?.status || 'unknown',
+                alerts: systemData?.notifications || [],
+                status: 'good', // Calculate from system health
                 lastUpdate: new Date().toISOString(),
                 timestamp: Date.now()
             };

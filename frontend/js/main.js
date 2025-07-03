@@ -135,10 +135,7 @@ function updateMonitoringDisplay(data) {
         });
         
         // Update Disk with details
-        let diskUsage = 0;
-        if (data.storage) {
-            diskUsage = Math.max(...Object.values(data.storage).map(disk => disk.usagePercent || 0));
-        }
+        const diskUsage = metrics.disk?.usage || 0;
         monitoringDisplay.updateMetricCard({
             metricId: 'disk-usage',
             value: diskUsage,
@@ -152,10 +149,10 @@ function updateMonitoringDisplay(data) {
         });
     }
     
-    // Update health status using unified manager
-    const healthData = data.system ? 
-        monitoringDisplay.defaultConfig.getHealthStatus?.(data) || 
-        { status: data.status || 'unknown', issues: [] } : 
+    // Update health status using monitoring data manager
+    const monitoringManager = window.app?.monitoringData;
+    const healthData = monitoringManager ? 
+        monitoringManager.getHealthStatus() : 
         { status: 'unknown', issues: [] };
     
     monitoringDisplay.updateHealthStatus('health-status', healthData.status, healthData.issues);
