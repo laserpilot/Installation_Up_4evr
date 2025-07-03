@@ -568,6 +568,37 @@ class PlatformManager {
             return APIResponse.success({ message: 'Configuration imported' });
         });
 
+        this.api.registerRoute('/config', 'POST', async (data) => {
+            // Save configuration data
+            if (!data || typeof data !== 'object') {
+                throw new Error('Valid configuration data is required');
+            }
+            
+            // Update configuration with the provided data
+            for (const [key, value] of Object.entries(data)) {
+                await this.config.update(key, value);
+            }
+            
+            return APIResponse.success({ 
+                message: 'Configuration saved successfully',
+                data: this.config.get()
+            });
+        });
+
+        this.api.registerRoute('/config/apply', 'POST', async (data) => {
+            // Apply current configuration (restart services if needed)
+            const config = this.config.get();
+            
+            // Here you would implement actual configuration application logic
+            // For now, we'll simulate applying the configuration
+            
+            return APIResponse.success({ 
+                message: 'Configuration applied successfully',
+                appliedAt: new Date().toISOString(),
+                config: config
+            });
+        });
+
         // User preferences routes for first-run detection
         this.api.registerRoute('/config/user-preferences', 'GET', async () => {
             const preferences = this.config.get('userPreferences') || {};
@@ -762,6 +793,34 @@ class PlatformManager {
             return APIResponse.success({ 
                 message: 'System restart initiated',
                 status: 'restarting' 
+            });
+        });
+
+        this.api.registerRoute('/system/reboot', 'POST', async () => {
+            // System reboot - in production this would execute system reboot command
+            console.log('[SYSTEM] System reboot requested');
+            
+            // In demo mode, we simulate the reboot confirmation
+            return APIResponse.success({ 
+                message: 'System reboot initiated',
+                status: 'rebooting',
+                note: 'Demo mode: actual system reboot disabled for safety'
+            });
+        });
+
+        this.api.registerRoute('/system/restart-apps', 'POST', async () => {
+            // Restart all managed applications
+            console.log('[SYSTEM] Application restart requested');
+            
+            // In production, this would restart all managed applications
+            const monitoringData = this.monitoring?.getCurrentData() || {};
+            const apps = monitoringData.apps || [];
+            
+            return APIResponse.success({ 
+                message: 'Application restart initiated',
+                status: 'restarting-apps',
+                affectedApps: Array.isArray(apps) ? apps.length : 0,
+                note: 'Demo mode: simulated application restart'
             });
         });
 

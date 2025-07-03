@@ -65,5 +65,29 @@ module.exports = (platformManager) => {
         }
     });
 
+    router.post('/', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest("/config", "POST", req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ 
+                error: error.message,
+                note: 'Configuration management requires platform manager mode'
+            });
+        }
+    });
+
+    router.post('/apply', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest("/config/apply", "POST", req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ 
+                error: error.message,
+                note: 'Configuration management requires platform manager mode'
+            });
+        }
+    });
+
     return router;
 };

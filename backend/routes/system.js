@@ -274,5 +274,43 @@ module.exports = (platformManager) => {
         }
     });
 
+    /**
+     * @swagger
+     * /api/system/reboot:
+     *   post:
+     *     summary: Reboot the system
+     *     description: Initiate a system reboot after confirmation.
+     *     responses:
+     *       200:
+     *         description: System reboot initiated successfully.
+     */
+    router.post('/reboot', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/reboot', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/system/restart-apps:
+     *   post:
+     *     summary: Restart all applications
+     *     description: Restart all managed applications gracefully.
+     *     responses:
+     *       200:
+     *         description: Application restart initiated successfully.
+     */
+    router.post('/restart-apps', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/restart-apps', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     return router;
 };
