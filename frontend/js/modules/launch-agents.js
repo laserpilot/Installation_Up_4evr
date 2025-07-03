@@ -3,7 +3,7 @@
  * @description Logic for the Launch Agents tab.
  */
 
-import { apiCall } from '../utils/api.js';
+import { apiCall, MasterConfigAPI } from '../utils/api.js';
 import { showToast, showLoading, hideLoading } from '../utils/ui.js';
 import { createAgentCard } from '../components/LaunchAgentCard.js';
 
@@ -126,10 +126,23 @@ async function createLaunchAgent() {
     
     showLoading('Creating launch agent...');
     try {
-        await apiCall('/api/launch-agents/create', {
+        const result = await apiCall('/api/launch-agents/create', {
             method: 'POST',
             body: JSON.stringify({ appPath: currentAppPath, options })
         });
+        
+        // Add to master configuration
+        if (result.success) {
+            await updateMasterConfigWithAgent({
+                id: options.label || `agent-${Date.now()}`,
+                name: options.label || currentAppPath.split('/').pop(),
+                path: currentAppPath,
+                plistPath: result.data?.plistPath,
+                created: new Date().toISOString(),
+                type: 'app'
+            });
+        }
+        
         showToast('Launch agent created successfully!', 'success');
         loadLaunchAgents();
     } catch (error) {
@@ -149,16 +162,79 @@ async function installLaunchAgent() {
     
     showLoading('Installing launch agent...');
     try {
-        await apiCall('/api/launch-agents/install', {
+        const result = await apiCall('/api/launch-agents/install', {
             method: 'POST',
             body: JSON.stringify({ appPath: currentAppPath, options })
         });
+        
+        // Add to master configuration
+        if (result.success) {
+            await updateMasterConfigWithAgent({
+                id: options.label || `agent-${Date.now()}`,
+                name: options.label || currentAppPath.split('/').pop(),
+                path: currentAppPath,
+                plistPath: result.data?.plistPath,
+                created: new Date().toISOString(),
+                type: 'app',
+                installed: true
+            });
+        }
+        
         showToast('Launch agent installed and started!', 'success');
         loadLaunchAgents();
     } catch (error) {
         showToast('Failed to install launch agent', 'error');
     } finally {
         hideLoading();
+    }
+}
+
+// Master Configuration Integration
+async function updateMasterConfigWithAgent(agentInfo) {
+    try {
+        await MasterConfigAPI.addLaunchAgent(agentInfo);
+        console.log('[LAUNCH-AGENTS] Added agent to master configuration:', agentInfo.name);
+    } catch (error) {
+        console.warn('[LAUNCH-AGENTS] Failed to update master configuration:', error);
+        // Don't fail the main operation if master config update fails
+    }
+}
+
+async function removeMasterConfigAgent(agentId) {
+    try {
+        await MasterConfigAPI.removeLaunchAgent(agentId);
+        console.log('[LAUNCH-AGENTS] Removed agent from master configuration:', agentId);
+    } catch (error) {
+        console.warn('[LAUNCH-AGENTS] Failed to remove from master configuration:', error);
+    }
+}
+
+async function loadMasterConfigAgents() {
+    try {
+        const response = await MasterConfigAPI.getLaunchAgents();
+        if (response.success && response.data) {
+            const { agents, webApps } = response.data;
+            
+            // Display additional info about agents tracked in master config
+            if (agents && agents.length > 0) {
+                console.log('[LAUNCH-AGENTS] Master config tracks', agents.length, 'launch agents');
+                
+                // Could add UI indicators for agents tracked in master config
+                agents.forEach(agent => {
+                    const agentCard = document.querySelector(`[data-agent-label="${agent.id}"]`);
+                    if (agentCard) {
+                        agentCard.classList.add('tracked-in-master');
+                        agentCard.title = `Tracked in master configuration since ${new Date(agent.created).toLocaleDateString()}`;
+                    }
+                });
+            }
+            
+            if (webApps && webApps.length > 0) {
+                console.log('[LAUNCH-AGENTS] Master config tracks', webApps.length, 'web applications');
+            }
+        }
+    } catch (error) {
+        console.warn('[LAUNCH-AGENTS] Failed to load master config agents:', error);
     }
 }
 
@@ -192,6 +268,11 @@ export function initLaunchAgents() {
     });
 
     loadLaunchAgents();
+    
+    // Load master configuration state after initial load
+    setTimeout(() => {
+        loadMasterConfigAgents();
+    }, 500);
 }
 
 function showTestResults(label, result) {

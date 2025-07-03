@@ -3,7 +3,7 @@
  * @description Logic for the System Preferences tab.
  */
 
-import { apiCall } from '../utils/api.js';
+import { apiCall, MasterConfigAPI } from '../utils/api.js';
 import { showToast, showLoading, hideLoading } from '../utils/ui.js';
 import { renderSettings } from '../components/SystemSettings.js';
 
@@ -123,6 +123,10 @@ async function applySelectedSettings() {
             method: 'POST',
             body: JSON.stringify({ settings: Array.from(selectedSettings) })
         });
+        
+        // Update master configuration with applied settings
+        await updateMasterConfigWithAppliedSettings(Array.from(selectedSettings));
+        
         showToast(`Applied ${selectedSettings.size} settings successfully!`, 'success');
         loadSystemPreferences(); // Refresh the view
     } catch (error) {
@@ -136,6 +140,14 @@ async function applyRequiredSettings() {
         const results = await apiCall('/api/system-prefs/apply-required', {
             method: 'POST'
         });
+        
+        // Update master configuration with required settings
+        const allSettings = await apiCall('/api/system-prefs/settings');
+        const requiredSettingIds = Object.values(allSettings.data || allSettings)
+            .filter(s => s.required)
+            .map(s => s.id);
+        await updateMasterConfigWithAppliedSettings(requiredSettingIds);
+        
         showToast('Required settings applied successfully!', 'success');
         loadSystemPreferences(); // Refresh the view
     } catch (error) {
@@ -271,7 +283,60 @@ async function generateRestoreScript() {
     } finally {
         hideLoading();
     }
-} 
+}
+
+// Master Configuration Integration
+async function updateMasterConfigWithAppliedSettings(appliedSettings) {
+    try {
+        // Get current state
+        const statusResponse = await apiCall('/api/system-prefs/status');
+        const currentState = (statusResponse.data || statusResponse).reduce((acc, status) => {
+            acc[status.setting] = status.status;
+            return acc;
+        }, {});
+        
+        // Update master config with applied settings and current state
+        await MasterConfigAPI.updateSystemPreferencesState(appliedSettings, currentState);
+        
+        console.log('[SYSTEM-PREFS] Updated master configuration with applied settings');
+    } catch (error) {
+        console.warn('[SYSTEM-PREFS] Failed to update master configuration:', error);
+        // Don't fail the main operation if master config update fails
+    }
+}
+
+async function loadMasterConfigState() {
+    try {
+        const response = await MasterConfigAPI.getSystemPreferencesState();
+        if (response.success && response.data) {
+            const { applied, currentState, lastVerified } = response.data;
+            
+            // Update UI to show previously applied settings
+            if (applied && Array.isArray(applied)) {
+                applied.forEach(settingId => {
+                    const checkbox = document.querySelector(`input[data-setting="${settingId}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                        selectedSettings.add(settingId);
+                        checkbox.closest('.setting-item')?.classList.add('selected');
+                    }
+                });
+            }
+            
+            // Show last verification time if available
+            if (lastVerified) {
+                const verifyButton = document.getElementById('verify-settings');
+                if (verifyButton) {
+                    const lastVerifiedDate = new Date(lastVerified).toLocaleString();
+                    verifyButton.title = `Last verified: ${lastVerifiedDate}`;
+                }
+            }
+        }
+    } catch (error) {
+        console.warn('[SYSTEM-PREFS] Failed to load master config state:', error);
+        // Continue without master config integration
+    }
+}
 
 export function initSystemPreferences() {
     document.getElementById('verify-settings').addEventListener('click', verifySettings);
@@ -281,4 +346,9 @@ export function initSystemPreferences() {
     document.getElementById('generate-restore-script').addEventListener('click', generateRestoreScript);
 
     loadSystemPreferences();
+    
+    // Load master configuration state after initial load
+    setTimeout(() => {
+        loadMasterConfigState();
+    }, 500);
 }

@@ -21,6 +21,22 @@ class ConfigManager {
             platform: process.platform,
             created: new Date().toISOString(),
             
+            // Master Configuration System
+            master: {
+                installationId: null,
+                installationName: 'Installation Up 4evr',
+                installationDescription: 'Automated installation management',
+                location: null,
+                contact: null,
+                createdDate: new Date().toISOString(),
+                lastModified: new Date().toISOString(),
+                activeProfileId: null,
+                autoSaveEnabled: true,
+                backupEnabled: true,
+                tags: [],
+                customFields: {}
+            },
+            
             // Monitoring configuration
             monitoring: {
                 enabled: true,
@@ -31,7 +47,10 @@ class ConfigManager {
                     disk: { warning: 80, critical: 95 },
                     temperature: { warning: 75, critical: 85 }
                 },
-                applications: []
+                applications: [],
+                // Link to launch agents for auto-monitoring
+                watchLaunchAgents: true,
+                autoAddNewAgents: false
             },
             
             // Notification configuration
@@ -62,6 +81,22 @@ class ConfigManager {
                 contact: null,
                 autoStart: [],
                 profiles: []
+            },
+            
+            // System preferences state tracking
+            systemPreferences: {
+                applied: {},
+                currentState: {},
+                lastVerified: null,
+                trackChanges: true
+            },
+            
+            // Launch agents management
+            launchAgents: {
+                created: [],
+                lastSync: null,
+                autoMonitor: true,
+                webApps: []
             },
             
             // Platform-specific settings
@@ -259,11 +294,147 @@ class ConfigManager {
         await this.update(`userPreferences.${key}`, value);
     }
 
+    // Master Configuration Management
+    async createMasterProfile(name, description, options = {}) {
+        const installationId = options.installationId || this.generateInstallationId();
+        const masterConfig = {
+            installationId,
+            installationName: name,
+            installationDescription: description,
+            location: options.location || null,
+            contact: options.contact || null,
+            createdDate: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            activeProfileId: options.activeProfileId || null,
+            autoSaveEnabled: options.autoSaveEnabled !== false,
+            backupEnabled: options.backupEnabled !== false,
+            tags: options.tags || [],
+            customFields: options.customFields || {}
+        };
+        
+        await this.update('master', masterConfig);
+        return masterConfig;
+    }
+    
+    async getMasterProfile() {
+        return this.get('master');
+    }
+    
+    async updateMasterProfile(updates) {
+        const current = this.get('master');
+        const updated = {
+            ...current,
+            ...updates,
+            lastModified: new Date().toISOString()
+        };
+        
+        await this.update('master', updated);
+        return updated;
+    }
+    
+    generateInstallationId() {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        return `inst-${timestamp}-${random}`;
+    }
+    
+    // System Preferences Integration
+    async updateSystemPreferencesState(applied, currentState) {
+        await this.update('systemPreferences', {
+            applied,
+            currentState,
+            lastVerified: new Date().toISOString(),
+            trackChanges: this.get('systemPreferences.trackChanges') !== false
+        });
+    }
+    
+    getSystemPreferencesState() {
+        return this.get('systemPreferences');
+    }
+    
+    // Launch Agents Integration
+    async addLaunchAgent(agentInfo) {
+        const agents = this.get('launchAgents.created') || [];
+        const existingIndex = agents.findIndex(a => a.id === agentInfo.id);
+        
+        if (existingIndex >= 0) {
+            agents[existingIndex] = { ...agents[existingIndex], ...agentInfo };
+        } else {
+            agents.push(agentInfo);
+        }
+        
+        await this.update('launchAgents.created', agents);
+        await this.update('launchAgents.lastSync', new Date().toISOString());
+        
+        // Auto-add to monitoring if enabled
+        if (this.get('monitoring.watchLaunchAgents') && this.get('monitoring.autoAddNewAgents')) {
+            await this.addWatchedApplication(agentInfo.name || agentInfo.id, {
+                path: agentInfo.path,
+                type: 'launch-agent',
+                autoGenerated: true
+            });
+        }
+    }
+    
+    async removeLaunchAgent(agentId) {
+        const agents = this.get('launchAgents.created') || [];
+        const filtered = agents.filter(a => a.id !== agentId);
+        await this.update('launchAgents.created', filtered);
+        
+        // Remove from monitoring if auto-generated
+        const monitoredApps = this.get('monitoring.applications') || [];
+        const filteredApps = monitoredApps.filter(app => 
+            !(app.type === 'launch-agent' && app.autoGenerated && app.path === agentId)
+        );
+        await this.update('monitoring.applications', filteredApps);
+    }
+    
+    getLaunchAgents() {
+        return this.get('launchAgents.created') || [];
+    }
+    
+    async addWebApp(webAppInfo) {
+        const webApps = this.get('launchAgents.webApps') || [];
+        const existingIndex = webApps.findIndex(w => w.id === webAppInfo.id);
+        
+        if (existingIndex >= 0) {
+            webApps[existingIndex] = { ...webApps[existingIndex], ...webAppInfo };
+        } else {
+            webApps.push(webAppInfo);
+        }
+        
+        await this.update('launchAgents.webApps', webApps);
+    }
+    
+    getWebApps() {
+        return this.get('launchAgents.webApps') || [];
+    }
+    
     // Export/Import configuration
     async exportConfig(filePath = null) {
         const exportPath = filePath || path.join(this.configDir, `config-backup-${Date.now()}.json`);
         const configData = JSON.stringify(this.config, null, 2);
         await fs.writeFile(exportPath, configData, 'utf8');
+        return exportPath;
+    }
+    
+    async exportMasterProfile(filePath = null) {
+        const master = this.get('master');
+        const exportData = {
+            master,
+            systemPreferences: this.get('systemPreferences'),
+            launchAgents: this.get('launchAgents'),
+            monitoring: this.get('monitoring'),
+            notifications: this.get('notifications'),
+            dashboard: this.get('dashboard'),
+            installation: this.get('installation'),
+            userPreferences: this.get('userPreferences'),
+            exportDate: new Date().toISOString(),
+            version: this.get('version')
+        };
+        
+        const exportPath = filePath || path.join(this.configDir, `master-profile-${master.installationId || Date.now()}.json`);
+        await fs.writeFile(exportPath, JSON.stringify(exportData, null, 2), 'utf8');
         return exportPath;
     }
 
@@ -278,6 +449,26 @@ class ConfigManager {
         
         this.config = this.mergeConfig(this.defaultConfig, importedConfig);
         await this.saveConfig();
+    }
+    
+    async importMasterProfile(filePath) {
+        const configData = await fs.readFile(filePath, 'utf8');
+        const importedData = JSON.parse(configData);
+        
+        // Validate master profile structure
+        if (!importedData.master || !importedData.version) {
+            throw new Error('Invalid master profile file - missing required fields');
+        }
+        
+        // Update last modified date
+        importedData.master.lastModified = new Date().toISOString();
+        
+        // Merge with current config
+        const merged = this.mergeConfig(this.config, importedData);
+        this.config = merged;
+        await this.saveConfig();
+        
+        return importedData.master;
     }
 
     // Reset configuration

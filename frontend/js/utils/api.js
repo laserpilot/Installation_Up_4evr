@@ -56,3 +56,103 @@ export async function apiCall(endpoint, options = {}) {
         throw error;
     }
 }
+
+// Master Configuration API Functions
+export const MasterConfigAPI = {
+    /**
+     * Get current master profile
+     */
+    async getMasterProfile() {
+        return await apiCall('/api/config/master');
+    },
+
+    /**
+     * Create new master profile
+     */
+    async createMasterProfile(name, description, options = {}) {
+        return await apiCall('/api/config/master', {
+            method: 'POST',
+            body: JSON.stringify({ name, description, ...options })
+        });
+    },
+
+    /**
+     * Update master profile
+     */
+    async updateMasterProfile(updates) {
+        return await apiCall('/api/config/master', {
+            method: 'PUT',
+            body: JSON.stringify(updates)
+        });
+    },
+
+    /**
+     * Export master profile
+     */
+    async exportMasterProfile() {
+        return await apiCall('/api/config/master/export');
+    },
+
+    /**
+     * Import master profile
+     */
+    async importMasterProfile(filePath) {
+        return await apiCall('/api/config/master/import', {
+            method: 'POST',
+            body: JSON.stringify({ filePath })
+        });
+    },
+
+    /**
+     * Get system preferences state
+     */
+    async getSystemPreferencesState() {
+        return await apiCall('/api/config/system-preferences/state');
+    },
+
+    /**
+     * Update system preferences state
+     */
+    async updateSystemPreferencesState(applied, currentState) {
+        return await apiCall('/api/config/system-preferences/state', {
+            method: 'POST',
+            body: JSON.stringify({ applied, currentState })
+        });
+    },
+
+    /**
+     * Get launch agents from master config
+     */
+    async getLaunchAgents() {
+        return await apiCall('/api/config/launch-agents');
+    },
+
+    /**
+     * Add launch agent to master config
+     */
+    async addLaunchAgent(agentInfo) {
+        return await apiCall('/api/config/launch-agents', {
+            method: 'POST',
+            body: JSON.stringify(agentInfo)
+        });
+    },
+
+    /**
+     * Remove launch agent from master config
+     */
+    async removeLaunchAgent(agentId) {
+        return await apiCall(`/api/config/launch-agents/${agentId}`, {
+            method: 'DELETE'
+        });
+    },
+
+    /**
+     * Add web app to master config
+     */
+    async addWebApp(webAppInfo) {
+        return await apiCall('/api/config/web-apps', {
+            method: 'POST',
+            body: JSON.stringify(webAppInfo)
+        });
+    }
+};
