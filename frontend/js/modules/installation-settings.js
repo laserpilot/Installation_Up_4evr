@@ -5,6 +5,7 @@
 
 import { apiCall } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
+import { setValue, getValue, synchronizeSliderInput } from '../utils/form-helpers.js';
 
 export function initInstallationSettings() {
     console.log('[INIT] Initializing Installation Settings tab...');
@@ -25,20 +26,7 @@ function setupSliderSynchronization() {
     synchronizeSliderInput('proximity-threshold-slider', 'proximity-threshold-input');
 }
 
-function synchronizeSliderInput(sliderId, inputId) {
-    const slider = document.getElementById(sliderId);
-    const input = document.getElementById(inputId);
-    
-    if (slider && input) {
-        slider.addEventListener('input', (e) => {
-            input.value = e.target.value;
-        });
-        
-        input.addEventListener('input', (e) => {
-            slider.value = e.target.value;
-        });
-    }
-}
+// synchronizeSliderInput is now imported from form-helpers.js
 
 function setupActionButtons() {
     const testBtn = document.getElementById('test-installation-settings');
@@ -199,15 +187,4 @@ async function applyInstallationSettings() {
     }
 }
 
-// Utility functions
-function setValue(id, value) {
-    const element = document.getElementById(id);
-    if (element) {
-        element.value = value;
-    }
-}
-
-function getValue(id) {
-    const element = document.getElementById(id);
-    return element ? element.value : '';
-}
+// Utility functions are now imported from form-helpers.js

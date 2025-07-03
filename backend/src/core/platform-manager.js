@@ -135,6 +135,22 @@ class PlatformManager {
                 APIResponse.error(result, 'Failed to generate script');
         });
 
+        // Generate terminal commands for manual execution
+        this.api.registerRoute('/system/settings/generate-commands', 'GET', async () => {
+            const result = await this.systemManager.generateCommands();
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result, 'Failed to generate commands');
+        });
+
+        // Generate restore script to revert settings
+        this.api.registerRoute('/system/settings/generate-restore', 'GET', async () => {
+            const result = await this.systemManager.generateRestore();
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result, 'Failed to generate restore script');
+        });
+
         // SIP status route (macOS specific)
         this.api.registerRoute('/system/sip-status', 'GET', async () => {
             if (this.platform !== 'macos') {
@@ -252,6 +268,118 @@ class PlatformManager {
                 path: appPath,
                 type: appPath.endsWith('.app') ? 'macOS App' : 'Executable'
             });
+        });
+
+        this.api.registerRoute('/launch-agents/test', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label } = data;
+            if (!label) {
+                throw new Error('Label is required');
+            }
+            const result = await this.processManager.testLaunchAgent(label);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/export', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label } = data;
+            if (!label) {
+                throw new Error('Label is required');
+            }
+            const result = await this.processManager.exportLaunchAgent(label);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/view', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label } = data;
+            if (!label) {
+                throw new Error('Label is required');
+            }
+            const result = await this.processManager.viewLaunchAgent(label);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/update', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label, content } = data;
+            if (!label || !content) {
+                throw new Error('Label and content are required');
+            }
+            const result = await this.processManager.updateLaunchAgent(label, content);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/start', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label } = data;
+            if (!label) {
+                throw new Error('Label is required');
+            }
+            const result = await this.processManager.startLaunchAgent(label);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/stop', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label } = data;
+            if (!label) {
+                throw new Error('Label is required');
+            }
+            const result = await this.processManager.stopLaunchAgent(label);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/restart', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label } = data;
+            if (!label) {
+                throw new Error('Label is required');
+            }
+            const result = await this.processManager.restartLaunchAgent(label);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
+        });
+
+        this.api.registerRoute('/launch-agents/delete', 'POST', async (data) => {
+            if (this.platform !== 'macos') {
+                return APIResponse.error({ message: 'Launch agents only available on macOS' });
+            }
+            const { label } = data;
+            if (!label) {
+                throw new Error('Label is required');
+            }
+            const result = await this.processManager.removeLaunchAgent(label);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result);
         });
 
         // Monitoring routes

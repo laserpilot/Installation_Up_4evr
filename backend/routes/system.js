@@ -122,5 +122,81 @@ module.exports = (platformManager) => {
         }
     });
 
+    /**
+     * @swagger
+     * /api/system/settings/verify:
+     *   post:
+     *     summary: Verify system settings
+     *     description: Check current system settings status against recommended configuration.
+     *     responses:
+     *       200:
+     *         description: Verification results for all system settings.
+     */
+    router.post('/settings/verify', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/settings/verify', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/system/settings/apply-required:
+     *   post:
+     *     summary: Apply required system settings
+     *     description: Apply all required system settings for installation computers.
+     *     responses:
+     *       200:
+     *         description: Results of applying required settings.
+     */
+    router.post('/settings/apply-required', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/settings/apply-required', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/system/settings/generate-commands:
+     *   get:
+     *     summary: Generate terminal commands
+     *     description: Generate terminal commands to apply system settings manually.
+     *     responses:
+     *       200:
+     *         description: Terminal commands for applying system settings.
+     */
+    router.get('/settings/generate-commands', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/settings/generate-commands', 'GET');
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/system/settings/generate-restore:
+     *   get:
+     *     summary: Generate restore script
+     *     description: Generate terminal commands to restore system settings to defaults.
+     *     responses:
+     *       200:
+     *         description: Terminal commands for restoring system settings.
+     */
+    router.get('/settings/generate-restore', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/settings/generate-restore', 'GET');
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     return router;
 };

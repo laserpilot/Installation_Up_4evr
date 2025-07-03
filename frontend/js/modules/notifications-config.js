@@ -7,6 +7,9 @@ import { apiCall } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
 import { ConfigSection } from '../components/ConfigSection.js';
 
+// Import notification functions from the main notifications module
+import { saveNotificationConfig as saveConfig } from './notifications.js';
+
 async function loadNotificationConfig() {
     try {
         const response = await apiCall('/api/notifications/config');
@@ -17,18 +20,8 @@ async function loadNotificationConfig() {
     }
 }
 
-async function saveNotificationConfig() {
-    try {
-        const config = JSON.parse(document.getElementById('notification-config-editor').value);
-        await apiCall('/api/notifications/config', {
-            method: 'POST',
-            body: JSON.stringify({ config })
-        });
-        showToast('Notification configuration saved', 'success');
-    } catch (error) {
-        showToast('Failed to save notification configuration', 'error');
-    }
-}
+// Use the shared save function
+const saveNotificationConfig = saveConfig;
 
 function resetNotificationConfig() {
     if (confirm('Are you sure you want to reset the notification configuration to defaults?')) {

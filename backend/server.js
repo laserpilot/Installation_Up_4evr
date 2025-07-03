@@ -73,6 +73,70 @@ app.use('/api/platform', platformRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/validation', validationRoutes);
 
+// Legacy compatibility routes for system-prefs (redirect to new system routes)
+app.get('/api/system-prefs/settings', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/system-prefs/status', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/status', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/system-prefs/verify', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/verify', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/system-prefs/apply', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/apply', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/system-prefs/apply-required', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/apply-required', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/system-prefs/generate-commands', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/generate-commands', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/system-prefs/generate-restore', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/generate-restore', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 // Error handling middleware
 app.use((error, req, res, next) => {

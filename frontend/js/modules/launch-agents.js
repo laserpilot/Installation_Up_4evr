@@ -69,13 +69,23 @@ async function handleLaunchAgentAction(label, action) {
             case 'restart':
                 result = await apiCall(`/api/launch-agents/restart`, { method: 'POST', body: JSON.stringify({ label }) });
                 break;
+            case 'test':
+                showLoading('Testing launch agent...');
+                result = await apiCall(`/api/launch-agents/test`, { method: 'POST', body: JSON.stringify({ label }) });
+                hideLoading();
+                showTestResults(label, result);
+                return;
+            case 'export':
+                result = await apiCall(`/api/launch-agents/export`, { method: 'POST', body: JSON.stringify({ label }) });
+                downloadAgentFile(label, result);
+                return;
             case 'view':
                 result = await apiCall(`/api/launch-agents/view`, { method: 'POST', body: JSON.stringify({ label }) });
-                // showPlistContent(label, result.content);
+                showPlistContent(label, result);
                 return;
             case 'edit':
                 result = await apiCall(`/api/launch-agents/view`, { method: 'POST', body: JSON.stringify({ label }) });
-                // showPlistEditor(label, result.content);
+                showPlistEditor(label, result);
                 return;
             case 'delete':
                 if (confirm(`Are you sure you want to delete ${label}? This cannot be undone.`)) {
@@ -91,6 +101,8 @@ async function handleLaunchAgentAction(label, action) {
         loadLaunchAgents();
     } catch (error) {
         showToast(`Failed to ${action} ${label}: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -180,4 +192,174 @@ export function initLaunchAgents() {
     });
 
     loadLaunchAgents();
+}
+
+function showTestResults(label, result) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-flask"></i> Test Results: ${label}</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="test-results">
+                    <div class="test-status ${result.success ? 'success' : 'error'}">
+                        <i class="fas ${result.success ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        <span>${result.success ? 'Test Passed' : 'Test Failed'}</span>
+                    </div>
+                    <div class="test-details">
+                        <h4>Test Details:</h4>
+                        <pre>${result.data?.output || result.message || 'No additional details'}</pre>
+                        ${result.data?.warnings ? `<div class="warnings"><h5>Warnings:</h5><ul>${result.data.warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+}
+
+function downloadAgentFile(label, result) {
+    if (!result.success || !result.data) {
+        showToast('Failed to export launch agent', 'error');
+        return;
+    }
+    
+    const content = result.data.content || result.data.plistContent;
+    const filename = result.data.filename || `${label}.plist`;
+    
+    const blob = new Blob([content], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+    showToast(`Launch agent exported as ${filename}`, 'success');
+}
+
+function showPlistContent(label, result) {
+    if (!result.success || !result.data) {
+        showToast('Failed to load plist content', 'error');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content script-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-eye"></i> View Plist: ${label}</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <pre class="code-block">${result.data.content || result.content}</pre>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="copy-plist-content">
+                        <i class="fas fa-copy"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+    
+    modal.querySelector('#copy-plist-content').addEventListener('click', () => {
+        const content = result.data.content || result.content;
+        navigator.clipboard.writeText(content).then(() => {
+            showToast('Plist content copied to clipboard!', 'success');
+        });
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+}
+
+function showPlistEditor(label, result) {
+    if (!result.success || !result.data) {
+        showToast('Failed to load plist content', 'error');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content script-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Plist: ${label}</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-banner">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Warning:</strong> Editing plist files directly can break launch agents. Make sure you understand the format.
+                </div>
+                <textarea class="code-editor" id="plist-editor">${result.data.content || result.content}</textarea>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancel-edit">Cancel</button>
+                    <button class="btn btn-primary" id="save-plist">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const closeModal = () => document.body.removeChild(modal);
+    
+    modal.querySelector('.modal-close').addEventListener('click', closeModal);
+    modal.querySelector('#cancel-edit').addEventListener('click', closeModal);
+    
+    modal.querySelector('#save-plist').addEventListener('click', async () => {
+        const newContent = modal.querySelector('#plist-editor').value;
+        try {
+            showLoading('Saving plist changes...');
+            await apiCall('/api/launch-agents/update', {
+                method: 'POST',
+                body: JSON.stringify({ label, content: newContent })
+            });
+            showToast('Plist updated successfully!', 'success');
+            closeModal();
+            loadLaunchAgents();
+        } catch (error) {
+            showToast('Failed to save plist changes', 'error');
+        } finally {
+            hideLoading();
+        }
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
 }

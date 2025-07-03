@@ -44,9 +44,11 @@ export function createAgentCard(agent, status) {
                 <button class="btn-action" data-action="start" title="Start"><i class="fas fa-play"></i></button>
                 <button class="btn-action" data-action="stop" title="Stop"><i class="fas fa-stop"></i></button>
                 <button class="btn-action" data-action="restart" title="Restart"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn-action" data-action="test" title="Test Agent"><i class="fas fa-flask"></i></button>
+                <button class="btn-action" data-action="export" title="Export Agent"><i class="fas fa-download"></i></button>
                 <button class="btn-action" data-action="view" title="View Plist"><i class="fas fa-eye"></i></button>
                 <button class="btn-action" data-action="edit" title="Edit Plist"><i class="fas fa-edit"></i></button>
-                <button class.btn-action" data-action="delete" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                <button class="btn-action" data-action="delete" title="Delete"><i class="fas fa-trash-alt"></i></button>
             </div>
         </div>
     `;
