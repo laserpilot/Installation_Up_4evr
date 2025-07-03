@@ -896,9 +896,81 @@ body {
 
 .metric-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--success-color), var(--warning-color), var(--error-color));
+    background: var(--success-color);
     transition: width 0.3s ease;
     width: 0%;
+}
+
+.metric-fill.level-low {
+    background: var(--success-color);
+}
+
+.metric-fill.level-medium {
+    background: var(--warning-color);
+}
+
+.metric-fill.level-high {
+    background: var(--danger-color);
+}
+
+.metric-status {
+    margin-top: var(--spacing-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.metric-status.status-low {
+    color: var(--success-color);
+}
+
+.metric-status.status-medium {
+    color: var(--warning-color);
+}
+
+.metric-status.status-high {
+    color: var(--danger-color);
+}
+
+/* Dashboard Application Status Cards */
+.app-status-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-sm);
+}
+
+.app-status-card .app-icon {
+    font-size: 1.5rem;
+}
+
+.app-status-card .app-info {
+    flex: 1;
+}
+
+.app-status-card .app-info h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.app-status-card .app-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.app-status-card .app-info small {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+}
+
+.app-status-card .app-actions {
+    display: flex;
+    gap: var(--spacing-sm);
 }
 
 .health-status {
