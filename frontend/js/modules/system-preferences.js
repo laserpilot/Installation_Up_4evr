@@ -157,8 +157,16 @@ async function applyRequiredSettings() {
 
 async function generateTerminalCommands() {
     try {
+        if (selectedSettings.size === 0) {
+            showToast('Please select settings to generate commands for', 'warning');
+            return;
+        }
+        
         showLoading('Generating terminal commands...');
-        const response = await apiCall('/api/system-prefs/generate-commands');
+        const response = await apiCall('/api/system-prefs/generate-commands', {
+            method: 'POST',
+            body: JSON.stringify({ settings: Array.from(selectedSettings) })
+        });
         
         if (response.success && response.data) {
             // Extract commands from nested structure
@@ -174,7 +182,7 @@ async function generateTerminalCommands() {
                         <button class="modal-close">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p>Copy and paste these commands into Terminal to apply system settings manually:</p>
+                        <p>Copy and paste these commands into Terminal to apply the ${selectedSettings.size} selected system settings manually:</p>
                         <pre class="code-block" id="terminal-commands">${commands}</pre>
                         <div class="modal-actions">
                             <button class="btn btn-primary" id="copy-commands">

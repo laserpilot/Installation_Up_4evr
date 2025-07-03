@@ -130,6 +130,15 @@ app.get('/api/system-prefs/generate-commands', async (req, res) => {
     }
 });
 
+app.post('/api/system-prefs/generate-commands', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/generate-commands', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/api/system-prefs/generate-restore', async (req, res) => {
     try {
         const result = await platformManager.handleAPIRequest('/system/settings/generate-restore', 'GET');
