@@ -157,6 +157,23 @@ class PlatformManager {
                 APIResponse.error(result, 'Failed to generate commands');
         });
 
+        // Generate terminal commands for selected settings only
+        this.api.registerRoute('/system/settings/generate-commands', 'POST', async (data) => {
+            const { settings } = data;
+            if (!settings || !Array.isArray(settings)) {
+                // Fall back to all settings if no selection provided
+                const result = await this.systemManager.generateCommands();
+                return result.success ? 
+                    APIResponse.success(result) : 
+                    APIResponse.error(result, 'Failed to generate commands');
+            }
+            
+            const result = await this.systemManager.generateCommands(settings);
+            return result.success ? 
+                APIResponse.success(result) : 
+                APIResponse.error(result, 'Failed to generate commands');
+        });
+
         // Generate restore script to revert settings
         this.api.registerRoute('/system/settings/generate-restore', 'GET', async () => {
             const result = await this.systemManager.generateRestore();

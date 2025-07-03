@@ -181,6 +181,36 @@ module.exports = (platformManager) => {
 
     /**
      * @swagger
+     * /api/system/settings/generate-commands:
+     *   post:
+     *     summary: Generate terminal commands for selected settings
+     *     description: Generate terminal commands to apply only the selected system settings manually.
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               settings:
+     *                 type: array
+     *                 items:
+     *                   type: string
+     *     responses:
+     *       200:
+     *         description: Terminal commands for applying selected system settings.
+     */
+    router.post('/settings/generate-commands', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/settings/generate-commands', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
      * /api/system/settings/generate-restore:
      *   get:
      *     summary: Generate restore script

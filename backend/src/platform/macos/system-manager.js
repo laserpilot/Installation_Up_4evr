@@ -652,31 +652,49 @@ echo "Review the output above for any errors."
      * Generate terminal commands for manual execution
      * @returns {Object} Commands string for manual execution
      */
-    async generateCommands() {
+    async generateCommands(selectedSettings = null) {
         const commands = [];
         commands.push('#!/bin/bash');
         commands.push('# Installation Up 4evr - System Preferences Configuration');
         commands.push('# Generated on: ' + new Date().toISOString());
         commands.push('');
+        
+        // Determine which settings to include
+        const settingsToInclude = selectedSettings ? 
+            selectedSettings.filter(key => this.settings[key]) : 
+            Object.keys(this.settings);
+            
+        if (settingsToInclude.length === 0) {
+            return {
+                success: false,
+                error: 'No valid settings selected for command generation'
+            };
+        }
+        
         commands.push('echo "Installing Up 4evr - System Preferences Configuration"');
+        commands.push(`echo "Applying ${settingsToInclude.length} selected setting${settingsToInclude.length !== 1 ? 's' : ''}..."`);
         commands.push('echo "==========================================="');
         commands.push('');
 
-        // Add all settings commands
-        for (const [key, setting] of Object.entries(this.settings)) {
-            commands.push(`echo "Configuring ${setting.name}..."`);
+        // Add only selected settings commands with better formatting
+        settingsToInclude.forEach((key, index) => {
+            const setting = this.settings[key];
+            commands.push(`echo "[${index + 1}/${settingsToInclude.length}] Configuring ${setting.name}..."`);
             commands.push(setting.command);
+            commands.push('sleep 1  # Brief pause between settings');
             commands.push('');
-        }
+        });
 
         commands.push('echo "Configuration complete!"');
+        commands.push(`echo "Successfully applied ${settingsToInclude.length} setting${settingsToInclude.length !== 1 ? 's' : ''}"`);
         commands.push('echo "You may need to restart for all changes to take effect."');
 
         return {
             success: true,
             data: {
                 commands: commands.join('\n'),
-                count: Object.keys(this.settings).length,
+                count: settingsToInclude.length,
+                selectedSettings: selectedSettings || 'all',
                 timestamp: new Date().toISOString()
             }
         };
