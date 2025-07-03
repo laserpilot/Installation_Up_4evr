@@ -86,14 +86,14 @@ export function initSetupWizard() {
         await runWizardTests();
     });
     document.getElementById('wizard-go-dashboard')?.addEventListener('click', () => {
-        window.app.navigateToTab('dashboard');
+        navigateToTab('dashboard');
         showToast('Welcome to your Dashboard!', 'success');
     });
     document.getElementById('wizard-advanced-config')?.addEventListener('click', () => {
-        window.app.navigateToTab('configuration');
+        navigateToTab('configuration');
     });
     document.getElementById('skip-wizard')?.addEventListener('click', () => {
-        window.app.navigateToTab('dashboard');
+        navigateToTab('dashboard');
     });
 
     // Initial display of the first step
