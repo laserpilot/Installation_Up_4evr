@@ -5,6 +5,7 @@
 
 import { apiCall } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
+import { monitoringDisplay } from '../utils/monitoring-display.js';
 
 let isInitialized = false;
 let refreshInterval = null;
@@ -29,25 +30,8 @@ export function initDashboard() {
 }
 
 function setupEventListeners() {
-    // Dashboard refresh button
-    const refreshBtn = document.getElementById('dashboard-refresh');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', async () => {
-            refreshBtn.disabled = true;
-            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-            
-            try {
-                await refreshDashboardData();
-                showToast('Dashboard refreshed successfully', 'success');
-            } catch (error) {
-                console.error('Dashboard refresh failed:', error);
-                showToast('Failed to refresh dashboard', 'error');
-            } finally {
-                refreshBtn.disabled = false;
-                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-            }
-        });
-    }
+    // Dashboard refresh button using unified display manager
+    monitoringDisplay.setupRefreshButton('dashboard-refresh', refreshDashboardData);
     
     // Setup wizard button
     const wizardBtn = document.getElementById('run-setup-wizard');
@@ -153,94 +137,52 @@ async function refreshDashboardData() {
 }
 
 function updateSystemMetrics(systemData) {
-    // CPU Usage
-    const cpuValue = systemData.cpu?.usage || 0;
-    const cpuTopProcesses = systemData.cpu?.topProcesses || [];
-    updateMetricCard('cpu', cpuValue, '%', cpuValue > 80 ? 'high' : cpuValue > 60 ? 'medium' : 'low');
-    updateTopProcesses('cpu', cpuTopProcesses);
+    // CPU Usage with top processes
+    monitoringDisplay.updateMetricCard({
+        metricId: 'dashboard-cpu',
+        value: systemData.cpu?.usage || 0,
+        unit: '%',
+        type: 'cpu',
+        showProcesses: true,
+        processes: systemData.cpu?.topProcesses || []
+    });
     
-    // Memory Usage  
-    const memoryValue = systemData.memory?.usage || 0;
-    const memoryTopProcesses = systemData.memory?.topProcesses || [];
-    updateMetricCard('memory', memoryValue, '%', memoryValue > 90 ? 'high' : memoryValue > 70 ? 'medium' : 'low');
-    updateTopProcesses('memory', memoryTopProcesses);
+    // Memory Usage with top processes
+    monitoringDisplay.updateMetricCard({
+        metricId: 'dashboard-memory',
+        value: systemData.memory?.usage || 0,
+        unit: '%',
+        type: 'memory',
+        showProcesses: true,
+        processes: systemData.memory?.topProcesses || []
+    });
     
-    // Disk Usage
-    const diskValue = systemData.disk?.usage || 0;
-    const diskDetails = {
-        total: systemData.disk?.total || 'Unknown',
-        used: systemData.disk?.used || 'Unknown', 
-        available: systemData.disk?.available || 'Unknown'
-    };
-    updateMetricCard('disk', diskValue, '%', diskValue > 90 ? 'high' : diskValue > 80 ? 'medium' : 'low');
-    updateDiskDetails(diskDetails);
+    // Disk Usage with details
+    monitoringDisplay.updateMetricCard({
+        metricId: 'dashboard-disk',
+        value: systemData.disk?.usage || 0,
+        unit: '%',
+        type: 'disk',
+        diskDetails: {
+            total: systemData.disk?.total || 'Unknown',
+            used: systemData.disk?.used || 'Unknown', 
+            available: systemData.disk?.available || 'Unknown'
+        }
+    });
     
     // System Uptime
     const uptimeValue = systemData.uptime?.seconds || 0;
     const uptimeFormatted = systemData.uptime?.formatted || formatUptime(uptimeValue);
-    updateMetricCard('uptime', uptimeFormatted, '', 'low', uptimeValue > 0 ? 'Active' : 'Unknown');
+    monitoringDisplay.updateMetricCard({
+        metricId: 'dashboard-uptime',
+        value: uptimeFormatted,
+        unit: '',
+        type: 'uptime',
+        customStatus: uptimeValue > 0 ? 'Active' : 'Unknown'
+    });
 }
 
-function updateMetricCard(metric, value, unit, level, customStatus) {
-    const valueElement = document.getElementById(`dashboard-${metric}-value`);
-    const barElement = document.getElementById(`dashboard-${metric}-bar`);
-    const statusElement = document.getElementById(`dashboard-${metric}-status`);
-    
-    if (valueElement) {
-        valueElement.textContent = `${value}${unit}`;
-    }
-    
-    if (barElement) {
-        const percentage = typeof value === 'number' ? Math.min(value, 100) : 0;
-        barElement.style.width = `${percentage}%`;
-        
-        // Update color based on level
-        barElement.className = `metric-fill level-${level}`;
-    }
-    
-    if (statusElement) {
-        statusElement.textContent = customStatus || getStatusText(level);
-        statusElement.className = `metric-status status-${level}`;
-    }
-}
-
-function updateTopProcesses(metric, topProcesses) {
-    const processContainer = document.getElementById(`dashboard-${metric}-processes`);
-    if (!processContainer) return;
-    
-    if (!topProcesses || topProcesses.length === 0) {
-        processContainer.innerHTML = '<div class="no-processes">No process data available</div>';
-        return;
-    }
-    
-    // Show top 3 processes
-    const top3 = topProcesses.slice(0, 3);
-    
-    processContainer.innerHTML = top3.map(process => {
-        const processName = process.name || `PID ${process.pid}`;
-        const usage = metric === 'cpu' ? 
-            `${process.cpuPercent?.toFixed(1)}%` : 
-            `${process.memoryMB}MB`;
-        
-        return `
-            <div class="process-item">
-                <span class="process-name">${processName}</span>
-                <span class="process-usage">${usage}</span>
-            </div>
-        `;
-    }).join('');
-}
-
-function updateDiskDetails(diskDetails) {
-    const diskDetailsContainer = document.getElementById('dashboard-disk-details');
-    if (!diskDetailsContainer) return;
-    
-    diskDetailsContainer.innerHTML = `
-        <div class="disk-details">
-            ${diskDetails.total} drive, ${diskDetails.used} used, ${diskDetails.available} free
-        </div>
-    `;
-}
+// Old metric functions replaced by unified MonitoringDisplayManager
 
 function updateApplications(applications) {
     const container = document.getElementById('dashboard-applications');
@@ -280,33 +222,8 @@ function updateApplications(applications) {
 }
 
 function updateRecentActivity(alerts) {
-    const container = document.getElementById('dashboard-alerts');
-    if (!container) return;
-    
-    if (!alerts || alerts.length === 0) {
-        container.innerHTML = `
-            <div class="no-alerts-message">
-                <i class="fas fa-check-circle"></i>
-                <p>No recent alerts. System running smoothly.</p>
-            </div>
-        `;
-        return;
-    }
-    
-    // Show only the last 5 alerts
-    const recentAlerts = alerts.slice(-5).reverse();
-    
-    container.innerHTML = recentAlerts.map(alert => `
-        <div class="alert-item alert-${alert.level || 'info'}">
-            <div class="alert-icon">
-                <i class="fas ${getAlertIcon(alert.level)}"></i>
-            </div>
-            <div class="alert-content">
-                <p>${alert.message}</p>
-                <small>${formatTimestamp(alert.timestamp)}</small>
-            </div>
-        </div>
-    `).join('');
+    // Use unified alerts display
+    monitoringDisplay.updateAlertsSection('dashboard-alerts', alerts);
 }
 
 function startDashboardRefresh() {
@@ -315,10 +232,10 @@ function startDashboardRefresh() {
         clearInterval(refreshInterval);
     }
     
-    // Set up automatic refresh every 30 seconds
-    refreshInterval = setInterval(() => {
-        refreshDashboardData();
-    }, 30000);
+    // Use unified auto-refresh with 30-second interval
+    refreshInterval = monitoringDisplay.setupAutoRefresh(refreshDashboardData, {
+        refreshInterval: 30000
+    });
     
     console.log('[DASHBOARD] Auto-refresh started (30s interval)');
 }
@@ -339,37 +256,7 @@ function formatUptime(seconds) {
     return `${Math.floor(seconds / 86400)}d`;
 }
 
-function getStatusText(level) {
-    switch (level) {
-        case 'high': return 'Critical';
-        case 'medium': return 'Warning';
-        case 'low': return 'Normal';
-        default: return 'Unknown';
-    }
-}
-
-function getAlertIcon(level) {
-    switch (level) {
-        case 'critical': return 'fa-exclamation-triangle';
-        case 'warning': return 'fa-exclamation-circle';
-        case 'info': return 'fa-info-circle';
-        default: return 'fa-bell';
-    }
-}
-
-function formatTimestamp(timestamp) {
-    if (!timestamp) return 'Unknown time';
-    
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return date.toLocaleDateString();
-}
+// Utility functions moved to unified MonitoringDisplayManager
 
 // Global function for app toggle (called from HTML)
 window.toggleApplication = async function(appName) {

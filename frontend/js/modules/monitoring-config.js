@@ -6,6 +6,7 @@
 import { apiCall } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
 import { ConfigSection } from '../components/ConfigSection.js';
+import { monitoringDisplay } from '../utils/monitoring-display.js';
 
 async function loadMonitoringConfig() {
     try {
@@ -120,15 +121,15 @@ function setupMonitoringConfigButtons() {
 }
 
 function setupRefreshButton() {
-    const refreshBtn = document.getElementById('refresh-system-status');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', refreshSystemStatus);
-    }
+    // Use unified refresh button setup
+    monitoringDisplay.setupRefreshButton('refresh-system-status', refreshSystemStatus);
 }
 
 function setupStatusDisplay() {
-    // Set up periodic status updates for the monitoring config tab
-    setInterval(refreshSystemStatus, 10000); // Update every 10 seconds
+    // Use unified auto-refresh with 10-second interval for monitoring config
+    monitoringDisplay.setupAutoRefresh(refreshSystemStatus, {
+        refreshInterval: 10000
+    });
 }
 
 async function refreshSystemStatus() {
@@ -142,47 +143,51 @@ async function refreshSystemStatus() {
 }
 
 function updateStatusCards(data) {
+    // Update status cards using unified display manager
+    const system = data.system || {};
+    
     // Update CPU status
-    updateStatusCard('cpu', data.system?.cpu || 0);
+    if (system.cpu) {
+        monitoringDisplay.updateMetricCard({
+            metricId: 'current-cpu',
+            value: system.cpu.usage || 0,
+            unit: '%',
+            type: 'cpu'
+        });
+    }
     
     // Update Memory status  
-    updateStatusCard('memory', data.system?.memory || 0);
+    if (system.memory) {
+        monitoringDisplay.updateMetricCard({
+            metricId: 'current-memory',
+            value: system.memory.usage || 0,
+            unit: '%',
+            type: 'memory'
+        });
+    }
     
     // Update Disk status
-    updateStatusCard('disk', data.system?.disk || 0);
+    if (system.disk) {
+        monitoringDisplay.updateMetricCard({
+            metricId: 'current-disk',
+            value: system.disk.usage || 0,
+            unit: '%',
+            type: 'disk'
+        });
+    }
     
     // Update Temperature status
-    updateStatusCard('temperature', data.system?.temperature || 0);
+    if (system.temperature) {
+        monitoringDisplay.updateMetricCard({
+            metricId: 'current-temperature',
+            value: system.temperature || 0,
+            unit: '°C',
+            type: 'temperature'
+        });
+    }
 }
 
-function updateStatusCard(type, value) {
-    const valueElement = document.getElementById(`current-${type}`);
-    const indicatorElement = document.getElementById(`${type}-indicator`);
-    const trendElement = document.getElementById(`${type}-trend`);
-    
-    if (valueElement) {
-        if (type === 'temperature') {
-            valueElement.textContent = `${Math.round(value)}°C`;
-        } else {
-            valueElement.textContent = `${Math.round(value)}%`;
-        }
-    }
-    
-    if (indicatorElement) {
-        if (value > 80) {
-            indicatorElement.textContent = '🔴';
-        } else if (value > 60) {
-            indicatorElement.textContent = '🟡';
-        } else {
-            indicatorElement.textContent = '🟢';
-        }
-    }
-    
-    if (trendElement) {
-        // Add trend indication (simplified)
-        trendElement.textContent = value > 50 ? '📈' : '📉';
-    }
-}
+// Old updateStatusCard function replaced by unified MonitoringDisplayManager
 
 function setupThresholdControls() {
     // Setup synchronization between sliders and number inputs
