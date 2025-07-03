@@ -37,8 +37,8 @@ function setupEventListeners() {
     const wizardBtn = document.getElementById('run-setup-wizard');
     if (wizardBtn) {
         wizardBtn.addEventListener('click', () => {
-            if (window.app && window.app.navigateToTab) {
-                window.app.navigateToTab('setup-wizard');
+            if (window.navigateToTab) {
+                navigateToTab('setup-wizard');
             } else {
                 showToast('Navigation not available', 'error');
             }
@@ -193,7 +193,7 @@ function updateApplications(applications) {
             <div class="no-apps-message">
                 <i class="fas fa-info-circle"></i>
                 <p>No applications are currently being monitored.</p>
-                <button class="btn btn-link" onclick="window.app.navigateToTab('launch-agents')">
+                <button class="btn btn-link" onclick="navigateToTab('launch-agents')">
                     <i class="fas fa-rocket"></i> Set up Launch Agents
                 </button>
             </div>

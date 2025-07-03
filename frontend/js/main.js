@@ -331,6 +331,24 @@ InstallationUp4evr.prototype.moduleInitializers = {
     'notifications': initNotifications
 };
 
+// Global navigation function for use in HTML onclick handlers
+window.navigateToTab = function(tabId) {
+    if (window.app && window.app.navigateToTab) {
+        window.app.navigateToTab(tabId);
+    } else {
+        console.error('[NAVIGATION] App not ready, queuing navigation to:', tabId);
+        // Queue the navigation for when app is ready
+        document.addEventListener('app-ready', () => {
+            window.app.navigateToTab(tabId);
+        });
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new InstallationUp4evr();
+    
+    // Dispatch app ready event for any queued navigations
+    setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('app-ready'));
+    }, 100);
 });
