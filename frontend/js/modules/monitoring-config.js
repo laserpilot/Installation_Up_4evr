@@ -30,16 +30,57 @@ async function saveMonitoringConfig() {
     }
 }
 
-function resetMonitoringConfig() {
+async function resetMonitoringConfig() {
     if (confirm('Are you sure you want to reset the monitoring configuration to defaults?')) {
-        // Implement reset logic here
-        showToast('Monitoring configuration reset', 'success');
+        try {
+            const response = await apiCall('/api/monitoring/config/reset', {
+                method: 'POST'
+            });
+            
+            // Update the editor with the reset configuration
+            document.getElementById('monitoring-config-editor').value = JSON.stringify(response.config, null, 2);
+            
+            // Refresh the status display to show reset values
+            refreshSystemStatus();
+            
+            showToast('Monitoring configuration reset to defaults', 'success');
+        } catch (error) {
+            console.error('Reset failed:', error);
+            showToast('Failed to reset monitoring configuration', 'error');
+        }
     }
 }
 
-function applyMonitoringConfig() {
-    // Implement apply logic here
-    showToast('Monitoring configuration applied', 'success');
+async function applyMonitoringConfig() {
+    try {
+        const configText = document.getElementById('monitoring-config-editor').value;
+        let config;
+        
+        try {
+            config = JSON.parse(configText);
+        } catch (parseError) {
+            showToast('Invalid JSON configuration format', 'error');
+            return;
+        }
+        
+        const response = await apiCall('/api/monitoring/config/apply', {
+            method: 'POST',
+            body: JSON.stringify({ config })
+        });
+        
+        if (response.restartRequired) {
+            showToast('Monitoring configuration applied and monitoring system restarted', 'success');
+        } else {
+            showToast('Monitoring configuration applied successfully', 'success');
+        }
+        
+        // Refresh status to show the applied changes
+        refreshSystemStatus();
+        
+    } catch (error) {
+        console.error('Apply failed:', error);
+        showToast('Failed to apply monitoring configuration', 'error');
+    }
 }
 
 export function initMonitoringConfig() {

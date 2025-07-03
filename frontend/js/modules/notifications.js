@@ -10,16 +10,16 @@ import { setValue, getValue, setCheckbox, getCheckbox } from '../utils/form-help
 export function initNotifications() {
     console.log('[INIT] Initializing Notifications tab...');
     
-    // Setup channel toggles
-    setupChannelToggles();
-    
     // Setup test buttons
     setupTestButtons();
+    
+    // Setup action buttons
+    setupActionButtons();
     
     // Setup form interactions
     setupFormInteractions();
     
-    // Load current configuration
+    // Load current configuration and setup toggles
     loadNotificationConfig();
 }
 
@@ -31,12 +31,18 @@ function setupChannelToggles() {
         const config = document.getElementById(`${channel}-config`);
         
         if (toggle && config) {
+            // Note: Can't easily remove existing listeners, but this shouldn't cause issues
+            
+            // Add event listener
             toggle.addEventListener('change', (e) => {
                 config.style.display = e.target.checked ? 'block' : 'none';
+                console.log(`[NOTIFICATIONS] ${channel} toggle:`, e.target.checked ? 'shown' : 'hidden');
             });
             
-            // Trigger initial state
-            config.style.display = toggle.checked ? 'block' : 'none';
+            // Set initial state based on current checkbox value
+            const isChecked = toggle.checked;
+            config.style.display = isChecked ? 'block' : 'none';
+            console.log(`[NOTIFICATIONS] ${channel} initial state:`, isChecked ? 'shown' : 'hidden');
         }
     });
 }
@@ -56,6 +62,19 @@ function setupTestButtons() {
     
     if (testWebhookBtn) {
         testWebhookBtn.addEventListener('click', () => testNotificationChannel('webhook'));
+    }
+}
+
+function setupActionButtons() {
+    const loadBtn = document.getElementById('load-notification-config');
+    const saveBtn = document.getElementById('save-notification-config');
+    
+    if (loadBtn) {
+        loadBtn.addEventListener('click', loadNotificationConfig);
+    }
+    
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveNotificationConfig);
     }
 }
 
@@ -140,8 +159,19 @@ function populateNotificationConfig(config) {
     setValue('webhook-method', config.webhook?.method || 'POST');
     setValue('webhook-format', config.webhook?.format || 'json');
     
-    // Trigger toggle events to show/hide configs
+    // Setup toggle events and ensure visibility is correct
     setupChannelToggles();
+    
+    // Update visibility based on toggle states after config is loaded
+    const channels = ['slack', 'discord', 'webhook'];
+    channels.forEach(channel => {
+        const toggle = document.getElementById(`${channel}-enabled`);
+        const configDiv = document.getElementById(`${channel}-config`);
+        if (toggle && configDiv) {
+            configDiv.style.display = toggle.checked ? 'block' : 'none';
+            console.log(`[NOTIFICATIONS] ${channel} config visibility:`, toggle.checked ? 'shown' : 'hidden');
+        }
+    });
 }
 
 function getCurrentConfig() {
