@@ -3280,6 +3280,78 @@ input:checked + .toggle-slider:before {
     margin-bottom: var(--spacing-md);
 }
 
+/* Application Creation Actions */
+.app-creation-actions {
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-md);
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.app-creation-actions .help-text {
+    display: block;
+    margin-top: var(--spacing-sm);
+    color: var(--text-tertiary);
+    font-size: 0.9em;
+}
+
+/* Drag and Drop States */
+.app-drop-zone.drag-over {
+    border-color: var(--primary-color);
+    background-color: rgba(0, 122, 255, 0.1);
+}
+
+.web-config input.valid {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+}
+
+.web-config input.error {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
+}
+
+/* Wizard Instructions Modal */
+.wizard-instructions-modal .instructions-section {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+}
+
+.wizard-instructions-modal .instructions-section h4 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.wizard-instructions-modal ol {
+    margin-left: var(--spacing-md);
+    line-height: 1.8;
+}
+
+.wizard-instructions-modal .info-note {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: rgba(0, 122, 255, 0.1);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-md);
+}
+
+.wizard-instructions-modal .info-note i {
+    color: var(--primary-color);
+    margin-top: 2px;
+}
+
+.wizard-instructions-modal code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
 /* Verification Step */
 .verification-tests {
     display: flex;
