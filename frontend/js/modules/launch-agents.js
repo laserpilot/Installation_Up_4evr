@@ -610,12 +610,12 @@ export function initLaunchAgents() {
     
     // Load master configuration state after initial load
     setTimeout(() => {
-        loadMasterConfigState();
+        loadLaunchAgentsMasterConfig();
     }, 500);
 }
 
 // Master Configuration Integration
-async function loadMasterConfigState() {
+async function loadLaunchAgentsMasterConfig() {
     try {
         const response = await MasterConfigAPI.load();
         if (response.success && response.data.launchAgents) {
@@ -653,7 +653,7 @@ async function loadMasterConfigState() {
     }
 }
 
-async function saveMasterConfig() {
+async function saveLaunchAgentsMasterConfig() {
     try {
         // Collect current configuration
         const config = {

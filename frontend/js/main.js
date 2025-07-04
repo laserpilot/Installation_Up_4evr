@@ -236,10 +236,25 @@ function updateDetailCard(elementId, data) {
 
 class InstallationUp4evr {
     constructor() {
-        this.authSession = new AuthSessionManager();
-        this.monitoringData = new MonitoringDataManager();
-        this.uiManager = new UIManager();
-        this.init();
+        console.log('[INIT] InstallationUp4evr constructor starting...');
+        try {
+            this.authSession = new AuthSessionManager();
+            console.log('[INIT] ✅ AuthSessionManager created');
+            
+            this.monitoringData = new MonitoringDataManager();
+            console.log('[INIT] ✅ MonitoringDataManager created');
+            
+            this.uiManager = new UIManager();
+            console.log('[INIT] ✅ UIManager created');
+            
+            // Use async initialization properly
+            this.init().catch(error => {
+                console.error('[INIT] ❌ Init error:', error);
+            });
+            console.log('[INIT] ✅ init() called');
+        } catch (error) {
+            console.error('[INIT] ❌ Constructor error:', error);
+        }
     }
 
     async init() {
@@ -248,6 +263,9 @@ class InstallationUp4evr {
         await this.uiManager.init();
 
         this.setupTabNavigation();
+        
+        // Setup mobile navigation
+        this.setupMobileNavigation();
 
         // Start global monitoring
         this.monitoringData.startMonitoring();
@@ -256,15 +274,54 @@ class InstallationUp4evr {
         this.navigateToTab('dashboard');
     }
 
+    setupMobileNavigation() {
+        const mobileToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (mobileToggle && sidebar) {
+            mobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-open');
+                const isOpen = sidebar.classList.contains('mobile-open');
+                mobileToggle.setAttribute('aria-expanded', isOpen);
+                mobileToggle.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+            });
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!sidebar.contains(e.target) && !mobileToggle.contains(e.target)) {
+                    sidebar.classList.remove('mobile-open');
+                    mobileToggle.setAttribute('aria-expanded', 'false');
+                    mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                }
+            });
+        }
+    }
+
     setupTabNavigation() {
+        console.log('[INIT] Setting up tab navigation...');
         const tabs = document.querySelectorAll('.sidebar-button');
-        tabs.forEach(tab => {
+        console.log(`[INIT] Found ${tabs.length} sidebar buttons`);
+        
+        tabs.forEach((tab, index) => {
+            const dataTab = tab.getAttribute('data-tab');
+            console.log(`[INIT] Button ${index + 1}: data-tab="${dataTab}"`);
+            
             tab.addEventListener('click', (e) => {
+                // Close mobile menu on tab click
+                const sidebar = document.querySelector('.sidebar');
+                const mobileToggle = document.getElementById('mobile-menu-toggle');
+                if (sidebar && mobileToggle && window.innerWidth <= 768) {
+                    sidebar.classList.remove('mobile-open');
+                    mobileToggle.setAttribute('aria-expanded', 'false');
+                    mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                }
                 e.preventDefault();
+                console.log(`[CLICK] Tab clicked: ${dataTab}`);
                 const targetId = tab.getAttribute('data-tab');
                 this.navigateToTab(targetId);
             });
         });
+        console.log('[INIT] ✅ Tab navigation setup complete');
     }
 
     navigateToTab(tabId) {
@@ -352,10 +409,17 @@ window.navigateToTab = function(tabId) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new InstallationUp4evr();
-    
-    // Dispatch app ready event for any queued navigations
-    setTimeout(() => {
-        document.dispatchEvent(new CustomEvent('app-ready'));
-    }, 100);
+    console.log('[INIT] DOM Content Loaded, creating app...');
+    try {
+        window.app = new InstallationUp4evr();
+        console.log('[INIT] ✅ window.app created successfully');
+        
+        // Dispatch app ready event for any queued navigations
+        setTimeout(() => {
+            document.dispatchEvent(new CustomEvent('app-ready'));
+            console.log('[INIT] ✅ app-ready event dispatched');
+        }, 100);
+    } catch (error) {
+        console.error('[INIT] ❌ Failed to create app:', error);
+    }
 });

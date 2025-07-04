@@ -1,3 +1,24 @@
+
+/* Skip Navigation Link for Accessibility */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 10000;
+    border-radius: 0 0 4px 4px;
+    font-weight: bold;
+    transition: top 0.3s;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
 /* Installation Up 4evr - Styles */
 
 * {
@@ -355,7 +376,7 @@ body {
 }
 
 .form-group input[type="text"]:focus {
-    outline: none;
+    /* outline: none removed for accessibility */
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
@@ -1473,7 +1494,7 @@ body {
 .config-item input:focus,
 .config-item select:focus,
 .config-item textarea:focus {
-    outline: none;
+    /* outline: none removed for accessibility */
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
@@ -2022,7 +2043,7 @@ input:checked + .toggle-slider:before {
     height: 8px;
     background: #ddd;
     border-radius: 4px;
-    outline: none;
+    /* outline: none removed for accessibility */
     opacity: 0.7;
     transition: opacity 0.2s;
 }
@@ -2813,7 +2834,7 @@ input:checked + .toggle-slider:before {
 }
 
 #web-app-url:focus {
-    outline: none;
+    /* outline: none removed for accessibility */
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
@@ -5527,5 +5548,164 @@ input:checked + .toggle-slider:before {
     .launch-agent-verification-modal .modal-content {
         margin: var(--spacing-md);
         max-width: none;
+    }
+}
+
+/* Mobile Navigation Improvements */
+.mobile-menu {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu {
+        display: block;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1000;
+        background: var(--primary-color, #007bff);
+        color: white;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 999;
+        background: white;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .content-area {
+        margin-left: 0;
+        padding: 4rem 1rem 1rem;
+    }
+    
+    .card {
+        margin: 0.5rem 0;
+    }
+    
+    .wizard-step {
+        padding: 1rem;
+    }
+    
+    .step-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .step-actions .btn {
+        width: 100%;
+    }
+}
+/* Flexible Layout System */
+.flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.flex-item {
+    flex: 1;
+    min-width: 300px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .flex-item {
+        min-width: 100%;
+    }
+    
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .responsive-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* Enhanced Focus Indicators for Accessibility */
+*:focus {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+}
+
+.btn:focus,
+.btn:focus-visible {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(0, 95, 204, 0.3);
+}
+
+.sidebar-button:focus,
+.sidebar-button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+    border-color: #005fcc;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #000000;
+        --secondary-color: #ffffff;
+        --text-color: #000000;
+        --background-color: #ffffff;
+    }
+    
+    .btn {
+        border: 2px solid currentColor;
+    }
+    
+    .card {
+        border: 2px solid #000000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

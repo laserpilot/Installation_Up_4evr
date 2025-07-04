@@ -36,12 +36,14 @@
   "author": "Installation Up 4evr",
   "license": "MIT",
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
-    "concurrently": "^8.2.2",
     "wait-on": "^7.2.0"
   },
   "dependencies": {
+    "jsdom": "^26.1.0",
+    "node-fetch": "^3.3.2",
     "sudo-prompt": "^9.2.1"
   },
   "build": {
@@ -76,7 +78,7 @@
         {
           "target": "zip",
           "arch": [
-            "x64", 
+            "x64",
             "arm64"
           ]
         }

@@ -10,6 +10,45 @@ import { apiCall } from '../utils/api.js';
 let currentStep = 1;
 const totalSteps = 6; // Based on index.html
 
+// Step validation function (module-level for access by other functions)
+function validateCurrentStep() {
+    switch (currentStep) {
+        case 2: // System Check
+            const failedChecks = document.querySelectorAll('.system-check-item .check-status.status-error');
+            if (failedChecks.length > 0) {
+                return {
+                    canProceed: false,
+                    message: `Please resolve ${failedChecks.length} failed system check(s) before continuing`
+                };
+            }
+            return { canProceed: true };
+            
+        case 3: // Essential Settings
+            // Allow proceeding even with unselected settings (user can skip)
+            return { canProceed: true };
+            
+        case 4: // Application Setup
+            // Use the enhanced validation function if available
+            if (typeof window.validateWizardApplicationStep === 'function') {
+                return window.validateWizardApplicationStep();
+            }
+            
+            // Fallback validation
+            const hasApp = wizardCurrentAppPath || document.getElementById('wizard-app-drop')?.dataset.appPath;
+            const hasWebUrl = document.getElementById('wizard-web-url')?.value;
+            if (!hasApp && !hasWebUrl) {
+                return {
+                    canProceed: false,
+                    message: 'Please configure at least one application (desktop app or web URL) before continuing'
+                };
+            }
+            return { canProceed: true };
+            
+        default:
+            return { canProceed: true };
+    }
+}
+
 export function initSetupWizard() {
     console.log('[INIT] Initializing Setup Wizard tab...');
 
@@ -79,44 +118,6 @@ export function initSetupWizard() {
         return true;
     };
     
-    // Step validation function
-    function validateCurrentStep() {
-        switch (currentStep) {
-            case 2: // System Check
-                const failedChecks = document.querySelectorAll('.system-check-item .check-status.status-error');
-                if (failedChecks.length > 0) {
-                    return {
-                        canProceed: false,
-                        message: `Please resolve ${failedChecks.length} failed system check(s) before continuing`
-                    };
-                }
-                return { canProceed: true };
-                
-            case 3: // Essential Settings
-                // Allow proceeding even with unselected settings (user can skip)
-                return { canProceed: true };
-                
-            case 4: // Application Setup
-                // Use the enhanced validation function if available
-                if (typeof window.validateWizardApplicationStep === 'function') {
-                    return window.validateWizardApplicationStep();
-                }
-                
-                // Fallback validation
-                const hasApp = wizardCurrentAppPath || document.getElementById('wizard-app-drop')?.dataset.appPath;
-                const hasWebUrl = document.getElementById('wizard-web-url')?.value;
-                if (!hasApp && !hasWebUrl) {
-                    return {
-                        canProceed: false,
-                        message: 'Please configure at least one application (desktop app or web URL) before continuing'
-                    };
-                }
-                return { canProceed: true };
-                
-            default:
-                return { canProceed: true };
-        }
-    }
     
     // Load content for specific steps
     function loadStepContent(stepNumber) {

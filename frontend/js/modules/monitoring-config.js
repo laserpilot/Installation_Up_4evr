@@ -354,21 +354,6 @@ async function updateMasterConfigWithMonitoring(config) {
     }
 }
 
-async function loadLaunchAgentSuggestions() {
-    try {
-        const response = await MasterConfigAPI.getLaunchAgents();
-        if (response.success && response.data) {
-            const { agents, webApps } = response.data;
-            const allApps = [...(agents || []), ...(webApps || [])];
-            
-            if (allApps.length > 0) {
-                addLaunchAgentSuggestionsUI(allApps);
-            }
-        }
-    } catch (error) {
-        console.warn('[MONITORING-CONFIG] Failed to load launch agent suggestions:', error);
-    }
-}
 
 function addLaunchAgentSuggestionsUI(agents) {
     const configEditor = document.getElementById('monitoring-config-editor');

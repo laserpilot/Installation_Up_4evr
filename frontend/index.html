@@ -8,6 +8,12 @@
     <link href="styles.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Skip Navigation for Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <!-- Mobile Navigation Toggle -->
+    <button class="mobile-menu" id="mobile-menu-toggle" aria-label="Toggle navigation menu">
+        <i class="fas fa-bars"></i>
+    </button>
     <div class="container">
         <!-- Header -->
         <header class="header">
@@ -88,7 +94,7 @@
                 </nav>
 
                 <!-- Main Content Area -->
-                <div class="content-area">
+                <div class="content-area" id="main-content">
                     <!-- Dashboard Tab (New Default) -->
                     <div id="dashboard-tab" class="tab-pane active">
                         <section class="card">
