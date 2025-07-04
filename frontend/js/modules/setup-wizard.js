@@ -194,39 +194,111 @@ export function initSetupWizard() {
     loadEssentialSettings();
 }
 
-// Load system check content for step 2
+// Load system check content for step 2 - Simplified 4 core settings
 async function loadSystemCheck() {
-    try {
-        const response = await fetch('/api/setup-wizard/system-check');
-        if (!response.ok) throw new Error('Failed to load system check');
+    console.log('[WIZARD] Loading simplified system check for 4 essential settings...');
+    
+    // Define the 4 essential "forever" settings
+    const essentialChecks = [
+        {
+            id: 'computer-sleep',
+            name: 'Computer Sleep Disabled',
+            description: 'Prevents your Mac from going to sleep and stopping your installation',
+            whyItMatters: 'If your computer sleeps, your installation will stop running',
+            howToCheck: 'System Preferences → Energy Saver → Computer Sleep: Never',
+            icon: 'fas fa-power-off'
+        },
+        {
+            id: 'display-sleep', 
+            name: 'Display Sleep Disabled',
+            description: 'Keeps your displays active and prevents screen blanking',
+            whyItMatters: 'Display sleep can cause visual installations to go black',
+            howToCheck: 'System Preferences → Energy Saver → Display Sleep: Never', 
+            icon: 'fas fa-tv'
+        },
+        {
+            id: 'screensaver-disabled',
+            name: 'Screensaver Disabled',
+            description: 'Prevents screensaver from interrupting your installation display',
+            whyItMatters: 'Screensavers can cover your installation content',
+            howToCheck: 'System Preferences → Desktop & Screen Saver → Screen Saver: Start after: Never',
+            icon: 'fas fa-desktop'
+        },
+        {
+            id: 'focus-mode',
+            name: 'Do Not Disturb (24-hour)',
+            description: 'Prevents notifications from interrupting your installation',
+            whyItMatters: 'Notifications can appear over your installation content',
+            howToCheck: 'System Preferences → Focus → Do Not Disturb → Schedule: Always',
+            icon: 'fas fa-bell-slash'
+        }
+    ];
+
+    const checksContainer = document.getElementById('wizard-system-checks');
+    if (!checksContainer) {
+        console.warn('[WIZARD] System checks container not found');
+        return;
+    }
+
+    // Create improved system check UI with education
+    checksContainer.innerHTML = `
+        <div class="system-check-intro">
+            <h4><i class="fas fa-shield-alt"></i> Essential "Forever" Settings</h4>
+            <p>These 4 settings ensure your installation runs reliably 24/7. You can skip this step, but applying these settings gives you peace of mind.</p>
+        </div>
         
-        const data = await response.json();
-        const checksContainer = document.getElementById('wizard-system-checks');
-        
-        if (checksContainer && data.success) {
-            checksContainer.innerHTML = data.data.systemChecks.map(check => `
-                <div class="system-check-item" data-check-id="${check.id}">
+        <div class="system-checks-list">
+            ${essentialChecks.map(check => `
+                <div class="system-check-item modern" data-check-id="${check.id}">
                     <div class="check-icon">
-                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <i class="${check.icon}"></i>
                     </div>
                     <div class="check-content">
-                        <h4>${check.name}</h4>
-                        <p>${check.description}</p>
-                        <span class="check-status">Checking...</span>
+                        <div class="check-header">
+                            <h4>${check.name}</h4>
+                            <span class="check-status">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                                Checking...
+                            </span>
+                        </div>
+                        <p class="check-description">${check.description}</p>
+                        <div class="check-details" style="display: none;">
+                            <div class="why-matters">
+                                <strong>Why this matters:</strong> ${check.whyItMatters}
+                            </div>
+                            <div class="how-to-check">
+                                <strong>Verify yourself:</strong> ${check.howToCheck}
+                            </div>
+                        </div>
                     </div>
-                    <div class="check-required">
-                        ${check.required ? '<span class="badge badge-required">Required</span>' : '<span class="badge badge-optional">Optional</span>'}
+                    <div class="check-actions">
+                        <button class="btn-toggle-details" title="Show more details">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
                     </div>
                 </div>
-            `).join('');
-            
-            // Simulate checks completion
-            setTimeout(() => runSystemChecks(data.data.systemChecks), 1000);
-        }
-    } catch (error) {
-        console.error('Error loading system check:', error);
-        showToast('Failed to load system check', 'error');
-    }
+            `).join('')}
+        </div>
+        
+        <div class="system-check-summary" id="system-check-summary">
+            <div class="summary-content">
+                <div class="summary-icon">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                </div>
+                <div class="summary-text">
+                    <span>Checking your system configuration...</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add event listeners for detail toggles
+    checksContainer.querySelectorAll('.btn-toggle-details').forEach(button => {
+        button.addEventListener('click', toggleCheckDetails);
+    });
+
+    // Start the actual system checks
+    setTimeout(() => runEssentialSystemChecks(essentialChecks), 1000);
 }
 
 // Run individual system checks
@@ -348,7 +420,7 @@ async function loadEssentialSettings() {
     }
 }
 
-// Apply essential settings with enhanced error handling
+// Apply essential settings with enhanced verification feedback
 async function applyEssentialSettings() {
     const selectedSettings = Array.from(document.querySelectorAll('.setting-checkbox:checked'))
         .map(checkbox => checkbox.dataset.settingId);
@@ -376,37 +448,46 @@ async function applyEssentialSettings() {
     // Disable both buttons during operation
     applyButton.disabled = true;
     skipButton.disabled = true;
-    applyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying Settings...';
     
     try {
-        const response = await fetch('/api/setup-wizard/apply-settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ selectedSettings })
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Server error (${response.status}): ${errorText}`);
+        // PHASE 1: BEFORE - Show current state and what will change
+        const proceedWithChanges = await showBeforeSettingsModal(selectedSettings);
+        if (!proceedWithChanges) {
+            return; // User cancelled
         }
         
-        const data = await response.json();
+        // PHASE 2: DURING - Apply settings with live feedback
+        const { success, appliedSettings, failedSettings } = await applySettingsWithProgress(selectedSettings, applyButton);
         
-        if (data.success) {
-            const appliedCount = data.data?.totalApplied || selectedSettings.length;
-            const failedCount = data.data?.totalFailed || 0;
-            
-            showToast(`Successfully applied ${appliedCount} system setting(s)`, 'success');
-            
-            if (failedCount > 0) {
-                showToast(`Warning: ${failedCount} setting(s) failed to apply. You may need to configure them manually.`, 'warning');
-            }
-            
+        // PHASE 3: AFTER - Verify changes and show results
+        await showAfterSettingsModal(success, appliedSettings, failedSettings);
+        
+        if (success) {
             // Update step status and proceed
             markStepCompleted(3, 'applied');
             window.navigateWizard('next', { skipValidation: true });
         } else {
-            throw new Error(data.message || data.error || 'Failed to apply settings');
+            // Show retry option for failed settings
+            const retry = await showConfirmDialog(
+                'Some Settings Failed',
+                `${failedSettings.length} setting(s) failed to apply. Would you like to try again or proceed anyway?`,
+                {
+                    confirmText: 'Retry Failed Settings',
+                    cancelText: 'Proceed Anyway',
+                    type: 'warning'
+                }
+            );
+            
+            if (retry) {
+                // Retry only the failed settings
+                const failedIds = failedSettings.map(s => s.id);
+                setTimeout(() => retryFailedSettings(failedIds), 1000);
+                return;
+            } else {
+                // Mark as partial completion and proceed
+                markStepCompleted(3, 'partial');
+                window.navigateWizard('next', { skipValidation: true });
+            }
         }
     } catch (error) {
         console.error('Error applying settings:', error);
@@ -516,10 +597,21 @@ function markStepCompleted(stepNumber, status = 'completed') {
     if (stepElement) {
         stepElement.classList.add('completed', `status-${status}`);
         
-        // Add status indicator
-        const statusIcon = status === 'skipped' 
-            ? '<i class="fas fa-forward" title="Skipped"></i>'
-            : '<i class="fas fa-check" title="Completed"></i>';
+        // Add status indicator with more status types
+        let statusIcon;
+        switch (status) {
+            case 'skipped':
+                statusIcon = '<i class="fas fa-forward" title="Skipped"></i>';
+                break;
+            case 'partial':
+                statusIcon = '<i class="fas fa-exclamation-triangle" title="Partially Completed"></i>';
+                break;
+            case 'applied':
+                statusIcon = '<i class="fas fa-check-circle" title="Applied"></i>';
+                break;
+            default:
+                statusIcon = '<i class="fas fa-check" title="Completed"></i>';
+        }
         
         const existingIcon = stepElement.querySelector('.status-icon');
         if (existingIcon) {
@@ -949,10 +1041,13 @@ function setupApplicationValidation() {
     };
 }
 
-// Function to create launch agent from wizard
+// Function to create launch agent from wizard with verification
 async function createWizardLaunchAgent() {
     try {
         showToast('Creating launch agent...', 'info');
+        
+        let creationResult;
+        let agentInfo;
         
         if (wizardCurrentMode === 'app') {
             if (!wizardCurrentAppPath) {
@@ -960,7 +1055,13 @@ async function createWizardLaunchAgent() {
                 return false;
             }
             
-            const result = await apiCall('/api/launch-agents/create', {
+            agentInfo = {
+                type: 'desktop',
+                name: wizardCurrentAppPath.split('/').pop(),
+                path: wizardCurrentAppPath
+            };
+            
+            creationResult = await apiCall('/api/launch-agents/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -972,14 +1073,6 @@ async function createWizardLaunchAgent() {
                     }
                 })
             });
-            
-            if (result.success) {
-                showToast(`Launch agent created for ${wizardCurrentAppPath.split('/').pop()}`, 'success');
-                return true;
-            } else {
-                showToast(`Failed to create launch agent: ${result.message}`, 'error');
-                return false;
-            }
             
         } else if (wizardCurrentMode === 'web') {
             const url = document.getElementById('wizard-web-url').value;
@@ -995,9 +1088,16 @@ async function createWizardLaunchAgent() {
             const appName = hostname.split('.')[0];
             const name = appName.charAt(0).toUpperCase() + appName.slice(1) + ' App';
             
+            agentInfo = {
+                type: 'web',
+                name: name,
+                url: url,
+                kioskMode: kioskMode
+            };
+            
             // Try the web-specific endpoint first
             try {
-                const result = await apiCall('/api/launch-agents/create-web', {
+                creationResult = await apiCall('/api/launch-agents/create-web', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1015,11 +1115,8 @@ async function createWizardLaunchAgent() {
                     })
                 });
                 
-                if (result.success) {
-                    showToast(`Web app launch agent created: ${name}`, 'success');
-                    return true;
-                } else {
-                    throw new Error(result.message || 'Web app endpoint failed');
+                if (!creationResult.success) {
+                    throw new Error(creationResult.message || 'Web app endpoint failed');
                 }
             } catch (error) {
                 console.warn('[WIZARD] Web app endpoint failed, falling back to basic method:', error.message);
@@ -1034,11 +1131,257 @@ async function createWizardLaunchAgent() {
             }
         }
         
-        return false;
+        // If creation was successful, show verification modal
+        if (creationResult && creationResult.success) {
+            await showLaunchAgentSuccessModal(agentInfo, creationResult);
+            markStepCompleted(4, 'applied');
+            return true;
+        } else {
+            const errorMessage = creationResult?.message || 'Unknown error';
+            showToast(`Failed to create launch agent: ${errorMessage}`, 'error');
+            return false;
+        }
+        
     } catch (error) {
         console.error('[WIZARD] Failed to create launch agent:', error);
         showToast('Failed to create launch agent', 'error');
         return false;
+    }
+}
+
+// Launch Agent Success Verification Modal - Phase 8.4.4.3
+async function showLaunchAgentSuccessModal(agentInfo, creationResult) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay launch-agent-verification-modal';
+        
+        const isDesktop = agentInfo.type === 'desktop';
+        const agentLabel = creationResult.data?.label || `com.installation.${agentInfo.name.toLowerCase().replace(/\s+/g, '')}`;
+        const plistPath = creationResult.data?.plistPath || `~/Library/LaunchAgents/${agentLabel}.plist`;
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-check-circle text-green"></i> Launch Agent Created Successfully</h3>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="verification-summary">
+                        <p>Your ${isDesktop ? 'application' : 'web app'} <strong>${agentInfo.name}</strong> has been configured to run automatically!</p>
+                    </div>
+                    
+                    <div class="agent-details">
+                        <h4><i class="fas fa-info-circle"></i> Launch Agent Details:</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Agent Name:</span>
+                                <span class="detail-value">${agentLabel}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">File Location:</span>
+                                <span class="detail-value file-path">${plistPath}</span>
+                            </div>
+                            ${isDesktop ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">Application Path:</span>
+                                    <span class="detail-value file-path">${agentInfo.path}</span>
+                                </div>
+                            ` : `
+                                <div class="detail-item">
+                                    <span class="detail-label">Web URL:</span>
+                                    <span class="detail-value">${agentInfo.url}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Kiosk Mode:</span>
+                                    <span class="detail-value">${agentInfo.kioskMode ? 'Enabled' : 'Disabled'}</span>
+                                </div>
+                            `}
+                            <div class="detail-item">
+                                <span class="detail-label">Auto-Start:</span>
+                                <span class="detail-value text-green">✓ Enabled</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Keep Alive:</span>
+                                <span class="detail-value text-green">✓ Enabled</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-verification">
+                        <h4><i class="fas fa-search"></i> Verify Status:</h4>
+                        <div class="status-check-container" id="agent-status-check">
+                            <div class="loading-state">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                                <span>Checking launch agent status...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="manual-verification">
+                        <h4><i class="fas fa-terminal"></i> Manual Verification Commands:</h4>
+                        <div class="command-section">
+                            <p><strong>Check if launch agent is loaded:</strong></p>
+                            <code>launchctl list | grep ${agentLabel}</code>
+                            <small>Should show the agent with a PID if running</small>
+                        </div>
+                        <div class="command-section">
+                            <p><strong>View launch agent details:</strong></p>
+                            <code>launchctl print gui/$(id -u)/${agentLabel}</code>
+                            <small>Shows detailed status and configuration</small>
+                        </div>
+                        <div class="command-section">
+                            <p><strong>Check plist file exists:</strong></p>
+                            <code>ls -la "${plistPath}"</code>
+                            <small>Should show the plist file with recent timestamp</small>
+                        </div>
+                        ${isDesktop ? `
+                            <div class="command-section">
+                                <p><strong>Test application launch:</strong></p>
+                                <code>open "${agentInfo.path}"</code>
+                                <small>Manually test that the application starts correctly</small>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="confidence-building">
+                        <div class="confidence-icon">
+                            <i class="fas fa-rocket text-green"></i>
+                        </div>
+                        <p><strong>Your application will now start automatically!</strong></p>
+                        <small>The launch agent ensures your ${isDesktop ? 'application' : 'web app'} runs continuously and restarts if it stops.</small>
+                    </div>
+                    
+                    <div class="next-steps">
+                        <h4><i class="fas fa-lightbulb"></i> What Happens Next:</h4>
+                        <ul>
+                            <li>✅ Your ${isDesktop ? 'application' : 'web app'} will start automatically at login</li>
+                            <li>✅ If the ${isDesktop ? 'application' : 'web app'} stops, it will automatically restart</li>
+                            <li>✅ You can manage this launch agent from the "Launch Agents" tab</li>
+                            <li>✅ The launch agent survives system reboots and updates</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="test-agent-btn">Test Now</button>
+                    <button class="btn btn-primary modal-continue">Continue Setup</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Start status verification
+        verifyLaunchAgentStatus(agentLabel);
+        
+        const cleanup = () => modal.remove();
+        
+        // Test agent button
+        modal.querySelector('#test-agent-btn').addEventListener('click', async () => {
+            await testLaunchAgent(agentLabel, agentInfo);
+        });
+        
+        modal.querySelector('.modal-continue').addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+        
+        // Close on escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                document.removeEventListener('keydown', escapeHandler);
+                resolve(true);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    });
+}
+
+// Verify launch agent status in real-time
+async function verifyLaunchAgentStatus(agentLabel) {
+    const statusContainer = document.getElementById('agent-status-check');
+    if (!statusContainer) return;
+    
+    try {
+        // Add a delay to allow the system to register the agent
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const response = await apiCall(`/api/launch-agents/status/${encodeURIComponent(agentLabel)}`);
+        
+        if (response.success) {
+            const status = response.data;
+            
+            statusContainer.innerHTML = `
+                <div class="status-result">
+                    <div class="status-item ${status.loaded ? 'status-success' : 'status-warning'}">
+                        <i class="fas ${status.loaded ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                        <span>Launch Agent: ${status.loaded ? 'Loaded' : 'Not Loaded'}</span>
+                    </div>
+                    <div class="status-item ${status.running ? 'status-success' : 'status-info'}">
+                        <i class="fas ${status.running ? 'fa-play-circle' : 'fa-pause-circle'}"></i>
+                        <span>Process: ${status.running ? `Running (PID: ${status.pid})` : 'Not Running'}</span>
+                    </div>
+                    ${status.lastExit ? `
+                        <div class="status-item status-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Last Exit: ${status.lastExit}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="status-explanation">
+                    ${status.loaded 
+                        ? '<p class="text-success">✓ Launch agent is properly registered with macOS</p>'
+                        : '<p class="text-warning">⚠ Launch agent may need time to load or manual loading</p>'
+                    }
+                    ${status.running 
+                        ? '<p class="text-success">✓ Application is currently running</p>'
+                        : '<p class="text-info">ℹ Application will start automatically when needed</p>'
+                    }
+                </div>
+            `;
+        } else {
+            throw new Error(response.message || 'Failed to check status');
+        }
+    } catch (error) {
+        console.error('Error verifying launch agent status:', error);
+        statusContainer.innerHTML = `
+            <div class="status-error">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                <p>Unable to verify status automatically. Use the manual commands below to check.</p>
+                <small>This is normal for newly created launch agents.</small>
+            </div>
+        `;
+    }
+}
+
+// Test launch agent functionality
+async function testLaunchAgent(agentLabel, agentInfo) {
+    const testButton = document.getElementById('test-agent-btn');
+    const originalText = testButton.innerHTML;
+    
+    testButton.disabled = true;
+    testButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    
+    try {
+        const response = await apiCall(`/api/launch-agents/test/${encodeURIComponent(agentLabel)}`, {
+            method: 'POST'
+        });
+        
+        if (response.success) {
+            showToast(`Launch agent test successful! ${agentInfo.name} should be starting.`, 'success');
+            
+            // Refresh status after test
+            setTimeout(() => verifyLaunchAgentStatus(agentLabel), 3000);
+        } else {
+            showToast(`Test failed: ${response.message}`, 'warning');
+        }
+    } catch (error) {
+        console.error('Error testing launch agent:', error);
+        showToast('Unable to test launch agent. You can test manually using the commands shown.', 'info');
+    } finally {
+        testButton.disabled = false;
+        testButton.innerHTML = originalText;
     }
 }
 
@@ -1096,6 +1439,461 @@ async function skipApplicationSetup() {
         createButton.disabled = false;
         skipButton.innerHTML = '<i class="fas fa-forward"></i> Skip App Setup';
     }
+}
+
+// Toggle details for system check items
+function toggleCheckDetails(event) {
+    const button = event.currentTarget;
+    const checkItem = button.closest('.system-check-item');
+    const details = checkItem.querySelector('.check-details');
+    const icon = button.querySelector('i');
+    
+    if (details.style.display === 'none') {
+        details.style.display = 'block';
+        icon.className = 'fas fa-chevron-up';
+        button.title = 'Hide details';
+    } else {
+        details.style.display = 'none';
+        icon.className = 'fas fa-chevron-down';
+        button.title = 'Show more details';
+    }
+}
+
+// Run essential system checks for the 4 core settings
+async function runEssentialSystemChecks(essentialChecks) {
+    console.log('[WIZARD] Running essential system checks...');
+    
+    try {
+        // Get current system settings status
+        const systemStatus = await apiCall('/api/system/settings/status');
+        const settingsData = systemStatus.settings || {};
+        
+        let allGood = true;
+        let checkedCount = 0;
+        
+        essentialChecks.forEach((check, index) => {
+            setTimeout(() => {
+                const checkElement = document.querySelector(`[data-check-id="${check.id}"]`);
+                if (!checkElement) return;
+                
+                const icon = checkElement.querySelector('.check-icon i');
+                const statusElement = checkElement.querySelector('.check-status');
+                
+                // Determine if this essential setting is properly configured
+                const isConfigured = getEssentialSettingStatus(check.id, settingsData);
+                
+                if (isConfigured) {
+                    // Setting is properly configured
+                    icon.className = `${check.icon} text-green`;
+                    statusElement.innerHTML = '<i class="fas fa-check-circle text-green"></i> Configured';
+                    checkElement.classList.add('check-passed');
+                } else {
+                    // Setting needs attention
+                    icon.className = `${check.icon} text-yellow`;
+                    statusElement.innerHTML = '<i class="fas fa-exclamation-triangle text-yellow"></i> Needs Setup';
+                    checkElement.classList.add('check-warning');
+                    allGood = false;
+                }
+                
+                checkedCount++;
+                
+                // Update summary when all checks are complete
+                if (checkedCount === essentialChecks.length) {
+                    updateSystemCheckSummary(allGood, checkedCount);
+                }
+            }, index * 300); // Stagger the checks for better UX
+        });
+        
+    } catch (error) {
+        console.error('[WIZARD] Error running essential system checks:', error);
+        
+        // Set all checks to error state if API call fails
+        essentialChecks.forEach(check => {
+            const checkElement = document.querySelector(`[data-check-id="${check.id}"]`);
+            if (checkElement) {
+                const icon = checkElement.querySelector('.check-icon i');
+                const statusElement = checkElement.querySelector('.check-status');
+                
+                icon.className = `${check.icon} text-red`;
+                statusElement.innerHTML = '<i class="fas fa-times-circle text-red"></i> Check Failed';
+                checkElement.classList.add('check-error');
+            }
+        });
+        
+        updateSystemCheckSummary(false, essentialChecks.length, 'Unable to verify system settings. Please check manually.');
+    }
+}
+
+// Get status for essential settings (simplified mapping)
+function getEssentialSettingStatus(checkId, settingsData) {
+    switch (checkId) {
+        case 'computer-sleep':
+            return settingsData.disableComputerSleep?.status === 'set';
+            
+        case 'display-sleep':
+            return settingsData.disableDisplaySleep?.status === 'set';
+            
+        case 'screensaver-disabled':
+            return settingsData.disableScreenSaver?.status === 'set';
+            
+        case 'focus-mode':
+            // This might not be available in current API, so default to false for now
+            return settingsData.enableFocusMode?.status === 'set' || false;
+            
+        default:
+            return false;
+    }
+}
+
+// Update the system check summary
+function updateSystemCheckSummary(allGood, totalChecks, errorMessage = null) {
+    const summaryElement = document.getElementById('system-check-summary');
+    if (!summaryElement) return;
+    
+    let summaryHTML;
+    
+    if (errorMessage) {
+        summaryHTML = `
+            <div class="summary-content error">
+                <div class="summary-icon">
+                    <i class="fas fa-exclamation-circle text-red"></i>
+                </div>
+                <div class="summary-text">
+                    <span>${errorMessage}</span>
+                    <small>You can proceed anyway, but manual verification is recommended.</small>
+                </div>
+            </div>
+        `;
+    } else if (allGood) {
+        summaryHTML = `
+            <div class="summary-content success">
+                <div class="summary-icon">
+                    <i class="fas fa-check-circle text-green"></i>
+                </div>
+                <div class="summary-text">
+                    <span>Excellent! All ${totalChecks} essential settings are configured correctly.</span>
+                    <small>Your installation is ready to run "forever" without interruption.</small>
+                </div>
+            </div>
+        `;
+    } else {
+        const configuredCount = document.querySelectorAll('.system-check-item.check-passed').length;
+        const needsSetupCount = totalChecks - configuredCount;
+        
+        summaryHTML = `
+            <div class="summary-content warning">
+                <div class="summary-icon">
+                    <i class="fas fa-exclamation-triangle text-yellow"></i>
+                </div>
+                <div class="summary-text">
+                    <span>${configuredCount} of ${totalChecks} settings are configured. ${needsSetupCount} need setup.</span>
+                    <small>You can proceed and fix these later, or apply them in the next step.</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    summaryElement.innerHTML = summaryHTML;
+}
+
+// PHASE 1: Show "before" state with what will change
+async function showBeforeSettingsModal(selectedSettings) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay settings-verification-modal';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-info-circle"></i> Settings to Apply</h3>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="verification-intro">
+                        <p>You are about to apply <strong>${selectedSettings.length} system setting(s)</strong>. Here's what will change:</p>
+                    </div>
+                    
+                    <div class="settings-preview" id="settings-preview">
+                        <div class="loading-state">
+                            <i class="fas fa-circle-notch fa-spin"></i>
+                            <span>Checking current state...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="self-check-instructions">
+                        <h4><i class="fas fa-search"></i> Verify Yourself:</h4>
+                        <p>After applying, you can verify these changes manually:</p>
+                        <ul>
+                            <li><strong>Computer Sleep:</strong> System Preferences → Energy Saver → Computer Sleep: Never</li>
+                            <li><strong>Display Sleep:</strong> System Preferences → Energy Saver → Display Sleep: Never</li>
+                            <li><strong>Screensaver:</strong> System Preferences → Desktop & Screen Saver → Start after: Never</li>
+                            <li><strong>Do Not Disturb:</strong> System Preferences → Focus → Schedule: Always</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button class="btn btn-primary modal-proceed">Proceed with Changes</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Load current state
+        loadCurrentStatePreview(selectedSettings);
+        
+        const cleanup = () => modal.remove();
+        
+        modal.querySelector('.modal-cancel').addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+        
+        modal.querySelector('.modal-proceed').addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+        
+        // Close on escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                document.removeEventListener('keydown', escapeHandler);
+                resolve(false);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    });
+}
+
+// Load current state for preview
+async function loadCurrentStatePreview(selectedSettings) {
+    const previewContainer = document.getElementById('settings-preview');
+    if (!previewContainer) return;
+    
+    try {
+        const response = await apiCall('/api/system/settings/status');
+        const settingsData = response.settings || {};
+        
+        const settingNames = {
+            'disableComputerSleep': 'Computer Sleep',
+            'disableDisplaySleep': 'Display Sleep', 
+            'disableScreenSaver': 'Screensaver',
+            'enableFocusMode': 'Do Not Disturb (24h)'
+        };
+        
+        const previewHTML = selectedSettings.map(settingId => {
+            const setting = settingsData[settingId];
+            const name = settingNames[settingId] || settingId;
+            const currentStatus = setting?.status === 'set' ? 'Configured' : 'Not Configured';
+            const statusClass = setting?.status === 'set' ? 'text-green' : 'text-yellow';
+            
+            return `
+                <div class="setting-preview-item">
+                    <div class="setting-info">
+                        <h5>${name}</h5>
+                        <div class="status-change">
+                            <span class="current-status ${statusClass}">
+                                <i class="fas ${setting?.status === 'set' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+                                Currently: ${currentStatus}
+                            </span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="new-status text-green">
+                                <i class="fas fa-check-circle"></i>
+                                Will be: Configured
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        previewContainer.innerHTML = previewHTML;
+        
+    } catch (error) {
+        console.error('Error loading current state:', error);
+        previewContainer.innerHTML = `
+            <div class="preview-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Unable to check current state. Settings will be applied as selected.</p>
+            </div>
+        `;
+    }
+}
+
+// PHASE 2: Apply settings with live progress feedback
+async function applySettingsWithProgress(selectedSettings, buttonElement) {
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying Settings...';
+    
+    const appliedSettings = [];
+    const failedSettings = [];
+    
+    try {
+        const response = await fetch('/api/setup-wizard/apply-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ selectedSettings })
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Populate results based on API response
+            if (data.data && data.data.results) {
+                data.data.results.forEach(result => {
+                    if (result.success) {
+                        appliedSettings.push(result);
+                    } else {
+                        failedSettings.push(result);
+                    }
+                });
+            } else {
+                // Fallback: assume all selected settings were applied
+                selectedSettings.forEach(id => {
+                    appliedSettings.push({ id, name: id, success: true });
+                });
+            }
+            
+            const success = failedSettings.length === 0;
+            showToast(`Applied ${appliedSettings.length} of ${selectedSettings.length} settings`, success ? 'success' : 'warning');
+            
+            return { success, appliedSettings, failedSettings };
+        } else {
+            throw new Error(data.message || data.error || 'Failed to apply settings');
+        }
+    } catch (error) {
+        // All settings failed
+        selectedSettings.forEach(id => {
+            failedSettings.push({ id, name: id, success: false, error: error.message });
+        });
+        
+        return { success: false, appliedSettings, failedSettings };
+    }
+}
+
+// PHASE 3: Show "after" verification with results
+async function showAfterSettingsModal(success, appliedSettings, failedSettings) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay settings-verification-modal';
+        
+        const totalSettings = appliedSettings.length + failedSettings.length;
+        const iconClass = success ? 'fas fa-check-circle text-green' : 'fas fa-exclamation-triangle text-yellow';
+        const titleText = success ? 'Settings Applied Successfully' : 'Settings Partially Applied';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="${iconClass}"></i> ${titleText}</h3>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="verification-summary">
+                        <p>${appliedSettings.length} of ${totalSettings} settings were applied successfully.</p>
+                        ${failedSettings.length > 0 ? `<p class="text-warning">${failedSettings.length} settings failed to apply.</p>` : ''}
+                    </div>
+                    
+                    ${appliedSettings.length > 0 ? `
+                        <div class="applied-settings">
+                            <h4><i class="fas fa-check"></i> Successfully Applied:</h4>
+                            <ul>
+                                ${appliedSettings.map(setting => `
+                                    <li class="success-item">
+                                        <i class="fas fa-check-circle text-green"></i>
+                                        ${setting.name || setting.id}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${failedSettings.length > 0 ? `
+                        <div class="failed-settings">
+                            <h4><i class="fas fa-times"></i> Failed to Apply:</h4>
+                            <ul>
+                                ${failedSettings.map(setting => `
+                                    <li class="error-item">
+                                        <i class="fas fa-times-circle text-red"></i>
+                                        ${setting.name || setting.id}
+                                        ${setting.error ? `<small class="error-detail">Error: ${setting.error}</small>` : ''}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="verification-instructions">
+                        <h4><i class="fas fa-search"></i> Verify Your Changes:</h4>
+                        <div class="verification-steps">
+                            <p>To confirm these settings were applied correctly:</p>
+                            <ol>
+                                <li>Open <strong>System Preferences</strong></li>
+                                <li>Check <strong>Energy Saver</strong> → Computer Sleep and Display Sleep should be "Never"</li>
+                                <li>Check <strong>Desktop & Screen Saver</strong> → Screen Saver should start "Never"</li>
+                                <li>Check <strong>Focus</strong> → Do Not Disturb should be scheduled "Always"</li>
+                            </ol>
+                            <div class="terminal-commands">
+                                <p><strong>Or verify via Terminal:</strong></p>
+                                <code>pmset -g | grep -E "sleep|displaysleep"</code>
+                                <br><small>Should show "sleep 0" and "displaysleep 0"</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="confidence-building">
+                        <div class="confidence-icon">
+                            <i class="fas fa-shield-alt text-green"></i>
+                        </div>
+                        <p><strong>Your installation is now protected from sleep and interruptions!</strong></p>
+                        <small>These settings ensure your creative technology installation runs reliably 24/7.</small>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-primary modal-continue">Continue Setup</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const cleanup = () => modal.remove();
+        
+        modal.querySelector('.modal-continue').addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+        
+        // Close on escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                document.removeEventListener('keydown', escapeHandler);
+                resolve(true);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    });
+}
+
+// Retry failed settings function
+async function retryFailedSettings(failedSettingIds) {
+    console.log('[WIZARD] Retrying failed settings:', failedSettingIds);
+    
+    // Update checkboxes to only show failed settings as selected
+    document.querySelectorAll('.setting-checkbox').forEach(checkbox => {
+        checkbox.checked = failedSettingIds.includes(checkbox.dataset.settingId);
+    });
+    
+    // Re-run the apply process
+    await applyEssentialSettings();
 }
 
 // Show instructions for web app setup when backend endpoint is not available
