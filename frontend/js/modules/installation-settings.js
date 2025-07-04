@@ -3,7 +3,7 @@
  * @description Logic for the Installation Settings tab - handles creative technology installation parameters.
  */
 
-import { apiCall } from '../utils/api.js';
+import { apiCall, MasterConfigAPI } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
 import { setValue, getValue, synchronizeSliderInput } from '../utils/form-helpers.js';
 
@@ -16,6 +16,88 @@ export function initInstallationSettings() {
     
     // Load current settings
     loadInstallationSettings();
+    
+    // Load master configuration state after initial load
+    setTimeout(() => {
+        loadMasterConfigState();
+    }, 500);
+}
+
+// Master Configuration Integration
+async function loadMasterConfigState() {
+    try {
+        const response = await MasterConfigAPI.load();
+        if (response.success && response.data.installationSettings) {
+            console.log('[INSTALLATION-SETTINGS] Loaded master config state:', response.data.installationSettings);
+            
+            // Update UI with saved configuration
+            const config = response.data.installationSettings;
+            
+            // Apply saved settings
+            if (config.settings) {
+                Object.keys(config.settings).forEach(key => {
+                    setValue(key, config.settings[key]);
+                });
+            }
+            
+            // Apply saved custom parameters
+            if (config.customParameters) {
+                config.customParameters.forEach(param => {
+                    addCustomParameter(param.name, param.value, param.description);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('[INSTALLATION-SETTINGS] Failed to load master config state:', error);
+    }
+}
+
+async function saveMasterConfig() {
+    try {
+        // Collect current configuration
+        const config = {
+            settings: {
+                refreshRate: getValue('refresh-rate'),
+                maxCpuUsage: getValue('max-cpu-usage'),
+                memoryThreshold: getValue('memory-threshold'),
+                diskSpaceThreshold: getValue('disk-space-threshold'),
+                networkTimeout: getValue('network-timeout'),
+                autoRestart: getValue('auto-restart'),
+                failsafeMode: getValue('failsafe-mode'),
+                debugMode: getValue('debug-mode')
+            },
+            customParameters: getCustomParameters(),
+            lastUpdated: new Date().toISOString()
+        };
+        
+        await MasterConfigAPI.update('installationSettings', config);
+        console.log('[INSTALLATION-SETTINGS] Master config saved:', config);
+        
+    } catch (error) {
+        console.error('[INSTALLATION-SETTINGS] Failed to save master config:', error);
+    }
+}
+
+function getCustomParameters() {
+    const parameters = [];
+    const customSection = document.getElementById('custom-parameters');
+    if (customSection) {
+        const paramRows = customSection.querySelectorAll('.custom-param-row');
+        paramRows.forEach(row => {
+            const nameInput = row.querySelector('.param-name');
+            const valueInput = row.querySelector('.param-value');
+            const descInput = row.querySelector('.param-desc');
+            
+            if (nameInput && valueInput && nameInput.value.trim()) {
+                parameters.push({
+                    name: nameInput.value.trim(),
+                    value: valueInput.value.trim(),
+                    description: descInput ? descInput.value.trim() : ''
+                });
+            }
+        });
+    }
+    return parameters;
 }
 
 function setupSliderSynchronization() {

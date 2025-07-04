@@ -498,12 +498,144 @@ function showExpertWarningModal(settingId, settingName, settingDescription, onCo
     document.addEventListener('keydown', escapeHandler);
 }
 
+// Educational tooltips and help system
+function initializeTooltips() {
+    console.log('[SYSTEM-PREFS] Initializing educational tooltips...');
+    
+    // Add tooltip to Verify Settings button
+    addTooltip('verify-settings', {
+        title: "Why verify settings?",
+        content: "Check your current macOS settings against recommended values for creative installations. This helps ensure your system won't sleep during performances or automatically restart applications.",
+        undoInfo: "Verification is read-only and makes no changes to your system."
+    });
+    
+    // Add tooltip to Apply Required button
+    addTooltip('apply-required', {
+        title: "Why these settings matter",
+        content: "Required settings prevent system sleep, disable screensavers, and stop automatic updates during creative performances. These are essential for uninterrupted installations.",
+        undoInfo: "To undo: Use 'Generate Restore Script' button to create commands that revert to macOS defaults."
+    });
+    
+    // Add tooltip to Generate Script button
+    addTooltip('generate-script', {
+        title: "Why generate terminal commands?",
+        content: "Terminal commands let you verify what changes will be made before applying them. You can also run these commands manually for precise control over your system configuration.",
+        undoInfo: "These commands are safe and match exactly what the 'Apply' buttons do."
+    });
+    
+    // Add help text to setting sections
+    addSectionHelp('required-settings', {
+        title: "💡 Essential Settings for Creative Installations",
+        content: "These settings ensure your installation runs continuously without interruption. They prevent system sleep, disable screensavers, and stop automatic restarts.",
+        benefits: [
+            "No interruptions during performances",
+            "Consistent uptime for multi-day installations", 
+            "Prevents unexpected system updates",
+            "Maintains display brightness and connectivity"
+        ]
+    });
+    
+    addSectionHelp('optional-settings', {
+        title: "🔧 Additional Optimizations",
+        content: "Optional settings that can improve performance and user experience for specific installation types.",
+        benefits: [
+            "Enhanced security for public installations",
+            "Better performance for graphics-intensive work",
+            "Improved accessibility and user experience"
+        ]
+    });
+}
+
+function addTooltip(elementId, config) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'educational-tooltip';
+    tooltip.innerHTML = `
+        <div class="tooltip-header">
+            <i class="fas fa-info-circle"></i>
+            <span>${config.title}</span>
+        </div>
+        <div class="tooltip-content">
+            <p>${config.content}</p>
+            ${config.undoInfo ? `
+                <div class="undo-info">
+                    <i class="fas fa-undo"></i>
+                    <span>How to undo: ${config.undoInfo}</span>
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    // Position tooltip near button
+    element.parentNode.insertBefore(tooltip, element.nextSibling);
+    
+    // Add show/hide on hover
+    element.addEventListener('mouseenter', () => {
+        tooltip.style.display = 'block';
+        setTimeout(() => tooltip.classList.add('show'), 10);
+    });
+    
+    element.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('show');
+        setTimeout(() => tooltip.style.display = 'none', 200);
+    });
+}
+
+function addSectionHelp(sectionId, config) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    
+    // Find or create section header
+    let header = section.previousElementSibling;
+    if (!header || !header.classList.contains('section-header')) {
+        header = document.createElement('div');
+        header.className = 'section-header';
+        section.parentNode.insertBefore(header, section);
+    }
+    
+    // Add help info to header
+    const helpInfo = document.createElement('div');
+    helpInfo.className = 'section-help-info';
+    helpInfo.innerHTML = `
+        <div class="help-toggle">
+            <span class="help-title">${config.title}</span>
+            <button class="help-expand-btn">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+        <div class="help-content">
+            <p>${config.content}</p>
+            <ul class="benefits-list">
+                ${config.benefits.map(benefit => `<li><i class="fas fa-check"></i> ${benefit}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+    
+    header.appendChild(helpInfo);
+    
+    // Add expand/collapse functionality
+    const toggleBtn = helpInfo.querySelector('.help-expand-btn');
+    const helpContent = helpInfo.querySelector('.help-content');
+    
+    toggleBtn.addEventListener('click', () => {
+        const isExpanded = helpContent.classList.contains('expanded');
+        helpContent.classList.toggle('expanded', !isExpanded);
+        toggleBtn.querySelector('i').style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+}
+
 export function initSystemPreferences() {
     document.getElementById('verify-settings').addEventListener('click', verifySettings);
     document.getElementById('apply-required').addEventListener('click', applyRequiredSettings);
     document.getElementById('apply-selected').addEventListener('click', applySelectedSettings);
     document.getElementById('generate-script').addEventListener('click', generateTerminalCommands);
     document.getElementById('generate-restore-script').addEventListener('click', generateRestoreScript);
+
+    // Initialize educational tooltips
+    initializeTooltips();
 
     loadSystemPreferences();
     
