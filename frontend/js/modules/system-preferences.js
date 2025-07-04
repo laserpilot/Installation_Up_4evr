@@ -14,7 +14,7 @@ async function loadSystemPreferences() {
     try {
         const [allSettings, statusData] = await Promise.all([
             apiCall('/api/system-prefs/settings'),
-            apiCall('/api/system-prefs/status')
+            apiCall('/api/system/settings/status')
         ]);
 
         const statusLookup = (statusData.data || statusData).reduce((acc, status) => {
@@ -78,12 +78,11 @@ async function verifySettings() {
     showLoading('Checking current system settings status...');
     
     try {
-        const response = await apiCall('/api/system-prefs/verify');
-        if (response.success && response.data) {
+        const settingsData = await apiCall('/api/system/settings/status');
+        if (settingsData && Array.isArray(settingsData)) {
             // Re-render the settings with the new status
             loadSystemPreferences();
 
-            const settingsData = response.data;
             const appliedCount = settingsData.filter(s => s.status === 'applied').length;
             const needsAttentionCount = settingsData.filter(s => s.status === 'not_applied').length;
             const errorCount = settingsData.filter(s => s.status === 'error').length;

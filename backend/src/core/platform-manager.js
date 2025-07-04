@@ -82,6 +82,13 @@ class PlatformManager {
             return APIResponse.success(status);
         });
 
+        // GET route for verifying all system settings status (read-only)
+        this.api.registerRoute('/system/settings/verify', 'GET', async () => {
+            const status = await this.systemManager.verifySettings();
+            return APIResponse.success(status);
+        });
+
+        // POST route for verifying selected system settings  
         this.api.registerRoute('/system/settings/verify', 'POST', async () => {
             const status = await this.systemManager.verifySettings();
             return APIResponse.success(status);
