@@ -32,10 +32,16 @@ async function loadLaunchAgents() {
 
 function renderLaunchAgents() {
     const container = document.getElementById('launch-agents-list');
-    const agents = allAgents.filter(agent => agent.plistPath && agent.plistPath.includes('/Library/LaunchAgents/'));
+    // Filter to show only user-specific launch agents (not system ones)
+    const agents = allAgents.filter(agent => 
+        agent.plistPath && 
+        agent.plistPath.includes('/Library/LaunchAgents/') && 
+        !agent.plistPath.startsWith('/Library/LaunchAgents/') && // exclude system-level
+        !agent.plistPath.startsWith('/System/Library/LaunchAgents/') // exclude system-level
+    );
 
     if (agents.length === 0) {
-        container.innerHTML = '<p>No launch agents found</p>';
+        container.innerHTML = '<p>No user launch agents found in ~/Library/LaunchAgents</p>';
         return;
     }
 

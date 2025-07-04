@@ -94,6 +94,17 @@ app.get('/api/system-prefs/status', async (req, res) => {
     }
 });
 
+// GET endpoint for verifying current system settings status (read-only)
+app.get('/api/system-prefs/verify', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/system/settings/verify', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST endpoint for verifying selected system settings
 app.post('/api/system-prefs/verify', async (req, res) => {
     try {
         const result = await platformManager.handleAPIRequest('/system/settings/verify', 'POST', req.body);
@@ -225,6 +236,61 @@ app.post('/api/launch-agents/export', async (req, res) => {
 app.post('/api/launch-agents/create-web', async (req, res) => {
     try {
         const result = await platformManager.handleAPIRequest('/launch-agents/create-web', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Launch Agent Action Routes
+app.post('/api/launch-agents/start', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/start', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/stop', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/stop', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/restart', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/restart', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/view', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/view', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/update', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/update', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/launch-agents/delete', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/launch-agents/delete', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
