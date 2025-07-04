@@ -310,6 +310,9 @@ async function loadMasterConfigAgents() {
 function switchCreationMode(mode) {
     currentMode = mode;
     
+    // Save mode change to master config
+    saveMasterConfig();
+    
     // Update tab states
     document.querySelectorAll('.mode-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.mode === mode);
@@ -604,6 +607,77 @@ export function initLaunchAgents() {
     
     // Start real-time status updates
     startRealtimeStatusUpdates();
+    
+    // Load master configuration state after initial load
+    setTimeout(() => {
+        loadMasterConfigState();
+    }, 500);
+}
+
+// Master Configuration Integration
+async function loadMasterConfigState() {
+    try {
+        const response = await MasterConfigAPI.load();
+        if (response.success && response.data.launchAgents) {
+            console.log('[LAUNCH-AGENTS] Loaded master config state:', response.data.launchAgents);
+            
+            // Update UI with saved configuration
+            const config = response.data.launchAgents;
+            
+            // Apply saved mode
+            if (config.currentMode) {
+                switchCreationMode(config.currentMode);
+            }
+            
+            // Apply saved web app settings
+            if (config.webAppSettings) {
+                const settings = config.webAppSettings;
+                if (settings.url) {
+                    const urlInput = document.getElementById('web-app-url');
+                    if (urlInput) urlInput.value = settings.url;
+                }
+                if (settings.browser) {
+                    const browserSelect = document.getElementById('web-browser-select');
+                    if (browserSelect) browserSelect.value = settings.browser;
+                }
+                if (settings.options) {
+                    Object.keys(settings.options).forEach(option => {
+                        const checkbox = document.getElementById(`web-${option}`);
+                        if (checkbox) checkbox.checked = settings.options[option];
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        console.error('[LAUNCH-AGENTS] Failed to load master config state:', error);
+    }
+}
+
+async function saveMasterConfig() {
+    try {
+        // Collect current configuration
+        const config = {
+            currentMode: currentMode,
+            webAppSettings: {
+                url: document.getElementById('web-app-url')?.value || '',
+                browser: document.getElementById('web-browser-select')?.value || 'chrome',
+                options: {
+                    'kiosk-mode': document.getElementById('web-kiosk-mode')?.checked || false,
+                    'disable-dev-tools': document.getElementById('web-disable-dev-tools')?.checked || false,
+                    'disable-extensions': document.getElementById('web-disable-extensions')?.checked || false,
+                    'incognito-mode': document.getElementById('web-incognito-mode')?.checked || false
+                }
+            },
+            totalAgents: allAgents.length,
+            lastUpdated: new Date().toISOString()
+        };
+        
+        await MasterConfigAPI.update('launchAgents', config);
+        console.log('[LAUNCH-AGENTS] Master config saved:', config);
+        
+    } catch (error) {
+        console.error('[LAUNCH-AGENTS] Failed to save master config:', error);
+    }
 }
 
 // Export functions for external use (tab switching)

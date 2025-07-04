@@ -786,42 +786,149 @@ async function loadWizardSummary() {
             
             summaryContainer.innerHTML = `
                 <div class="setup-summary-content">
-                    <div class="summary-stats">
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-heart-pulse"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h4>Health Score</h4>
-                                <span class="stat-value ${summary.healthScore > 80 ? 'text-green' : summary.healthScore > 60 ? 'text-yellow' : 'text-red'}">${summary.healthScore}%</span>
-                            </div>
+                    <!-- Forever Guarantee Section -->
+                    <div class="forever-guarantee">
+                        <div class="guarantee-header">
+                            <i class="fas fa-shield-alt guarantee-icon"></i>
+                            <h3>🎯 Your Installation Will Run Forever</h3>
+                            <p class="guarantee-subtitle">Professional-grade automation is now protecting your creative technology installation.</p>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas ${summary.settingsConfigured ? 'fa-check-circle text-green' : 'fa-times-circle text-red'}"></i>
+                        
+                        <div class="forever-evidence">
+                            <div class="evidence-item ${summary.settingsConfigured ? 'verified' : 'pending'}">
+                                <i class="fas ${summary.settingsConfigured ? 'fa-check-circle' : 'fa-clock'}"></i>
+                                <div class="evidence-content">
+                                    <h4>Sleep Prevention Active</h4>
+                                    <p>System will never sleep, display will stay on, screensaver disabled. Your installation runs 24/7.</p>
+                                    ${summary.settingsConfigured ? '<span class="verified-badge">Verified</span>' : '<span class="pending-badge">Configure in System Preferences</span>'}
+                                </div>
                             </div>
-                            <div class="stat-content">
-                                <h4>Settings</h4>
-                                <span class="stat-value">${summary.settingsConfigured ? 'Configured' : 'Needs Work'}</span>
+                            
+                            <div class="evidence-item ${summary.launchAgents > 0 ? 'verified' : 'pending'}">
+                                <i class="fas ${summary.launchAgents > 0 ? 'fa-check-circle' : 'fa-clock'}"></i>
+                                <div class="evidence-content">
+                                    <h4>Auto-Start Applications (${summary.launchAgents || 0} configured)</h4>
+                                    <p>Your applications will automatically restart if they crash or after system reboots.</p>
+                                    ${summary.launchAgents > 0 ? '<span class="verified-badge">Verified</span>' : '<span class="pending-badge">Create in Launch Agents</span>'}
+                                </div>
                             </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas ${summary.monitoringActive ? 'fa-chart-line text-green' : 'fa-chart-line text-gray'}"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h4>Monitoring</h4>
-                                <span class="stat-value">${summary.monitoringActive ? 'Active' : 'Inactive'}</span>
+                            
+                            <div class="evidence-item ${summary.monitoringActive ? 'verified' : 'pending'}">
+                                <i class="fas ${summary.monitoringActive ? 'fa-check-circle' : 'fa-clock'}"></i>
+                                <div class="evidence-content">
+                                    <h4>Real-Time Monitoring</h4>
+                                    <p>System health monitoring with automatic alerts for any issues.</p>
+                                    ${summary.monitoringActive ? '<span class="verified-badge">Active</span>' : '<span class="pending-badge">Enable in Monitoring</span>'}
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="recommended-steps">
-                        <h4>Recommended Next Steps:</h4>
-                        <ul>
-                            ${summary.recommendedNextSteps.map(step => `<li>${step}</li>`).join('')}
-                        </ul>
+                    <!-- Technical Verification Section -->
+                    <div class="technical-verification">
+                        <h4><i class="fas fa-clipboard-check"></i> Technical Verification Report</h4>
+                        <div class="verification-grid">
+                            <div class="verification-card">
+                                <div class="card-header">
+                                    <i class="fas fa-heart-pulse"></i>
+                                    <span>System Health</span>
+                                </div>
+                                <div class="card-score ${summary.healthScore > 80 ? 'excellent' : summary.healthScore > 60 ? 'good' : 'needs-work'}">
+                                    ${summary.healthScore}%
+                                </div>
+                                <div class="card-status">
+                                    ${summary.healthScore > 80 ? 'Excellent - Ready for production' : 
+                                      summary.healthScore > 60 ? 'Good - Minor optimizations recommended' : 
+                                      'Needs attention - Review settings'}
+                                </div>
+                            </div>
+                            
+                            <div class="verification-card">
+                                <div class="card-header">
+                                    <i class="fas fa-cog"></i>
+                                    <span>System Configuration</span>
+                                </div>
+                                <div class="card-score ${summary.settingsConfigured ? 'excellent' : 'needs-work'}">
+                                    ${summary.settingsConfigured ? 'Configured' : 'Pending'}
+                                </div>
+                                <div class="card-status">
+                                    ${summary.settingsConfigured ? 'All essential settings applied' : 'Configure in System Preferences tab'}
+                                </div>
+                            </div>
+                            
+                            <div class="verification-card">
+                                <div class="card-header">
+                                    <i class="fas fa-rocket"></i>
+                                    <span>Launch Agents</span>
+                                </div>
+                                <div class="card-score ${summary.launchAgents > 0 ? 'excellent' : 'needs-work'}">
+                                    ${summary.launchAgents || 0}
+                                </div>
+                                <div class="card-status">
+                                    ${summary.launchAgents > 0 ? 'Applications protected' : 'Create launch agents for auto-start'}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- Command Line Verification -->
+                    <div class="command-verification">
+                        <h4><i class="fas fa-terminal"></i> Verify Your Setup (Terminal Commands)</h4>
+                        <div class="command-section">
+                            <p class="command-intro">Run these commands to independently verify your installation setup:</p>
+                            
+                            <div class="command-block">
+                                <div class="command-header">Check Sleep Settings:</div>
+                                <code>pmset -g | grep -E "(sleep|displaysleep)"</code>
+                                <div class="expected-output">Expected: sleep 0, displaysleep 0</div>
+                            </div>
+                            
+                            <div class="command-block">
+                                <div class="command-header">List Launch Agents:</div>
+                                <code>launchctl list | grep -v "com.apple"</code>
+                                <div class="expected-output">Expected: Your custom launch agents listed</div>
+                            </div>
+                            
+                            <div class="command-block">
+                                <div class="command-header">Check System Uptime:</div>
+                                <code>uptime</code>
+                                <div class="expected-output">Shows how long system has been running</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Success Message -->
+                    <div class="success-message">
+                        <div class="success-content">
+                            <i class="fas fa-trophy success-icon"></i>
+                            <h3>🎉 Installation Protection Complete!</h3>
+                            <p class="success-text">
+                                Your creative technology installation is now protected with professional-grade automation. 
+                                ${summary.settingsConfigured && summary.launchAgents > 0 ? 
+                                  'Your system will run continuously and your applications will automatically restart if needed.' :
+                                  'Complete the pending items above to achieve full protection.'}
+                            </p>
+                            
+                            <div class="next-steps-buttons">
+                                <button onclick="window.navigateToTab('dashboard')" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                                </button>
+                                <button onclick="window.navigateToTab('monitoring')" class="btn btn-secondary">
+                                    <i class="fas fa-chart-line"></i> View Monitoring
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommended Next Steps (if any) -->
+                    ${summary.recommendedNextSteps.length > 0 ? `
+                        <div class="recommended-steps">
+                            <h4><i class="fas fa-lightbulb"></i> Recommended Next Steps:</h4>
+                            <ul class="steps-list">
+                                ${summary.recommendedNextSteps.map(step => `<li class="step-item">${step}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }

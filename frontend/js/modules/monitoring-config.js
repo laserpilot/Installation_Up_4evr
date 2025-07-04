@@ -98,6 +98,7 @@ export function initMonitoringConfig() {
     setupRefreshButton();
     setupStatusDisplay();
     setupThresholdControls();
+    setupLaunchAgentSuggestions();
     
     // Initialize with current config and status
     loadMonitoringConfig();
@@ -107,6 +108,200 @@ export function initMonitoringConfig() {
     setTimeout(() => {
         loadLaunchAgentSuggestions();
     }, 1000);
+}
+
+// Launch Agent Suggestions Functionality
+function setupLaunchAgentSuggestions() {
+    console.log('[MONITORING-CONFIG] Setting up launch agent suggestions...');
+    
+    const refreshButton = document.getElementById('refresh-suggestions');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', loadLaunchAgentSuggestions);
+    }
+}
+
+async function loadLaunchAgentSuggestions() {
+    try {
+        showLoading('Scanning for applications...');
+        
+        // Get running applications and existing launch agents
+        const [appsResponse, agentsResponse] = await Promise.all([
+            apiCall('/api/monitoring/applications'),
+            apiCall('/api/launch-agents/list')
+        ]);
+        
+        const runningApps = appsResponse.data || [];
+        const existingAgents = agentsResponse.data || [];
+        
+        // Filter apps that don't have launch agents yet
+        const suggestions = filterApplicationSuggestions(runningApps, existingAgents);
+        
+        displayLaunchAgentSuggestions(suggestions);
+        
+    } catch (error) {
+        console.error('[MONITORING-CONFIG] Failed to load launch agent suggestions:', error);
+        showToast('Failed to load application suggestions', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function filterApplicationSuggestions(runningApps, existingAgents) {
+    const existingPaths = existingAgents.map(agent => agent.program_path || agent.path);
+    const suggestions = [];
+    
+    runningApps.forEach(app => {
+        // Skip system applications and apps that already have launch agents
+        if (!app.name.startsWith('com.apple.') && 
+            !existingPaths.some(path => path.includes(app.name)) &&
+            !app.name.includes('System') &&
+            !app.name.includes('Finder')) {
+            
+            suggestions.push({
+                name: app.name,
+                path: app.path || `/Applications/${app.name}.app`,
+                pid: app.pid,
+                cpu: app.cpu || 0,
+                memory: app.memory || 0,
+                reason: determineAutostartReason(app)
+            });
+        }
+    });
+    
+    // Sort by relevance (higher CPU/memory usage indicates more important apps)
+    return suggestions.sort((a, b) => (b.cpu + b.memory) - (a.cpu + a.memory));
+}
+
+function determineAutostartReason(app) {
+    const name = app.name.toLowerCase();
+    
+    if (name.includes('creative') || name.includes('adobe') || name.includes('sketch')) {
+        return 'Creative application - would benefit from auto-restart on crash';
+    } else if (name.includes('browser') || name.includes('chrome') || name.includes('firefox')) {
+        return 'Browser application - useful for kiosk mode installations';
+    } else if (name.includes('media') || name.includes('vlc') || name.includes('quicktime')) {
+        return 'Media application - important for continuous playback installations';
+    } else if (app.cpu > 5 || app.memory > 100) {
+        return 'High resource usage - critical application that should auto-restart';
+    } else {
+        return 'Running application - could benefit from launch agent protection';
+    }
+}
+
+function displayLaunchAgentSuggestions(suggestions) {
+    const container = document.getElementById('launch-agent-suggestions');
+    if (!container) return;
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = `
+            <div class="suggestion-placeholder">
+                <i class="fas fa-check-circle"></i>
+                <p>Great! All running applications already have launch agent protection, or no suitable applications found.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = suggestions.map(app => `
+        <div class="suggestion-card" data-app-name="${app.name}" data-app-path="${app.path}">
+            <div class="suggestion-header">
+                <div class="app-info">
+                    <h4>${app.name}</h4>
+                    <small class="app-path">${app.path}</small>
+                </div>
+                <div class="app-stats">
+                    <span class="cpu-stat">CPU: ${app.cpu.toFixed(1)}%</span>
+                    <span class="memory-stat">RAM: ${app.memory.toFixed(0)}MB</span>
+                </div>
+            </div>
+            <div class="suggestion-reason">
+                <i class="fas fa-lightbulb"></i>
+                <span>${app.reason}</span>
+            </div>
+            <div class="suggestion-actions">
+                <button class="btn btn-small btn-primary create-agent-btn" 
+                        data-app-name="${app.name}" 
+                        data-app-path="${app.path}">
+                    <i class="fas fa-rocket"></i> Create Launch Agent
+                </button>
+                <button class="btn btn-small btn-secondary ignore-suggestion-btn" 
+                        data-app-name="${app.name}">
+                    <i class="fas fa-times"></i> Ignore
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners to suggestion buttons
+    container.querySelectorAll('.create-agent-btn').forEach(button => {
+        button.addEventListener('click', handleCreateLaunchAgent);
+    });
+    
+    container.querySelectorAll('.ignore-suggestion-btn').forEach(button => {
+        button.addEventListener('click', handleIgnoreSuggestion);
+    });
+}
+
+async function handleCreateLaunchAgent(event) {
+    const button = event.target.closest('.create-agent-btn');
+    const appName = button.dataset.appName;
+    const appPath = button.dataset.appPath;
+    
+    try {
+        showLoading('Creating launch agent...');
+        
+        // Create launch agent using the API
+        const response = await apiCall('/api/launch-agents/create', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: appName,
+                path: appPath,
+                autoStart: true,
+                keepAlive: true
+            })
+        });
+        
+        if (response.success) {
+            showToast(`Launch agent created for ${appName}`, 'success');
+            
+            // Remove the suggestion card
+            const suggestionCard = button.closest('.suggestion-card');
+            suggestionCard.remove();
+            
+            // Check if there are any suggestions left
+            const container = document.getElementById('launch-agent-suggestions');
+            if (container.children.length === 0) {
+                displayLaunchAgentSuggestions([]);
+            }
+        } else {
+            throw new Error(response.error || 'Failed to create launch agent');
+        }
+        
+    } catch (error) {
+        console.error('[MONITORING-CONFIG] Failed to create launch agent:', error);
+        showToast(`Failed to create launch agent: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function handleIgnoreSuggestion(event) {
+    const button = event.target.closest('.ignore-suggestion-btn');
+    const suggestionCard = button.closest('.suggestion-card');
+    
+    // Add fade out animation
+    suggestionCard.style.opacity = '0.5';
+    suggestionCard.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+        suggestionCard.remove();
+        
+        // Check if there are any suggestions left
+        const container = document.getElementById('launch-agent-suggestions');
+        if (container.children.length === 0) {
+            displayLaunchAgentSuggestions([]);
+        }
+    }, 300);
 }
 
 function setupMonitoringConfigButtons() {
