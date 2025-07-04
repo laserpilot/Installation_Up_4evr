@@ -388,37 +388,255 @@ function getSystemCheckResult(checkId, settingsData) {
 
 // Load essential settings content for step 3
 async function loadEssentialSettings() {
+    console.log('[WIZARD] Loading essential settings for step 3...');
     try {
         const response = await fetch('/api/setup-wizard/essential-settings');
+        console.log('[WIZARD] Essential settings API response status:', response.status);
         if (!response.ok) throw new Error('Failed to load essential settings');
         
         const data = await response.json();
+        console.log('[WIZARD] Essential settings data:', data);
         const settingsContainer = document.getElementById('wizard-essential-settings');
+        console.log('[WIZARD] Settings container found:', !!settingsContainer);
         
         if (settingsContainer && data.success) {
             settingsContainer.innerHTML = `
+                <div class="settings-introduction">
+                    <h3><i class="fas fa-shield-alt"></i> Essential Settings for 24/7 Operation</h3>
+                    <p>These 4 settings ensure your installation runs reliably without interruptions. Select which ones you'd like to apply, or generate terminal commands to run manually.</p>
+                </div>
+                
                 <div class="settings-list">
                     ${data.data.essentialSettings.map(setting => `
                         <div class="setting-item">
                             <label class="setting-label">
                                 <input type="checkbox" class="setting-checkbox" data-setting-id="${setting.id}" ${setting.current ? '' : 'checked'}>
                                 <div class="setting-content">
-                                    <h4>${setting.name}</h4>
+                                    <div class="setting-header">
+                                        <h4>${setting.name}</h4>
+                                        <span class="setting-status ${setting.current ? 'status-compliant' : 'status-needs-config'}">
+                                            <i class="fas ${setting.current ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                                            ${setting.current ? 'Already configured' : 'Needs configuration'}
+                                        </span>
+                                    </div>
                                     <p>${setting.description}</p>
-                                    <span class="setting-status ${setting.current ? 'status-compliant' : 'status-needs-config'}">
-                                        ${setting.current ? 'Already configured' : 'Needs configuration'}
-                                    </span>
+                                    <small class="setting-category">Category: ${setting.category}</small>
                                 </div>
                             </label>
                         </div>
                     `).join('')}
                 </div>
+                
+                <div class="settings-actions">
+                    <div class="action-group">
+                        <h4><i class="fas fa-magic"></i> Apply Settings Automatically</h4>
+                        <p>Let the tool configure your system automatically (recommended)</p>
+                        <button class="btn btn-primary" id="wizard-apply-selected-settings">
+                            <i class="fas fa-check"></i> Apply Selected Settings
+                        </button>
+                    </div>
+                    
+                    <div class="action-group">
+                        <h4><i class="fas fa-terminal"></i> Generate Terminal Commands</h4>
+                        <p>Get terminal commands to run manually for complete control</p>
+                        <button class="btn btn-secondary" id="wizard-generate-commands">
+                            <i class="fas fa-code"></i> Generate Commands
+                        </button>
+                    </div>
+                    
+                    <div class="action-group">
+                        <h4><i class="fas fa-forward"></i> Skip This Step</h4>
+                        <p>Continue without configuring these settings (you can apply them later)</p>
+                        <button class="btn btn-warning" id="wizard-skip-step-button">
+                            <i class="fas fa-forward"></i> Skip This Step
+                        </button>
+                    </div>
+                </div>
             `;
+            
+            // Add event listeners for the new buttons with debug logging
+            const applyButton = document.getElementById('wizard-apply-selected-settings');
+            const generateButton = document.getElementById('wizard-generate-commands');
+            const skipButton = document.getElementById('wizard-skip-step-button');
+            
+            if (applyButton) {
+                applyButton.addEventListener('click', async (e) => {
+                    console.log('[WIZARD] Apply Selected Settings button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await applyEssentialSettings();
+                });
+                console.log('[WIZARD] Event listener attached to Apply Selected Settings button');
+            } else {
+                console.warn('[WIZARD] Apply Selected Settings button not found');
+            }
+            
+            if (generateButton) {
+                generateButton.addEventListener('click', async (e) => {
+                    console.log('[WIZARD] Generate Commands button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await generateWizardCommands();
+                });
+                console.log('[WIZARD] Event listener attached to Generate Commands button');
+            } else {
+                console.warn('[WIZARD] Generate Commands button not found');
+            }
+            
+            if (skipButton) {
+                skipButton.addEventListener('click', async (e) => {
+                    console.log('[WIZARD] Skip Step button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await skipEssentialSettings();
+                });
+                console.log('[WIZARD] Event listener attached to Skip Step button');
+            } else {
+                console.warn('[WIZARD] Skip Step button not found');
+            }
+            
+            // Hide the original static buttons to avoid confusion
+            const staticSkipButton = document.getElementById('wizard-skip-settings');
+            const staticApplyButton = document.getElementById('wizard-apply-settings');
+            if (staticSkipButton) staticSkipButton.style.display = 'none';
+            if (staticApplyButton) staticApplyButton.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading essential settings:', error);
         showToast('Failed to load essential settings', 'error');
     }
+}
+
+// Generate terminal commands for selected settings
+async function generateWizardCommands() {
+    console.log('[WIZARD] Generating terminal commands...');
+    const allCheckboxes = document.querySelectorAll('.setting-checkbox');
+    const checkedCheckboxes = document.querySelectorAll('.setting-checkbox:checked');
+    console.log('[WIZARD] All checkboxes found:', allCheckboxes.length);
+    console.log('[WIZARD] Checked checkboxes found:', checkedCheckboxes.length);
+    
+    const selectedSettings = Array.from(checkedCheckboxes)
+        .map(checkbox => checkbox.dataset.settingId);
+    
+    console.log('[WIZARD] Selected settings:', selectedSettings);
+    
+    if (selectedSettings.length === 0) {
+        console.log('[WIZARD] No settings selected, generating commands for all essential settings');
+        // If no settings are selected, use all essential settings by default
+        const allEssentialSettings = ['computerSleep', 'displaySleep', 'screensaver', 'doNotDisturb'];
+        selectedSettings.push(...allEssentialSettings);
+        showToast('Generating commands for all essential settings (none were selected)', 'info');
+    }
+    
+    try {
+        console.log('[WIZARD] Making API call to generate commands...');
+        const response = await fetch('/api/system-prefs/generate-commands', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                settings: selectedSettings 
+            })
+        });
+        
+        console.log('[WIZARD] API response status:', response.status);
+        if (!response.ok) throw new Error('Failed to generate commands');
+        
+        const data = await response.json();
+        console.log('[WIZARD] API response data:', data);
+        
+        if (data.success) {
+            // Display commands in a modal
+            console.log('[WIZARD] Calling showCommandsModal...');
+            console.log('[WIZARD] Data structure being passed:', JSON.stringify(data.data, null, 2));
+            // Extract the actual commands from the nested response
+            const commandsData = data.data?.data || data.data;
+            console.log('[WIZARD] Extracted commands data:', commandsData);
+            showCommandsModal(commandsData, selectedSettings);
+        } else {
+            throw new Error(data.message || 'Failed to generate commands');
+        }
+    } catch (error) {
+        console.error('[WIZARD] Error generating commands:', error);
+        showToast('Failed to generate terminal commands', 'error');
+    }
+}
+
+// Show commands in a modal dialog
+function showCommandsModal(commandsData, selectedSettings) {
+    console.log('[WIZARD] showCommandsModal called with:', commandsData, selectedSettings);
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+    console.log('[WIZARD] Created modal element:', modal);
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-terminal"></i> Terminal Commands</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Copy and paste these commands into Terminal to configure your system manually:</p>
+                <div class="commands-info">
+                    <p><strong>Selected Settings (${selectedSettings.length}):</strong> ${selectedSettings.join(', ')}</p>
+                </div>
+                <div class="code-block">
+                    <pre><code id="commands-text">${commandsData.commands || JSON.stringify(commandsData, null, 2)}</code></pre>
+                </div>
+                <div class="commands-instructions">
+                    <h4><i class="fas fa-info-circle"></i> Instructions:</h4>
+                    <ol>
+                        <li>Copy the commands above</li>
+                        <li>Open Terminal.app</li>
+                        <li>Paste and run the commands</li>
+                        <li>Some commands may require your admin password</li>
+                        <li>Return here when done and click "Continue" to proceed</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="copy-commands">
+                    <i class="fas fa-copy"></i> Copy Commands
+                </button>
+                <button class="btn btn-primary" id="commands-done">
+                    <i class="fas fa-check"></i> Done, Continue
+                </button>
+            </div>
+        </div>
+    `;
+    
+    console.log('[WIZARD] Appending modal to document body...');
+    document.body.appendChild(modal);
+    console.log('[WIZARD] Modal appended. Modal in DOM:', document.body.contains(modal));
+    console.log('[WIZARD] Modal display style:', window.getComputedStyle(modal).display);
+    console.log('[WIZARD] Modal visibility:', window.getComputedStyle(modal).visibility);
+    
+    // Add event listeners
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+    
+    modal.querySelector('#copy-commands').addEventListener('click', () => {
+        const commandsText = document.getElementById('commands-text').textContent;
+        navigator.clipboard.writeText(commandsText).then(() => {
+            showToast('Commands copied to clipboard', 'success');
+        }).catch(() => {
+            showToast('Failed to copy commands', 'error');
+        });
+    });
+    
+    modal.querySelector('#commands-done').addEventListener('click', () => {
+        document.body.removeChild(modal);
+        // Mark step as complete and allow proceeding
+        showToast('Commands generated. You can now continue to the next step.', 'success');
+    });
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
 }
 
 // Apply essential settings with enhanced verification feedback
@@ -529,8 +747,11 @@ async function applyEssentialSettings() {
 
 // Skip essential settings with user confirmation
 async function skipEssentialSettings() {
+    console.log('[WIZARD] Skip function called');
     const selectedCount = document.querySelectorAll('.setting-checkbox:checked').length;
     const totalCount = document.querySelectorAll('.setting-checkbox').length;
+    
+    console.log('[WIZARD] Selected count:', selectedCount, 'Total count:', totalCount);
     
     let confirmMessage;
     if (selectedCount === 0) {
@@ -539,6 +760,7 @@ async function skipEssentialSettings() {
         confirmMessage = `You have ${selectedCount} settings selected but unapplied. Skipping will leave your system configuration unchanged.\n\nAre you sure you want to skip this step?`;
     }
     
+    console.log('[WIZARD] Showing confirmation dialog');
     const confirmed = await showConfirmDialog(
         'Skip System Configuration',
         confirmMessage,
@@ -549,16 +771,18 @@ async function skipEssentialSettings() {
         }
     );
     
+    console.log('[WIZARD] User confirmed skip:', confirmed);
     if (!confirmed) {
         return;
     }
     
-    const skipButton = document.getElementById('wizard-skip-settings');
-    const applyButton = document.getElementById('wizard-apply-settings');
+    // Use the new dynamic button instead of the hidden static ones
+    const skipButton = document.getElementById('wizard-skip-step-button');
     
-    skipButton.disabled = true;
-    applyButton.disabled = true;
-    skipButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Skipping...';
+    if (skipButton) {
+        skipButton.disabled = true;
+        skipButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Skipping...';
+    }
     
     try {
         // Log the skip action for analytics
@@ -586,9 +810,10 @@ async function skipEssentialSettings() {
         markStepCompleted(3, 'skipped');
         window.navigateWizard('next', { skipValidation: true });
     } finally {
-        skipButton.disabled = false;
-        applyButton.disabled = false;
-        skipButton.innerHTML = '<i class="fas fa-forward"></i> Skip This Step';
+        if (skipButton) {
+            skipButton.disabled = false;
+            skipButton.innerHTML = '<i class="fas fa-forward"></i> Skip This Step';
+        }
     }
 }
 
@@ -625,6 +850,7 @@ function markStepCompleted(stepNumber, status = 'completed') {
 
 // Enhanced confirmation dialog
 async function showConfirmDialog(title, message, options = {}) {
+    console.log('[WIZARD] showConfirmDialog called with:', title, message, options);
     const {
         confirmText = 'Confirm',
         cancelText = 'Cancel',
@@ -633,7 +859,8 @@ async function showConfirmDialog(title, message, options = {}) {
     
     return new Promise((resolve) => {
         const modal = document.createElement('div');
-        modal.className = 'modal-overlay confirm-dialog';
+        modal.className = 'modal-overlay confirm-dialog show';
+        console.log('[WIZARD] Created confirm dialog modal:', modal);
         
         const iconClass = {
             'warning': 'fas fa-exclamation-triangle text-warning',
@@ -657,7 +884,10 @@ async function showConfirmDialog(title, message, options = {}) {
             </div>
         `;
         
+        console.log('[WIZARD] Appending confirm dialog to document body...');
         document.body.appendChild(modal);
+        console.log('[WIZARD] Confirm dialog appended. Modal in DOM:', document.body.contains(modal));
+        console.log('[WIZARD] Confirm dialog display style:', window.getComputedStyle(modal).display);
         
         const cleanup = () => modal.remove();
         
