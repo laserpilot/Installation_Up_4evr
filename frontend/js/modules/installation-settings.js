@@ -5,26 +5,26 @@
 
 import { apiCall, MasterConfigAPI } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
-import { setValue, getValue, synchronizeSliderInput } from '../utils/form-helpers.js';
+import { setValue, getValue, synchronizeSliderInput, loadMasterConfigState, saveMasterConfig } from '../utils/form-helpers.js';
 
 export function initInstallationSettings() {
     console.log('[INIT] Initializing Installation Settings tab...');
     
     // Set up form event listeners
     setupSliderSynchronization();
-    setupActionButtons();
+    setupInstallationActionButtons();
     
     // Load current settings
     loadInstallationSettings();
     
     // Load master configuration state after initial load
     setTimeout(() => {
-        loadMasterConfigState();
+        loadInstallationMasterConfig();
     }, 500);
 }
 
 // Master Configuration Integration
-async function loadMasterConfigState() {
+async function loadInstallationMasterConfig() {
     try {
         const response = await MasterConfigAPI.load();
         if (response.success && response.data.installationSettings) {
@@ -52,7 +52,7 @@ async function loadMasterConfigState() {
     }
 }
 
-async function saveMasterConfig() {
+async function saveInstallationMasterConfig() {
     try {
         // Collect current configuration
         const config = {
@@ -110,7 +110,7 @@ function setupSliderSynchronization() {
 
 // synchronizeSliderInput is now imported from form-helpers.js
 
-function setupActionButtons() {
+function setupInstallationActionButtons() {
     const testBtn = document.getElementById('test-installation-settings');
     const resetBtn = document.getElementById('reset-installation-settings');
     const applyBtn = document.getElementById('apply-installation-settings');

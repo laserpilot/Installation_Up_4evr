@@ -14,13 +14,13 @@ export function initNotifications() {
     setupTestButtons();
     
     // Setup action buttons
-    setupActionButtons();
+    setupNotificationActionButtons();
     
     // Setup form interactions
     setupFormInteractions();
     
     // Load current configuration and setup toggles
-    loadNotificationConfig();
+    loadMainNotificationConfig();
 }
 
 function setupChannelToggles() {
@@ -87,12 +87,12 @@ function setupTestButtons() {
     }
 }
 
-function setupActionButtons() {
+function setupNotificationActionButtons() {
     const loadBtn = document.getElementById('load-notification-config');
     const saveBtn = document.getElementById('save-notification-config');
     
     if (loadBtn) {
-        loadBtn.addEventListener('click', loadNotificationConfig);
+        loadBtn.addEventListener('click', loadMainNotificationConfig);
     }
     
     if (saveBtn) {
@@ -126,7 +126,7 @@ function setupFormInteractions() {
     }
 }
 
-async function loadNotificationConfig() {
+async function loadMainNotificationConfig() {
     try {
         const response = await apiCall('/api/notifications/config');
         populateNotificationConfig(response.config || getDefaultConfig());

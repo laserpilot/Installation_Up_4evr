@@ -70,11 +70,11 @@ function updateServiceStatusDisplay(status) {
         pidElement.textContent = status.pid || '--';
     }
     if (uptimeElement) {
-        uptimeElement.textContent = formatUptime(status.uptime) || '--';
+        uptimeElement.textContent = formatServiceUptime(status.uptime) || '--';
     }
 }
 
-function formatUptime(seconds) {
+function formatServiceUptime(seconds) {
     if (!seconds || seconds < 0) return null;
     
     const hours = Math.floor(seconds / 3600);

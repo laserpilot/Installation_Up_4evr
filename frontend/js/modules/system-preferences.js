@@ -311,7 +311,7 @@ async function updateMasterConfigWithAppliedSettings(appliedSettings) {
     }
 }
 
-async function loadMasterConfigState() {
+async function loadSystemPrefsMasterConfig() {
     try {
         const response = await MasterConfigAPI.getSystemPreferencesState();
         if (response.success && response.data) {
@@ -641,6 +641,6 @@ export function initSystemPreferences() {
     
     // Load master configuration state after initial load
     setTimeout(() => {
-        loadMasterConfigState();
+        loadSystemPrefsMasterConfig();
     }, 500);
 }

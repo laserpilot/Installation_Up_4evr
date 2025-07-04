@@ -97,3 +97,35 @@ export function synchronizeSliderInput(sliderId, inputId) {
         });
     }
 }
+
+/**
+ * Load master configuration state (shared utility)
+ * @returns {Object} Master configuration object
+ */
+export async function loadMasterConfigState() {
+    try {
+        const response = await window.MasterConfigAPI?.get() || { success: false };
+        return response.success ? response.data : {};
+    } catch (error) {
+        console.warn('[FORM-HELPERS] Failed to load master config:', error);
+        return {};
+    }
+}
+
+/**
+ * Save master configuration state (shared utility)
+ * @param {Object} updates - Configuration updates to merge
+ */
+export async function saveMasterConfig(updates) {
+    try {
+        const currentConfig = await loadMasterConfigState();
+        const updatedConfig = { ...currentConfig, ...updates };
+        
+        if (window.MasterConfigAPI?.save) {
+            await window.MasterConfigAPI.save(updatedConfig);
+            console.log('[FORM-HELPERS] Master configuration updated');
+        }
+    } catch (error) {
+        console.warn('[FORM-HELPERS] Failed to save master config:', error);
+    }
+}

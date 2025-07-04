@@ -180,7 +180,7 @@ function updateSystemMetrics(systemData) {
     
     // System Uptime
     const uptimeValue = systemData.uptime?.seconds || 0;
-    const uptimeFormatted = systemData.uptime?.formatted || formatUptime(uptimeValue);
+    const uptimeFormatted = systemData.uptime?.formatted || formatDashboardUptime(uptimeValue);
     monitoringDisplay.updateMetricCard({
         metricId: 'dashboard-uptime',
         value: uptimeFormatted,
@@ -257,7 +257,7 @@ function stopDashboardRefresh() {
 }
 
 // Utility functions
-function formatUptime(seconds) {
+function formatDashboardUptime(seconds) {
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;

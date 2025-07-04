@@ -17,7 +17,7 @@ export function initConfiguration() {
     setupConfigurationEvents();
     
     // Set up action button listeners
-    setupActionButtons();
+    setupConfigurationActionButtons();
 }
 
 async function loadConfiguration() {
@@ -160,7 +160,7 @@ function setupConfigurationEvents() {
     }
 }
 
-function setupActionButtons() {
+function setupConfigurationActionButtons() {
     // Load Configuration
     const loadBtn = document.getElementById('load-config');
     if (loadBtn) {

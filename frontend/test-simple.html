@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Navigation Test</title>
+    <style>
+        .sidebar-button { 
+            padding: 10px; 
+            margin: 5px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+        }
+        .sidebar-button.active { 
+            background: #28a745; 
+        }
+        .tab-pane { 
+            display: none; 
+            padding: 20px; 
+            border: 1px solid #ccc; 
+        }
+        .tab-pane.active { 
+            display: block; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Navigation Test</h1>
+    
+    <div id="sidebar">
+        <button class="sidebar-button" data-tab="dashboard">Dashboard</button>
+        <button class="sidebar-button" data-tab="system-prefs">System Prefs</button>
+        <button class="sidebar-button" data-tab="monitoring">Monitoring</button>
+    </div>
+    
+    <div id="content">
+        <div id="dashboard-tab" class="tab-pane active">Dashboard Content</div>
+        <div id="system-prefs-tab" class="tab-pane">System Prefs Content</div>
+        <div id="monitoring-tab" class="tab-pane">Monitoring Content</div>
+    </div>
+    
+    <script>
+        console.log('Simple test script loading...');
+        
+        function setupNavigation() {
+            console.log('Setting up navigation...');
+            
+            const buttons = document.querySelectorAll('.sidebar-button');
+            console.log(`Found ${buttons.length} buttons`);
+            
+            buttons.forEach((button, index) => {
+                const dataTab = button.getAttribute('data-tab');
+                console.log(`Button ${index}: data-tab="${dataTab}"`);
+                
+                button.addEventListener('click', (e) => {
+                    console.log(`Button clicked: ${dataTab}`);
+                    navigateToTab(dataTab);
+                });
+            });
+        }
+        
+        function navigateToTab(tabId) {
+            console.log(`Navigating to: ${tabId}`);
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.sidebar-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Remove active from all tab panes
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            
+            // Add active to clicked button
+            const activeButton = document.querySelector(`[data-tab="${tabId}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+                console.log(`Activated button: ${tabId}`);
+            }
+            
+            // Add active to corresponding tab pane
+            const activePane = document.getElementById(`${tabId}-tab`);
+            if (activePane) {
+                activePane.classList.add('active');
+                console.log(`Activated pane: ${tabId}-tab`);
+            }
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM ready, setting up navigation...');
+            setupNavigation();
+        });
+    </script>
+</body>
+</html>
