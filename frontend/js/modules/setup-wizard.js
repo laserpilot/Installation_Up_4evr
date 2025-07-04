@@ -97,8 +97,13 @@ export function initSetupWizard() {
                 return { canProceed: true };
                 
             case 4: // Application Setup
-                // Check if at least one application method is configured
-                const hasApp = document.getElementById('wizard-app-drop')?.dataset.appPath;
+                // Use the enhanced validation function if available
+                if (typeof window.validateWizardApplicationStep === 'function') {
+                    return window.validateWizardApplicationStep();
+                }
+                
+                // Fallback validation
+                const hasApp = wizardCurrentAppPath || document.getElementById('wizard-app-drop')?.dataset.appPath;
                 const hasWebUrl = document.getElementById('wizard-web-url')?.value;
                 if (!hasApp && !hasWebUrl) {
                     return {
@@ -121,6 +126,9 @@ export function initSetupWizard() {
                 break;
             case 3:
                 loadEssentialSettings();
+                break;
+            case 4:
+                initApplicationSetup();
                 break;
             case 6:
                 loadWizardSummary();
@@ -160,6 +168,12 @@ export function initSetupWizard() {
     });
     document.getElementById('wizard-run-tests')?.addEventListener('click', async () => {
         await runWizardTests();
+    });
+    document.getElementById('wizard-create-launch-agent')?.addEventListener('click', async () => {
+        await createWizardLaunchAgent();
+    });
+    document.getElementById('wizard-skip-app-setup')?.addEventListener('click', async () => {
+        await skipApplicationSetup();
     });
     document.getElementById('wizard-go-dashboard')?.addEventListener('click', () => {
         navigateToTab('dashboard');
@@ -731,4 +745,417 @@ async function loadWizardSummary() {
             `;
         }
     }
+}
+
+// Application Setup for Step 4
+let wizardCurrentAppPath = null;
+let wizardCurrentMode = 'app'; // 'app' or 'web'
+
+function initApplicationSetup() {
+    console.log('[WIZARD] Initializing Application Setup step...');
+    
+    // Set up mode switching
+    setupApplicationModeSwitch();
+    
+    // Initialize desktop app functionality
+    setupDesktopAppCreation();
+    
+    // Initialize web app functionality  
+    setupWebAppCreation();
+    
+    // Set up validation
+    setupApplicationValidation();
+}
+
+function setupApplicationModeSwitch() {
+    // Check if mode switch elements exist in wizard
+    const appMethod = document.getElementById('app-method');
+    const webMethod = document.getElementById('web-method');
+    
+    if (!appMethod || !webMethod) {
+        console.warn('[WIZARD] App setup method elements not found in step 4');
+        return;
+    }
+    
+    // Add click handlers for mode switching
+    appMethod.addEventListener('click', () => {
+        switchWizardMode('app');
+    });
+    
+    webMethod.addEventListener('click', () => {
+        switchWizardMode('web');
+    });
+}
+
+function switchWizardMode(mode) {
+    wizardCurrentMode = mode;
+    
+    const appMethod = document.getElementById('app-method');
+    const webMethod = document.getElementById('web-method');
+    
+    if (appMethod && webMethod) {
+        appMethod.classList.toggle('active', mode === 'app');
+        webMethod.classList.toggle('active', mode === 'web');
+    }
+    
+    console.log('[WIZARD] Switched to', mode, 'mode');
+}
+
+function setupDesktopAppCreation() {
+    const dropZone = document.getElementById('wizard-app-drop');
+    const browseButton = dropZone?.querySelector('button');
+    
+    if (!dropZone) {
+        console.warn('[WIZARD] App drop zone not found');
+        return;
+    }
+    
+    // Set up drag and drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.name.endsWith('.app') || file.type === '') {
+                handleWizardAppSelection(file.path || file.webkitRelativePath || file.name);
+            } else {
+                showToast('Please select a .app file', 'error');
+            }
+        }
+    });
+    
+    // Set up browse button
+    if (browseButton) {
+        browseButton.addEventListener('click', () => {
+            // Create file input for app selection
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.app';
+            fileInput.style.display = 'none';
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleWizardAppSelection(file.path || file.name);
+                }
+                document.body.removeChild(fileInput);
+            });
+            
+            document.body.appendChild(fileInput);
+            fileInput.click();
+        });
+    }
+}
+
+function handleWizardAppSelection(appPath) {
+    wizardCurrentAppPath = appPath;
+    
+    const dropZone = document.getElementById('wizard-app-drop');
+    if (dropZone) {
+        dropZone.dataset.appPath = appPath;
+        dropZone.innerHTML = `
+            <i class="fas fa-cube text-green"></i>
+            <p><strong>${appPath.split('/').pop()}</strong></p>
+            <p class="text-muted">Selected for launch agent creation</p>
+            <button class="btn btn-outline">Change App</button>
+        `;
+        
+        // Re-attach browse handler
+        const changeButton = dropZone.querySelector('button');
+        changeButton.addEventListener('click', () => {
+            setupDesktopAppCreation();
+        });
+    }
+    
+    showToast(`Selected app: ${appPath.split('/').pop()}`, 'success');
+    console.log('[WIZARD] Selected app:', appPath);
+}
+
+function setupWebAppCreation() {
+    const urlInput = document.getElementById('wizard-web-url');
+    const kioskCheckbox = document.getElementById('wizard-kiosk-mode');
+    
+    if (!urlInput) {
+        console.warn('[WIZARD] Web URL input not found');
+        return;
+    }
+    
+    // Set up URL validation
+    urlInput.addEventListener('input', () => {
+        const url = urlInput.value;
+        if (url) {
+            try {
+                new URL(url);
+                urlInput.classList.remove('error');
+                urlInput.classList.add('valid');
+            } catch (e) {
+                urlInput.classList.remove('valid');
+                urlInput.classList.add('error');
+            }
+        } else {
+            urlInput.classList.remove('valid', 'error');
+        }
+    });
+    
+    console.log('[WIZARD] Web app creation setup complete');
+}
+
+function setupApplicationValidation() {
+    // Enhanced validation for step 4
+    const originalValidate = validateCurrentStep;
+    
+    // Override validation function for step 4
+    window.validateWizardApplicationStep = function() {
+        if (wizardCurrentMode === 'app') {
+            const hasApp = wizardCurrentAppPath || document.getElementById('wizard-app-drop')?.dataset.appPath;
+            if (!hasApp) {
+                return {
+                    canProceed: false,
+                    message: 'Please select a desktop application first'
+                };
+            }
+        } else if (wizardCurrentMode === 'web') {
+            const url = document.getElementById('wizard-web-url')?.value;
+            if (!url) {
+                return {
+                    canProceed: false,
+                    message: 'Please enter a web application URL first'
+                };
+            }
+            
+            try {
+                new URL(url);
+            } catch (e) {
+                return {
+                    canProceed: false,
+                    message: 'Please enter a valid URL (must include http:// or https://)'
+                };
+            }
+        }
+        
+        return { canProceed: true };
+    };
+}
+
+// Function to create launch agent from wizard
+async function createWizardLaunchAgent() {
+    try {
+        showToast('Creating launch agent...', 'info');
+        
+        if (wizardCurrentMode === 'app') {
+            if (!wizardCurrentAppPath) {
+                showToast('Please select an application first', 'error');
+                return false;
+            }
+            
+            const result = await apiCall('/api/launch-agents/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    appPath: wizardCurrentAppPath,
+                    options: {
+                        keepAlive: true,
+                        runAtLoad: true,
+                        successfulExit: true
+                    }
+                })
+            });
+            
+            if (result.success) {
+                showToast(`Launch agent created for ${wizardCurrentAppPath.split('/').pop()}`, 'success');
+                return true;
+            } else {
+                showToast(`Failed to create launch agent: ${result.message}`, 'error');
+                return false;
+            }
+            
+        } else if (wizardCurrentMode === 'web') {
+            const url = document.getElementById('wizard-web-url').value;
+            const kioskMode = document.getElementById('wizard-kiosk-mode').checked;
+            
+            if (!url) {
+                showToast('Please enter a web application URL', 'error');
+                return false;
+            }
+            
+            // Extract name from URL
+            const hostname = new URL(url).hostname;
+            const appName = hostname.split('.')[0];
+            const name = appName.charAt(0).toUpperCase() + appName.slice(1) + ' App';
+            
+            // Try the web-specific endpoint first
+            try {
+                const result = await apiCall('/api/launch-agents/create-web', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        url,
+                        browserPath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+                        options: {
+                            kioskMode,
+                            disableDevTools: true,
+                            disableExtensions: true,
+                            incognitoMode: false,
+                            keepAlive: true,
+                            runAtLoad: true
+                        }
+                    })
+                });
+                
+                if (result.success) {
+                    showToast(`Web app launch agent created: ${name}`, 'success');
+                    return true;
+                } else {
+                    throw new Error(result.message || 'Web app endpoint failed');
+                }
+            } catch (error) {
+                console.warn('[WIZARD] Web app endpoint failed, falling back to basic method:', error.message);
+                
+                // Fallback: show instructions for manual setup
+                showToast('Web app launch agents require manual setup. Please use the Launch Agents tab for full web app functionality.', 'warning');
+                
+                // For now, mark as completed but with a note
+                markStepCompleted(4, 'partial');
+                showWizardWebAppInstructions(url, name);
+                return true;
+            }
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('[WIZARD] Failed to create launch agent:', error);
+        showToast('Failed to create launch agent', 'error');
+        return false;
+    }
+}
+
+// Skip application setup with user confirmation  
+async function skipApplicationSetup() {
+    const confirmed = await showConfirmDialog(
+        'Skip Application Setup',
+        'You are about to skip application setup. You can always create launch agents later from the Launch Agents tab.\n\nAre you sure you want to continue without setting up an application?',
+        {
+            confirmText: 'Yes, Skip App Setup',
+            cancelText: 'Cancel',
+            type: 'warning'
+        }
+    );
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    const skipButton = document.getElementById('wizard-skip-app-setup');
+    const createButton = document.getElementById('wizard-create-launch-agent');
+    
+    skipButton.disabled = true;
+    createButton.disabled = true;
+    skipButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Skipping...';
+    
+    try {
+        // Log the skip action for analytics
+        await fetch('/api/setup-wizard/log-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'skip_application_setup',
+                step: 4,
+                mode: wizardCurrentMode,
+                hasApp: !!wizardCurrentAppPath,
+                hasWebUrl: !!document.getElementById('wizard-web-url')?.value,
+                timestamp: new Date().toISOString()
+            })
+        }).catch(() => {/* Ignore logging errors */});
+        
+        showToast('Skipped application setup. You can configure launch agents later from the Launch Agents tab.', 'info');
+        
+        // Mark step as skipped and proceed
+        markStepCompleted(4, 'skipped');
+        window.navigateWizard('next', { skipValidation: true });
+        
+    } catch (error) {
+        console.error('Error during skip operation:', error);
+        // Even if logging fails, still proceed
+        markStepCompleted(4, 'skipped');
+        window.navigateWizard('next', { skipValidation: true });
+    } finally {
+        skipButton.disabled = false;
+        createButton.disabled = false;
+        skipButton.innerHTML = '<i class="fas fa-forward"></i> Skip App Setup';
+    }
+}
+
+// Show instructions for web app setup when backend endpoint is not available
+function showWizardWebAppInstructions(url, appName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay wizard-instructions-modal';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> Web App Setup Instructions</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <p>Your web application <strong>${appName}</strong> has been noted for setup.</p>
+                <p><strong>URL:</strong> ${url}</p>
+                
+                <div class="instructions-section">
+                    <h4>Next Steps:</h4>
+                    <ol>
+                        <li>After completing the setup wizard, go to the <strong>Launch Agents</strong> tab</li>
+                        <li>Switch to the <strong>Web Applications</strong> mode</li>
+                        <li>Enter your URL: <code>${url}</code></li>
+                        <li>Configure your browser options and create the launch agent</li>
+                    </ol>
+                </div>
+                
+                <div class="info-note">
+                    <i class="fas fa-lightbulb"></i>
+                    <p>The Launch Agents tab provides full control over web application launch agents with browser selection, kiosk mode options, and command preview.</p>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-primary modal-ok">Got It</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const cleanup = () => modal.remove();
+    
+    modal.querySelector('.modal-close').addEventListener('click', cleanup);
+    modal.querySelector('.modal-ok').addEventListener('click', cleanup);
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            cleanup();
+        }
+    });
+    
+    // Close on escape key
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            cleanup();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
 }
