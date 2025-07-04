@@ -1021,11 +1021,10 @@ class PlatformManager {
         });
 
         this.api.registerRoute('/setup-wizard/essential-settings', 'GET', async () => {
-            const systemSettings = await this.systemManager.getSystemSettings();
-            const essentialSettings = systemSettings.filter(setting => setting.category === 'required');
+            const systemSettingsData = await this.systemManager.getSystemSettings();
             
             return APIResponse.success({
-                essentialSettings: essentialSettings.map(setting => ({
+                essentialSettings: systemSettingsData.essentialSettings.map(setting => ({
                     id: setting.id,
                     name: setting.name,
                     description: setting.description,

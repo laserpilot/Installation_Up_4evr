@@ -648,6 +648,46 @@ echo "Review the output above for any errors."
         return this.applySettings(requiredKeys);
     }
 
+    async getSystemSettings() {
+        // Return the settings configuration for setup wizard
+        const allSettings = this.settings;
+        const essentialSettings = [];
+        
+        // Define the 4 essential settings for 24/7 operation
+        const essentialKeys = ['computerSleep', 'displaySleep', 'screensaver', 'doNotDisturb'];
+        
+        for (const key of essentialKeys) {
+            if (allSettings[key]) {
+                const setting = allSettings[key];
+                
+                // Check current status
+                let currentStatus = false;
+                try {
+                    const verification = await this.verifySettings([key]);
+                    currentStatus = verification.results[key] === 'compliant';
+                } catch (error) {
+                    console.warn(`Could not verify ${key}:`, error.message);
+                }
+                
+                essentialSettings.push({
+                    id: key,
+                    name: setting.name,
+                    description: setting.description,
+                    command: setting.command,
+                    current: currentStatus,
+                    category: setting.category || 'system',
+                    required: setting.required || false
+                });
+            }
+        }
+        
+        return {
+            essentialSettings,
+            totalCount: essentialSettings.length,
+            appliedCount: essentialSettings.filter(s => s.current).length
+        };
+    }
+
     /**
      * Generate terminal commands for manual execution
      * @returns {Object} Commands string for manual execution
