@@ -8,6 +8,14 @@ import { showToast } from '../utils/ui.js';
 import { ConfigSection } from '../components/ConfigSection.js';
 import { monitoringDisplay } from '../utils/monitoring-display.js';
 
+// Monitoring thresholds - consistent across all monitoring modules
+const MONITORING_THRESHOLDS = {
+    cpu: { warning: 70, critical: 85 },
+    memory: { warning: 75, critical: 90 },
+    disk: { warning: 80, critical: 95 },
+    temperature: { warning: 70, critical: 85 }
+};
+
 async function loadMonitoringConfig() {
     try {
         const response = await apiCall('/api/monitoring/config');
