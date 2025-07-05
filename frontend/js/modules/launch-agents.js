@@ -30,13 +30,16 @@ async function loadLaunchAgents() {
     }
 }
 
-function renderLaunchAgents() {
+function renderLaunchAgents(filterType = 'all') {
     const container = document.getElementById('launch-agents-list');
     // Show only user launch agents from ~/Library/LaunchAgents
-    const agents = allAgents.filter(agent => 
+    let agents = allAgents.filter(agent => 
         agent.plistPath && 
         (agent.plistPath.includes('/Users/') && agent.plistPath.includes('/Library/LaunchAgents/'))
     );
+    
+    // Apply filter
+    agents = applyAgentFilter(agents, filterType);
 
     console.log('[LAUNCH-AGENTS] Total agents from backend:', allAgents.length);
     console.log('[LAUNCH-AGENTS] User agents after filtering:', agents.length);
@@ -65,6 +68,37 @@ function renderLaunchAgents() {
     }).join('');
 
     addLaunchAgentActionListeners();
+}
+
+function applyAgentFilter(agents, filterType) {
+    switch (filterType) {
+        case 'user':
+            return agents.filter(agent => 
+                agent.plistPath.includes('/Users/') && 
+                !agent.label.toLowerCase().includes('apple') &&
+                !agent.label.toLowerCase().includes('com.apple')
+            );
+        case 'apps':
+            return agents.filter(agent => 
+                agent.label.includes('app') || 
+                agent.plistPath.includes('.app') ||
+                agent.label.toLowerCase().includes('chrome') ||
+                agent.label.toLowerCase().includes('browser')
+            );
+        case 'system':
+            return agents.filter(agent => 
+                agent.label.toLowerCase().includes('apple') ||
+                agent.label.toLowerCase().includes('com.apple') ||
+                agent.label.toLowerCase().includes('system')
+            );
+        case 'all':
+        default:
+            return agents;
+    }
+}
+
+function filterLaunchAgents(filterType) {
+    renderLaunchAgents(filterType);
 }
 
 async function updateAgentStatus() {
@@ -215,14 +249,19 @@ async function createLaunchAgent() {
         
         // Add to master configuration
         if (result.success) {
-            await updateMasterConfigWithAgent({
+            const agentInfo = {
                 id: options.label || `agent-${Date.now()}`,
                 name: options.label || currentAppPath.split('/').pop(),
                 path: currentAppPath,
                 plistPath: result.data?.plistPath,
                 created: new Date().toISOString(),
                 type: 'app'
-            });
+            };
+            
+            await updateMasterConfigWithAgent(agentInfo);
+            
+            // Add to monitoring system
+            await addToMonitoring(agentInfo);
         }
         
         showToast('Launch agent created successfully!', 'success');
@@ -251,7 +290,7 @@ async function installLaunchAgent() {
         
         // Add to master configuration
         if (result.success) {
-            await updateMasterConfigWithAgent({
+            const agentInfo = {
                 id: options.label || `agent-${Date.now()}`,
                 name: options.label || currentAppPath.split('/').pop(),
                 path: currentAppPath,
@@ -259,7 +298,12 @@ async function installLaunchAgent() {
                 created: new Date().toISOString(),
                 type: 'app',
                 installed: true
-            });
+            };
+            
+            await updateMasterConfigWithAgent(agentInfo);
+            
+            // Add to monitoring system
+            await addToMonitoring(agentInfo);
         }
         
         showToast('Launch agent installed and started!', 'success');
@@ -288,6 +332,32 @@ async function removeMasterConfigAgent(agentId) {
         console.log('[LAUNCH-AGENTS] Removed agent from master configuration:', agentId);
     } catch (error) {
         console.warn('[LAUNCH-AGENTS] Failed to remove from master configuration:', error);
+    }
+}
+
+async function addToMonitoring(agentInfo) {
+    try {
+        const response = await apiCall('/api/monitoring/applications/add', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: agentInfo.name,
+                path: agentInfo.path,
+                options: {
+                    shouldBeRunning: true,
+                    type: agentInfo.type,
+                    createdByTool: true
+                }
+            })
+        });
+        
+        if (response.success) {
+            console.log('[LAUNCH-AGENTS] Added agent to monitoring:', agentInfo.name);
+        } else {
+            console.warn('[LAUNCH-AGENTS] Failed to add agent to monitoring:', response.error);
+        }
+    } catch (error) {
+        console.warn('[LAUNCH-AGENTS] Failed to add agent to monitoring:', error);
+        // Don't fail the main operation if monitoring fails
     }
 }
 
@@ -325,7 +395,7 @@ function switchCreationMode(mode) {
     currentMode = mode;
     
     // Save mode change to master config
-    saveMasterConfig();
+    saveLaunchAgentsMasterConfig();
     
     // Update tab states
     document.querySelectorAll('.mode-tab').forEach(tab => {
@@ -426,6 +496,18 @@ async function createWebLaunchAgent() {
         });
         
         if (response.success) {
+            // Add to monitoring system
+            const agentInfo = {
+                id: `web-app-${Date.now()}`,
+                name: name,
+                path: url,
+                plistPath: response.data?.plistPath,
+                created: new Date().toISOString(),
+                type: 'web'
+            };
+            
+            await addToMonitoring(agentInfo);
+            
             showToast(`Web app launch agent created: ${name}`, 'success');
             
             // Clear form
@@ -611,6 +693,18 @@ export function initLaunchAgents() {
     
     // Auto-populate web app name from URL
     document.getElementById('web-app-url').addEventListener('input', autoPopulateWebAppName);
+
+    // Agent filtering buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            const filter = e.target.dataset.filter;
+            filterLaunchAgents(filter);
+        });
+    });
 
     loadLaunchAgents();
     
