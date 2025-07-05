@@ -810,6 +810,104 @@ class MacOSProcessManager extends ProcessManagerInterface {
      * Extract web app information from launch agent plist content
      * This looks for Chrome/browser-specific launch agent patterns
      */
+    /**
+     * Create a web application launch agent
+     */
+    async createWebAppLaunchAgent(name, url, browserPath, options = {}) {
+        try {
+            // Validate URL
+            try {
+                new URL(url);
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Invalid URL: ${url}`
+                };
+            }
+
+            // Create safe label
+            const label = name.replace(/[^a-zA-Z0-9.-]/g, '-').toLowerCase();
+            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+
+            // Build browser arguments
+            const args = [browserPath];
+            
+            if (options.kioskMode) {
+                args.push('--kiosk');
+            }
+            
+            if (options.disableDevTools) {
+                args.push('--disable-dev-tools');
+            }
+            
+            if (options.disableExtensions) {
+                args.push('--disable-extensions');
+            }
+            
+            if (options.incognitoMode) {
+                args.push('--incognito');
+            }
+            
+            // Add standard args for kiosk environments
+            args.push('--no-first-run');
+            args.push('--disable-default-apps');
+            args.push('--disable-popup-blocking');
+            args.push('--disable-infobars');
+            args.push(url);
+
+            // Create plist content
+            const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>${label}</string>
+    <key>ProgramArguments</key>
+    <array>
+        ${args.map(arg => `        <string>${arg}</string>`).join('\n')}
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/${label}.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/${label}.error.log</string>
+</dict>
+</plist>`;
+
+            // Write plist file
+            await fs.writeFile(plistPath, plistContent);
+            
+            // Optionally install (load) the agent
+            if (options.runAtLoad) {
+                try {
+                    await execAsync(`launchctl load "${plistPath}"`);
+                } catch (error) {
+                    console.warn(`Created web app launch agent but failed to load: ${error.message}`);
+                }
+            }
+
+            return {
+                success: true,
+                message: `Web application launch agent created: ${name}`,
+                data: {
+                    label,
+                    plistPath,
+                    url,
+                    browserPath
+                }
+            };
+
+        } catch (error) {
+            return {
+                success: false,
+                message: `Failed to create web app launch agent: ${error.message}`
+            };
+        }
+    }
+
     extractWebAppInfo(plistContent) {
         try {
             // Check if this is a Chrome kiosk mode or browser-based launch agent

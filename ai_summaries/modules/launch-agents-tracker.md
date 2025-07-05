@@ -28,10 +28,20 @@
 ## Active Issues 🎯
 
 **Currently:** 
-- [ ] Clicking Web Applications button does not work or change anything on the page, so I am unable to test if this is actually working
-- [ ] Buttons under each launch agent are currently displaying vertically instead of horizontally
-- [ ] div.agent-filters - not sure if this is still a necessary area, and the buttons also do not work
-- [ ] Is there a way we can clearly indicate which launch agents are created by our tool vs something else? if someone adds a launch agent here, i would expect it to also show up in the "Application Status" section of the dashboard.
+- [ ] Sort "Tool Created" launch agents to the top of the list
+- [ ] View plist button does not work - clicking it gives no UI response and no console error
+- [ ] Test plist button - unclear what this does and doesnt seem to have an effect. may need clearer explanations
+- [ ] Bottom of window may benefit from a Legend explaining what each of the buttons under each launch agent is intended to do
+- [ ] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist
+- [ ] Edit plist button - clicking it results in an error "Failed to load plist content"
+- [ ] Web application launch agent - preview command seems to say the right thing, but when clicking "Create Web App launch agent" it gives the error "Failed to create web app launch agent: Failed to process POST /launch-agents/create-web"
+
+**Recently Fixed (Latest Session):**
+- ✅ Web Applications button now works properly (fixed missing function call)
+- ✅ Launch agent action buttons display horizontally (removed duplicate CSS)
+- ✅ Agent filter buttons now functional (All/User/Apps/System filtering)
+- ✅ Tool-created agents have visual indicators (rocket badge + blue border)
+- ✅ Tool-created agents automatically appear in Dashboard Application Status
 
 ---
 
