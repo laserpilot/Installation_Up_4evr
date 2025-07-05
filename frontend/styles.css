@@ -2524,6 +2524,44 @@ input:checked+.toggle-slider:before {
     background: linear-gradient(90deg, rgba(0, 122, 255, 0.05) 0%, var(--card-background) 20%);
 }
 
+/* Launch Agents Legend */
+.launch-agents-legend {
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.launch-agents-legend h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs);
+}
+
+.legend-btn {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.legend-item span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
 /* Button Action styles for launch agent cards */
 .btn-action {
     padding: var(--spacing-xs) var(--spacing-sm);
