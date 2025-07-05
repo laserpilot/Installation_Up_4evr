@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
+
 <body>
     <!-- Skip Navigation for Accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -39,7 +41,7 @@
                     <div class="sidebar-header">
                         <h3><i class="fas fa-desktop"></i> Installation Up 4evr</h3>
                     </div>
-                    
+
                     <!-- Primary Navigation -->
                     <div class="sidebar-section">
                         <button class="sidebar-button primary-nav active" data-tab="dashboard">
@@ -49,7 +51,7 @@
                             <i class="fas fa-magic"></i> Setup Wizard
                         </button>
                     </div>
-                    
+
                     <!-- Advanced Tools Section -->
                     <div class="sidebar-section">
                         <h4 class="sidebar-section-title">
@@ -74,7 +76,7 @@
                             <i class="fas fa-microchip"></i> Installation Settings
                         </button>
                     </div>
-                    
+
                     <!-- Settings Section -->
                     <div class="sidebar-section">
                         <h4 class="sidebar-section-title">
@@ -90,7 +92,7 @@
                             <i class="fas fa-bell"></i> Notifications
                         </button>
                     </div>
-                    
+
                 </nav>
 
                 <!-- Main Content Area -->
@@ -110,7 +112,7 @@
                                 </div>
                             </div>
                             <p>Monitor your installation health and manage running applications</p>
-                            
+
                             <!-- System Health Overview -->
                             <div class="dashboard-section">
                                 <h3><i class="fas fa-heartbeat"></i> System Monitoring</h3>
@@ -129,7 +131,7 @@
                                             <!-- Top CPU processes will be populated here -->
                                         </div>
                                     </div>
-                                    
+
                                     <div class="metric-card" id="dashboard-memory">
                                         <div class="metric-header">
                                             <i class="fas fa-memory"></i>
@@ -144,7 +146,7 @@
                                             <!-- Top memory processes will be populated here -->
                                         </div>
                                     </div>
-                                    
+
                                     <div class="metric-card" id="dashboard-disk">
                                         <div class="metric-header">
                                             <i class="fas fa-hdd"></i>
@@ -159,7 +161,7 @@
                                             <!-- Disk details will be populated here -->
                                         </div>
                                     </div>
-                                    
+
                                     <div class="metric-card" id="dashboard-uptime">
                                         <div class="metric-header">
                                             <i class="fas fa-clock"></i>
@@ -173,7 +175,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Applications Status -->
                             <div class="dashboard-section">
                                 <h3><i class="fas fa-cogs"></i> Application Status</h3>
@@ -187,7 +189,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Recent Activity -->
                             <div class="dashboard-section">
                                 <h3><i class="fas fa-bell"></i> Recent Activity</h3>
@@ -198,7 +200,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Quick Actions -->
                             <div class="dashboard-section">
                                 <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
@@ -238,7 +240,7 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <!-- Progress Indicator -->
                             <div class="wizard-progress">
                                 <div class="progress-bar">
@@ -281,8 +283,10 @@
                                             <i class="fas fa-desktop"></i>
                                         </div>
                                         <h3>Welcome to Installation Up 4evr</h3>
-                                        <p>This wizard will guide you through setting up your Mac for 24/7 installation use. We'll configure system settings, set up monitoring, and ensure your installation runs reliably.</p>
-                                        
+                                        <p>This wizard will guide you through setting up your Mac for 24/7 installation
+                                            use. We'll configure system settings, set up monitoring, and ensure your
+                                            installation runs reliably.</p>
+
                                         <div class="setup-options">
                                             <div class="setup-card">
                                                 <h4><i class="fas fa-magic"></i> Guided Setup (Recommended)</h4>
@@ -295,7 +299,7 @@
                                                 <small>For experienced users</small>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="step-actions">
                                             <button class="btn btn-primary" id="start-guided-setup">
                                                 <i class="fas fa-play"></i> Start Guided Setup
@@ -311,12 +315,13 @@
                                 <div class="wizard-step" id="wizard-step-2">
                                     <div class="step-content">
                                         <h3><i class="fas fa-search"></i> System Check</h3>
-                                        <p>Let's check your current system configuration and identify what needs to be set up.</p>
-                                        
+                                        <p>Let's check your current system configuration and identify what needs to be
+                                            set up.</p>
+
                                         <div class="system-checks" id="wizard-system-checks">
                                             <!-- Populated by JavaScript -->
                                         </div>
-                                        
+
                                         <div class="step-actions">
                                             <button class="btn btn-secondary" id="wizard-back-1">
                                                 <i class="fas fa-arrow-left"></i> Back
@@ -333,16 +338,17 @@
                                     <div class="step-content">
                                         <h3><i class="fas fa-cog"></i> Essential Settings</h3>
                                         <p>Configure critical system settings for 24/7 operation.</p>
-                                        
+
                                         <div class="essential-settings" id="wizard-essential-settings">
                                             <!-- Populated by JavaScript -->
                                         </div>
-                                        
+
                                         <div class="step-actions">
                                             <button class="btn btn-secondary" id="wizard-back-2">
                                                 <i class="fas fa-arrow-left"></i> Back
                                             </button>
-                                            <button class="btn btn-warning" id="wizard-skip-settings" title="Skip system configuration and continue with current settings">
+                                            <button class="btn btn-warning" id="wizard-skip-settings"
+                                                title="Skip system configuration and continue with current settings">
                                                 <i class="fas fa-forward"></i> Skip This Step
                                             </button>
                                             <button class="btn btn-primary" id="wizard-apply-settings">
@@ -357,7 +363,7 @@
                                     <div class="step-content">
                                         <h3><i class="fas fa-rocket"></i> Application Setup</h3>
                                         <p>Set up your installation application to start automatically.</p>
-                                        
+
                                         <div class="app-setup-options">
                                             <div class="setup-method active" id="app-method">
                                                 <h4><i class="fas fa-cube"></i> Desktop Application</h4>
@@ -368,12 +374,13 @@
                                                     <button class="btn btn-outline">Browse Files</button>
                                                 </div>
                                             </div>
-                                            
+
                                             <div class="setup-method" id="web-method">
                                                 <h4><i class="fas fa-globe"></i> Web Application</h4>
                                                 <p>Set up Chrome in kiosk mode</p>
                                                 <div class="web-config">
-                                                    <input type="url" placeholder="https://yoursite.com" class="form-input" id="wizard-web-url">
+                                                    <input type="url" placeholder="https://yoursite.com"
+                                                        class="form-input" id="wizard-web-url">
                                                     <div class="checkbox-group">
                                                         <label>
                                                             <input type="checkbox" id="wizard-kiosk-mode" checked>
@@ -383,15 +390,16 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Application Creation Actions -->
                                         <div class="app-creation-actions">
                                             <button class="btn btn-success" id="wizard-create-launch-agent">
                                                 <i class="fas fa-plus"></i> Create Launch Agent
                                             </button>
-                                            <small class="help-text">This will create a launch agent for your selected application</small>
+                                            <small class="help-text">This will create a launch agent for your selected
+                                                application</small>
                                         </div>
-                                        
+
                                         <div class="step-actions">
                                             <button class="btn btn-secondary" id="wizard-back-3">
                                                 <i class="fas fa-arrow-left"></i> Back
@@ -411,11 +419,11 @@
                                     <div class="step-content">
                                         <h3><i class="fas fa-check-circle"></i> Verification</h3>
                                         <p>Let's test your setup to make sure everything works correctly.</p>
-                                        
+
                                         <div class="verification-tests" id="wizard-verification">
                                             <!-- Populated by JavaScript -->
                                         </div>
-                                        
+
                                         <div class="step-actions">
                                             <button class="btn btn-secondary" id="wizard-back-4">
                                                 <i class="fas fa-arrow-left"></i> Back
@@ -435,11 +443,11 @@
                                         </div>
                                         <h3>Setup Complete!</h3>
                                         <p>Your installation is now configured and ready for 24/7 operation.</p>
-                                        
+
                                         <div class="setup-summary" id="wizard-summary">
                                             <!-- Populated by JavaScript -->
                                         </div>
-                                        
+
                                         <div class="next-steps">
                                             <h4>What's Next?</h4>
                                             <ul>
@@ -448,7 +456,7 @@
                                                 <li>Test your installation thoroughly</li>
                                             </ul>
                                         </div>
-                                        
+
                                         <div class="step-actions">
                                             <button class="btn btn-primary" id="wizard-go-dashboard">
                                                 <i class="fas fa-tachometer-alt"></i> Go to Dashboard
@@ -466,225 +474,245 @@
                     <!-- System Preferences Tab -->
                     <div id="system-prefs-tab" class="tab-pane">
                         <section class="card">
-                <h2><i class="fas fa-cog"></i> System Preferences</h2>
-                <p>Configure macOS settings for 24/7 installation use</p>
-                
-                <div class="preferences-container">
-                    <!-- Required Settings -->
-                    <div class="preference-group">
-                        <h3><i class="fas fa-exclamation-circle text-red"></i> Required Settings</h3>
-                        <div id="required-settings" class="settings-grid">
-                            <!-- Populated by JavaScript -->
-                        </div>
-                    </div>
+                            <h2><i class="fas fa-cog"></i> System Preferences</h2>
+                            <p>Configure macOS settings for 24/7 installation use</p>
 
-                    <!-- Optional Settings -->
-                    <div class="preference-group">
-                        <h3><i class="fas fa-plus-circle text-yellow"></i> Optional Settings</h3>
-                        <div id="optional-settings" class="settings-grid">
-                            <!-- Populated by JavaScript -->
-                        </div>
-                    </div>
-                </div>
+                            <div class="preferences-container">
+                                <!-- Required Settings -->
+                                <div class="preference-group">
+                                    <h3><i class="fas fa-exclamation-circle text-red"></i> Required Settings</h3>
+                                    <div id="required-settings" class="settings-grid">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
 
-                <div class="action-buttons">
-                    <button id="verify-settings" class="btn btn-secondary" title="Check if your current macOS settings match the recommended configuration for 24/7 installations">
-                        <i class="fas fa-search"></i> Verify Current Settings
-                    </button>
-                    <button id="apply-required" class="btn btn-primary" title="Automatically apply all required system settings for installation computers">
-                        <i class="fas fa-check-circle"></i> Apply Required Settings
-                    </button>
-                    <button id="apply-selected" class="btn btn-success" title="Apply only the settings you have selected above">
-                        <i class="fas fa-play"></i> Apply Selected Settings
-                    </button>
-                    <button id="generate-script" class="btn btn-outline" title="Generate terminal commands to copy and run manually (Browser-safe option)">
-                        <i class="fas fa-terminal"></i> Generate Terminal Commands
-                    </button>
-                    <button id="generate-restore-script" class="btn btn-warning" title="Generate terminal script to restore all macOS settings back to defaults">
-                        <i class="fas fa-undo"></i> Generate Restore Script
-                    </button>
-                </div>
+                                <!-- Optional Settings -->
+                                <div class="preference-group">
+                                    <h3><i class="fas fa-plus-circle text-yellow"></i> Optional Settings</h3>
+                                    <div id="optional-settings" class="settings-grid">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="action-buttons">
+                                <button id="verify-settings" class="btn btn-secondary"
+                                    title="Check if your current macOS settings match the recommended configuration for 24/7 installations">
+                                    <i class="fas fa-search"></i> Verify Current Settings
+                                </button>
+                                <button id="apply-required" class="btn btn-primary"
+                                    title="Automatically apply all required system settings for installation computers">
+                                    <i class="fas fa-check-circle"></i> Apply Required Settings
+                                </button>
+                                <button id="apply-selected" class="btn btn-success"
+                                    title="Apply only the settings you have selected above">
+                                    <i class="fas fa-play"></i> Apply Selected Settings
+                                </button>
+                                <button id="generate-script" class="btn btn-outline"
+                                    title="Generate terminal commands to copy and run manually (Browser-safe option)">
+                                    <i class="fas fa-terminal"></i> Generate Terminal Commands
+                                </button>
+                                <button id="generate-restore-script" class="btn btn-warning"
+                                    title="Generate terminal script to restore all macOS settings back to defaults">
+                                    <i class="fas fa-undo"></i> Generate Restore Script
+                                </button>
+                            </div>
                         </section>
                     </div>
 
                     <!-- Launch Agents Tab -->
                     <div id="launch-agents-tab" class="tab-pane macos-only">
                         <section class="card">
-                <h2 id="launch-agents-title"><i class="fas fa-rocket"></i> Launch Agents</h2>
-                <p>Create launch agents to keep your apps and web applications running forever</p>
-                
-                <!-- Creation Mode Selector -->
-                <div class="creation-mode-selector">
-                    <div class="mode-tabs">
-                        <button class="mode-tab active" data-mode="app">
-                            <i class="fas fa-desktop"></i> Desktop Apps
-                        </button>
-                        <button class="mode-tab" data-mode="web">
-                            <i class="fas fa-globe"></i> Web Applications
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Desktop App Mode -->
-                <div class="creation-mode" id="app-mode" style="display: block;">
-                    <!-- Drag and Drop Zone -->
-                    <div class="drop-zone" id="app-drop-zone">
-                        <div class="drop-zone-content">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <h3>Drag & Drop Your App Here</h3>
-                            <p>Or click to browse for .app files</p>
-                            <input type="file" id="app-file-input" accept=".app" style="display: none;">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Web App Mode -->
-                <div class="creation-mode" id="web-mode" style="display: none;">
-                    <div class="web-app-creator">
-                        <div class="web-app-form">
-                            <h3><i class="fas fa-globe"></i> Create Web Application Launch Agent</h3>
-                            <p>Launch web applications in Chrome kiosk mode for installations</p>
-                            
-                            <div class="form-group">
-                                <label for="web-app-url">Web Application URL:</label>
-                                <input type="url" id="web-app-url" placeholder="https://example.com" required>
-                                <small class="help-text">Enter the full URL of the web application to launch</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="web-app-name">Application Name:</label>
-                                <input type="text" id="web-app-name" placeholder="My Web App" required>
-                                <small class="help-text">Friendly name for the launch agent</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="browser-path">Browser Path:</label>
-                                <select id="browser-path">
-                                    <option value="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome">Google Chrome</option>
-                                    <option value="/Applications/Chromium.app/Contents/MacOS/Chromium">Chromium</option>
-                                    <option value="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge">Microsoft Edge</option>
-                                    <option value="custom">Custom Browser Path...</option>
-                                </select>
-                                <input type="text" id="custom-browser-path" placeholder="/path/to/browser" style="display: none; margin-top: 8px;">
-                                <small class="help-text">Select the browser to use for kiosk mode</small>
-                            </div>
-                            
-                            <div class="web-options">
-                                <h4><i class="fas fa-cog"></i> Kiosk Mode Options</h4>
-                                <div class="options-grid">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="web-kiosk-mode" checked>
-                                        <span class="checkbox-custom"></span>
-                                        Full Screen Kiosk Mode
-                                    </label>
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="web-disable-dev-tools" checked>
-                                        <span class="checkbox-custom"></span>
-                                        Disable Developer Tools
-                                    </label>
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="web-disable-extensions" checked>
-                                        <span class="checkbox-custom"></span>
-                                        Disable Extensions
-                                    </label>
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="web-incognito-mode">
-                                        <span class="checkbox-custom"></span>
-                                        Incognito/Private Mode
-                                    </label>
+                            <h2 id="launch-agents-title"><i class="fas fa-rocket"></i> Launch Agents</h2>
+                            <p>Create launch agents to keep your apps and web applications running forever</p>
+
+                            <!-- Creation Mode Selector -->
+                            <div class="creation-mode-selector">
+                                <div class="mode-tabs">
+                                    <button class="mode-tab active" data-mode="app">
+                                        <i class="fas fa-desktop"></i> Desktop Apps
+                                    </button>
+                                    <button class="mode-tab" data-mode="web">
+                                        <i class="fas fa-globe"></i> Web Applications
+                                    </button>
                                 </div>
                             </div>
-                            
-                            <div class="action-buttons">
-                                <button id="create-web-launch-agent" class="btn btn-primary" title="Create launch agent for this web application">
-                                    <i class="fas fa-plus"></i> Create Web App Launch Agent
-                                </button>
-                                <button id="preview-web-command" class="btn btn-outline" title="Preview the browser command that will be used">
-                                    <i class="fas fa-eye"></i> Preview Command
-                                </button>
+
+                            <!-- Desktop App Mode -->
+                            <div class="creation-mode" id="app-mode" style="display: block;">
+                                <!-- Drag and Drop Zone -->
+                                <div class="drop-zone" id="app-drop-zone">
+                                    <div class="drop-zone-content">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <h3>Drag & Drop Your App Here</h3>
+                                        <p>Or click to browse for .app files</p>
+                                        <input type="file" id="app-file-input" accept=".app" style="display: none;">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- App Info Display (Desktop Mode) -->
-                <div id="app-info" class="app-info" style="display: none;">
-                    <div class="app-display">
-                        <div class="app-icon">
-                            <i class="fas fa-cube"></i>
-                        </div>
-                        <div class="app-details">
-                            <h3 id="app-name">App Name</h3>
-                            <p id="app-path">App Path</p>
-                            <div class="app-meta">
-                                <span id="app-version">Version</span>
-                                <span id="app-bundle-id">Bundle ID</span>
+                            <!-- Web App Mode -->
+                            <div class="creation-mode" id="web-mode" style="display: none;">
+                                <div class="web-app-creator">
+                                    <div class="web-app-form">
+                                        <h3><i class="fas fa-globe"></i> Create Web Application Launch Agent</h3>
+                                        <p>Launch web applications in Chrome kiosk mode for installations</p>
+
+                                        <div class="form-group">
+                                            <label for="web-app-url">Web Application URL:</label>
+                                            <input type="url" id="web-app-url" placeholder="https://example.com"
+                                                required>
+                                            <small class="help-text">Enter the full URL of the web application to
+                                                launch</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="web-app-name">Application Name:</label>
+                                            <input type="text" id="web-app-name" placeholder="My Web App" required>
+                                            <small class="help-text">Friendly name for the launch agent</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="browser-path">Browser Path:</label>
+                                            <select id="browser-path">
+                                                <option
+                                                    value="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome">
+                                                    Google Chrome</option>
+                                                <option value="/Applications/Chromium.app/Contents/MacOS/Chromium">
+                                                    Chromium</option>
+                                                <option
+                                                    value="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge">
+                                                    Microsoft Edge</option>
+                                                <option value="custom">Custom Browser Path...</option>
+                                            </select>
+                                            <input type="text" id="custom-browser-path" placeholder="/path/to/browser"
+                                                style="display: none; margin-top: 8px;">
+                                            <small class="help-text">Select the browser to use for kiosk mode</small>
+                                        </div>
+
+                                        <div class="web-options">
+                                            <h4><i class="fas fa-cog"></i> Kiosk Mode Options</h4>
+                                            <div class="options-grid">
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="web-kiosk-mode" checked>
+                                                    <span class="checkbox-custom"></span>
+                                                    Full Screen Kiosk Mode
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="web-disable-dev-tools" checked>
+                                                    <span class="checkbox-custom"></span>
+                                                    Disable Developer Tools
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="web-disable-extensions" checked>
+                                                    <span class="checkbox-custom"></span>
+                                                    Disable Extensions
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="web-incognito-mode">
+                                                    <span class="checkbox-custom"></span>
+                                                    Incognito/Private Mode
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="action-buttons">
+                                            <button id="create-web-launch-agent" class="btn btn-primary"
+                                                title="Create launch agent for this web application">
+                                                <i class="fas fa-plus"></i> Create Web App Launch Agent
+                                            </button>
+                                            <button id="preview-web-command" class="btn btn-outline"
+                                                title="Preview the browser command that will be used">
+                                                <i class="fas fa-eye"></i> Preview Command
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Launch Agent Options -->
-                    <div class="launch-options">
-                        <h4><i class="fas fa-wrench"></i> Launch Agent Options</h4>
-                        <div class="options-grid">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="keep-alive" checked>
-                                <span class="checkbox-custom"></span>
-                                Keep Alive (restart if crashes)
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="successful-exit" checked>
-                                <span class="checkbox-custom"></span>
-                                Allow manual quit
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="run-at-load" checked>
-                                <span class="checkbox-custom"></span>
-                                Run at login
-                            </label>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="custom-label">Custom Label (optional):</label>
-                            <input type="text" id="custom-label" placeholder="com.yourcompany.app.up4evr">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="program-filepath">Program File Path:</label>
-                            <input type="text" id="program-filepath" placeholder="/Applications/YourApp.app/Contents/MacOS/YourApp">
-                            <small class="help-text">Specify the exact executable path for the launch agent</small>
-                        </div>
-                    </div>
+                            <!-- App Info Display (Desktop Mode) -->
+                            <div id="app-info" class="app-info" style="display: none;">
+                                <div class="app-display">
+                                    <div class="app-icon">
+                                        <i class="fas fa-cube"></i>
+                                    </div>
+                                    <div class="app-details">
+                                        <h3 id="app-name">App Name</h3>
+                                        <p id="app-path">App Path</p>
+                                        <div class="app-meta">
+                                            <span id="app-version">Version</span>
+                                            <span id="app-bundle-id">Bundle ID</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                    <div class="action-buttons">
-                        <button id="create-launch-agent" class="btn btn-primary" title="Generate a launch agent configuration file for the selected application">
-                            <i class="fas fa-plus"></i> Create Launch Agent
-                        </button>
-                        <button id="install-launch-agent" class="btn btn-success" title="Create and install the launch agent to automatically start your app on boot">
-                            <i class="fas fa-rocket"></i> Install & Start
-                        </button>
-                    </div>
-                </div>
+                                <!-- Launch Agent Options -->
+                                <div class="launch-options">
+                                    <h4><i class="fas fa-wrench"></i> Launch Agent Options</h4>
+                                    <div class="options-grid">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="keep-alive" checked>
+                                            <span class="checkbox-custom"></span>
+                                            Keep Alive (restart if crashes)
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="successful-exit" checked>
+                                            <span class="checkbox-custom"></span>
+                                            Allow manual quit
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="run-at-load" checked>
+                                            <span class="checkbox-custom"></span>
+                                            Run at login
+                                        </label>
+                                    </div>
 
-                <!-- Existing Launch Agents -->
-                <div class="existing-agents">
-                    <div class="section-header">
-                        <h4><i class="fas fa-list"></i> Existing Launch Agents</h4>
-                        <div class="agent-filters">
-                            <button class="filter-btn active" data-filter="all">All</button>
-                            <button class="filter-btn" data-filter="user">User</button>
-                            <button class="filter-btn" data-filter="apps">Apps</button>
-                            <button class="filter-btn" data-filter="system">System</button>
-                        </div>
-                    </div>
-                    <div class="search-container">
-                        <input type="text" id="agent-search" placeholder="Search launch agents..." class="search-input">
-                        <i class="fas fa-search search-icon"></i>
-                    </div>
-                    <div id="launch-agents-list" class="agents-list">
-                        <!-- Populated by JavaScript -->
-                    </div>
-                </div>
+                                    <div class="form-group">
+                                        <label for="custom-label">Custom Label (optional):</label>
+                                        <input type="text" id="custom-label" placeholder="com.yourcompany.app.up4evr">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="program-filepath">Program File Path:</label>
+                                        <input type="text" id="program-filepath"
+                                            placeholder="/Applications/YourApp.app/Contents/MacOS/YourApp">
+                                        <small class="help-text">Specify the exact executable path for the launch
+                                            agent</small>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button id="create-launch-agent" class="btn btn-primary"
+                                        title="Generate a launch agent configuration file for the selected application">
+                                        <i class="fas fa-plus"></i> Create Launch Agent
+                                    </button>
+                                    <button id="install-launch-agent" class="btn btn-success"
+                                        title="Create and install the launch agent to automatically start your app on boot">
+                                        <i class="fas fa-rocket"></i> Install & Start
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Existing Launch Agents -->
+                            <div class="existing-agents">
+                                <div class="section-header">
+                                    <h4><i class="fas fa-list"></i> Existing Launch Agents</h4>
+                                    <div class="agent-filters">
+                                        <button class="filter-btn active" data-filter="all">All</button>
+                                        <button class="filter-btn" data-filter="user">User</button>
+                                        <button class="filter-btn" data-filter="apps">Apps</button>
+                                        <button class="filter-btn" data-filter="system">System</button>
+                                    </div>
+                                </div>
+                                <div class="search-container">
+                                    <input type="text" id="agent-search" placeholder="Search launch agents..."
+                                        class="search-input">
+                                    <i class="fas fa-search search-icon"></i>
+                                </div>
+                                <div id="launch-agents-list" class="agents-list">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
                         </section>
                     </div>
 
@@ -702,7 +730,7 @@
                         <section class="card">
                             <h2><i class="fas fa-chart-line"></i> System Monitoring</h2>
                             <p>Real-time system monitoring and installation health</p>
-                            
+
                             <!-- Monitoring Controls -->
                             <div class="monitoring-controls">
                                 <button id="refresh-monitoring" class="btn btn-secondary">
@@ -715,7 +743,7 @@
                                     <i class="fas fa-cog"></i> Settings
                                 </button>
                             </div>
-                            
+
                             <!-- System Overview -->
                             <div class="monitoring-grid">
                                 <div class="metric-card">
@@ -729,7 +757,7 @@
                                         <!-- Top CPU processes will be populated here -->
                                     </div>
                                 </div>
-                                
+
                                 <div class="metric-card">
                                     <h3><i class="fas fa-memory"></i> Memory Usage</h3>
                                     <div class="metric-value" id="memory-usage-value">--</div>
@@ -741,7 +769,7 @@
                                         <!-- Top memory processes will be populated here -->
                                     </div>
                                 </div>
-                                
+
                                 <div class="metric-card">
                                     <h3><i class="fas fa-hdd"></i> Disk Usage</h3>
                                     <div class="metric-value" id="disk-usage-value">--</div>
@@ -753,7 +781,7 @@
                                         <!-- Disk details will be populated here -->
                                     </div>
                                 </div>
-                                
+
                                 <div class="metric-card">
                                     <h3><i class="fas fa-heartbeat"></i> Health Status</h3>
                                     <div class="health-status" id="health-status">
@@ -762,7 +790,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Alerts and Notifications -->
                             <div class="alerts-section">
                                 <h3><i class="fas fa-bell"></i> Active Alerts</h3>
@@ -770,24 +798,24 @@
                                     <!-- Alerts populated by JavaScript -->
                                 </div>
                             </div>
-                            
+
                             <!-- System Details -->
                             <div class="details-grid">
                                 <div class="detail-card">
                                     <h4><i class="fas fa-tv"></i> Display Status</h4>
                                     <div id="display-status" class="detail-content">Loading...</div>
                                 </div>
-                                
+
                                 <div class="detail-card">
                                     <h4><i class="fas fa-network-wired"></i> Network Status</h4>
                                     <div id="network-status" class="detail-content">Loading...</div>
                                 </div>
-                                
+
                                 <div class="detail-card">
                                     <h4><i class="fas fa-clock"></i> Time Since Reboot</h4>
                                     <div id="uptime-status" class="detail-content">Loading...</div>
                                 </div>
-                                
+
                                 <div class="detail-card">
                                     <h4><i class="fas fa-list-check"></i> Monitored Apps</h4>
                                     <div id="apps-status" class="detail-content">Loading...</div>
@@ -801,7 +829,7 @@
                         <section class="card">
                             <h2><i class="fas fa-server"></i> Backend Service Control</h2>
                             <p>Manage the Installation Up 4evr backend service</p>
-                            
+
                             <!-- Service Status -->
                             <div class="service-status-section">
                                 <div class="service-status-card">
@@ -809,10 +837,11 @@
                                         <h3><i class="fas fa-info-circle"></i> Service Status</h3>
                                         <div class="service-status-indicator" id="service-status-indicator">
                                             <span class="service-status-icon" id="service-status-icon">🟡</span>
-                                            <span class="service-status-text" id="service-status-text">Checking...</span>
+                                            <span class="service-status-text"
+                                                id="service-status-text">Checking...</span>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="service-details">
                                         <div class="service-detail">
                                             <label>Process ID:</label>
@@ -833,7 +862,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Service Controls -->
                             <div class="service-controls-section">
                                 <h3><i class="fas fa-gamepad"></i> Service Controls</h3>
@@ -851,17 +880,19 @@
                                         <i class="fas fa-download"></i> Install as System Service
                                     </button>
                                 </div>
-                                
+
                                 <div class="service-help">
                                     <p><i class="fas fa-info-circle"></i> <strong>Service Management:</strong></p>
                                     <ul>
                                         <li><strong>Restart Backend:</strong> Restart the current backend process</li>
-                                        <li><strong>Stop/Start Backend:</strong> Control the backend service manually</li>
-                                        <li><strong>Install as System Service:</strong> Set up backend to auto-start on boot</li>
+                                        <li><strong>Stop/Start Backend:</strong> Control the backend service manually
+                                        </li>
+                                        <li><strong>Install as System Service:</strong> Set up backend to auto-start on
+                                            boot</li>
                                     </ul>
                                 </div>
                             </div>
-                            
+
                             <!-- Service Logs -->
                             <div class="service-logs-section">
                                 <h3><i class="fas fa-file-alt"></i> Service Logs</h3>
@@ -894,19 +925,21 @@
                         <section class="card">
                             <h2><i class="fas fa-sliders-h"></i> Configuration Management</h2>
                             <p>Centralized configuration for all automation settings</p>
-                            
+
                             <!-- Global Settings -->
                             <div class="config-section">
                                 <h3><i class="fas fa-globe"></i> Global Settings</h3>
                                 <div class="config-grid">
                                     <div class="config-item">
                                         <label for="installation-name">Installation Name</label>
-                                        <input type="text" id="installation-name" placeholder="My Installation" value="">
+                                        <input type="text" id="installation-name" placeholder="My Installation"
+                                            value="">
                                         <small>Unique identifier for this installation</small>
                                     </div>
                                     <div class="config-item">
                                         <label for="installation-location">Location</label>
-                                        <input type="text" id="installation-location" placeholder="Gallery, Museum, etc." value="">
+                                        <input type="text" id="installation-location"
+                                            placeholder="Gallery, Museum, etc." value="">
                                         <small>Physical location of this installation</small>
                                     </div>
                                     <div class="config-item">
@@ -1032,7 +1065,7 @@
                                         <small>How often to restart applications (1-168 hours)</small>
                                     </div>
                                 </div>
-                                
+
                                 <div class="maintenance-actions">
                                     <button type="button" class="btn btn-warning" id="reboot-now">
                                         <i class="fas fa-power-off"></i> Reboot Now
@@ -1067,7 +1100,8 @@
                                     </div>
                                     <div class="config-item">
                                         <label for="allowed-ips">Allowed IP Addresses</label>
-                                        <textarea id="allowed-ips" rows="3" placeholder="192.168.1.0/24&#10;10.0.0.0/8"></textarea>
+                                        <textarea id="allowed-ips" rows="3"
+                                            placeholder="192.168.1.0/24&#10;10.0.0.0/8"></textarea>
                                         <small>CIDR notation, one per line (empty = allow all)</small>
                                     </div>
                                     <div class="config-item">
@@ -1116,7 +1150,7 @@
                         <section class="card">
                             <h2><i class="fas fa-bell"></i> Notification Channels</h2>
                             <p>Configure alert notifications for Slack, Discord, webhooks, and email</p>
-                            
+
                             <!-- Slack Configuration -->
                             <div class="notification-channel" data-channel="slack">
                                 <div class="channel-header">
@@ -1129,12 +1163,13 @@
                                         <label for="slack-enabled">Enable Slack</label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="channel-config" id="slack-config">
                                     <div class="config-grid">
                                         <div class="config-item">
                                             <label for="slack-webhook-url">Webhook URL</label>
-                                            <input type="url" id="slack-webhook-url" placeholder="https://hooks.slack.com/services/...">
+                                            <input type="url" id="slack-webhook-url"
+                                                placeholder="https://hooks.slack.com/services/...">
                                             <small>Create an Incoming Webhook in your Slack workspace</small>
                                         </div>
                                         <div class="config-item">
@@ -1144,7 +1179,8 @@
                                         </div>
                                         <div class="config-item">
                                             <label for="slack-username">Bot Username</label>
-                                            <input type="text" id="slack-username" placeholder="Installation Bot" value="Installation Up 4evr">
+                                            <input type="text" id="slack-username" placeholder="Installation Bot"
+                                                value="Installation Up 4evr">
                                             <small>Display name for the bot</small>
                                         </div>
                                         <div class="config-item">
@@ -1159,7 +1195,7 @@
                                             <small>Emoji icon for the bot messages</small>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="test-section">
                                         <button id="test-slack" class="btn btn-secondary">
                                             <i class="fas fa-paper-plane"></i> Test Slack Connection
@@ -1181,22 +1217,25 @@
                                         <label for="discord-enabled">Enable Discord</label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="channel-config" id="discord-config">
                                     <div class="config-grid">
                                         <div class="config-item">
                                             <label for="discord-webhook-url">Webhook URL</label>
-                                            <input type="url" id="discord-webhook-url" placeholder="https://discord.com/api/webhooks/...">
+                                            <input type="url" id="discord-webhook-url"
+                                                placeholder="https://discord.com/api/webhooks/...">
                                             <small>Create a webhook in your Discord server settings</small>
                                         </div>
                                         <div class="config-item">
                                             <label for="discord-username">Bot Username</label>
-                                            <input type="text" id="discord-username" placeholder="Installation Bot" value="Installation Up 4evr">
+                                            <input type="text" id="discord-username" placeholder="Installation Bot"
+                                                value="Installation Up 4evr">
                                             <small>Display name for the webhook</small>
                                         </div>
                                         <div class="config-item">
                                             <label for="discord-avatar">Avatar URL</label>
-                                            <input type="url" id="discord-avatar" placeholder="https://example.com/avatar.png">
+                                            <input type="url" id="discord-avatar"
+                                                placeholder="https://example.com/avatar.png">
                                             <small>Custom avatar image URL (optional)</small>
                                         </div>
                                         <div class="config-item">
@@ -1208,7 +1247,7 @@
                                             <small>Send formatted rich embed messages</small>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="test-section">
                                         <button id="test-discord" class="btn btn-secondary">
                                             <i class="fas fa-paper-plane"></i> Test Discord Connection
@@ -1230,12 +1269,12 @@
                                         <label for="webhook-enabled">Enable Webhooks</label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="channel-config" id="webhook-config">
                                     <div class="webhook-list" id="webhook-list">
                                         <!-- Dynamic webhook entries will be added here -->
                                     </div>
-                                    
+
                                     <div class="webhook-add-section">
                                         <h4><i class="fas fa-plus"></i> Add Webhook</h4>
                                         <div class="config-grid">
@@ -1245,7 +1284,8 @@
                                             </div>
                                             <div class="config-item">
                                                 <label for="webhook-url">URL</label>
-                                                <input type="url" id="webhook-url" placeholder="https://api.example.com/alerts">
+                                                <input type="url" id="webhook-url"
+                                                    placeholder="https://api.example.com/alerts">
                                             </div>
                                             <div class="config-item">
                                                 <label for="webhook-method">Method</label>
@@ -1257,7 +1297,8 @@
                                             </div>
                                             <div class="config-item">
                                                 <label for="webhook-headers">Headers (JSON)</label>
-                                                <textarea id="webhook-headers" rows="2" placeholder='{"Authorization": "Bearer token"}'></textarea>
+                                                <textarea id="webhook-headers" rows="2"
+                                                    placeholder='{"Authorization": "Bearer token"}'></textarea>
                                                 <small>Optional custom headers as JSON</small>
                                             </div>
                                         </div>
@@ -1280,7 +1321,7 @@
                                         <label for="email-enabled">Enable Email</label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="channel-config" id="email-config">
                                     <div class="config-grid">
                                         <div class="config-item">
@@ -1297,7 +1338,8 @@
                                         </div>
                                         <div class="config-item">
                                             <label for="smtp-password">Password</label>
-                                            <input type="password" id="smtp-password" placeholder="App password or API key">
+                                            <input type="password" id="smtp-password"
+                                                placeholder="App password or API key">
                                             <small>Use app-specific passwords for Gmail/Outlook</small>
                                         </div>
                                         <div class="config-item">
@@ -1306,7 +1348,8 @@
                                         </div>
                                         <div class="config-item">
                                             <label for="email-to">To Addresses</label>
-                                            <textarea id="email-to" rows="2" placeholder="admin@example.com&#10;team@example.com"></textarea>
+                                            <textarea id="email-to" rows="2"
+                                                placeholder="admin@example.com&#10;team@example.com"></textarea>
                                             <small>One email address per line</small>
                                         </div>
                                         <div class="config-item">
@@ -1318,7 +1361,7 @@
                                             <small>Enable secure connection</small>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="test-section">
                                         <button id="test-email" class="btn btn-secondary">
                                             <i class="fas fa-paper-plane"></i> Test Email Connection
@@ -1364,7 +1407,8 @@
                                     <div class="config-item">
                                         <label for="test-all-channels">Test All Channels</label>
                                         <button id="test-all-channels" class="btn btn-warning">
-                                            <i class="fas fa-broadcast-tower"></i> Send Test Alert to All Enabled Channels
+                                            <i class="fas fa-broadcast-tower"></i> Send Test Alert to All Enabled
+                                            Channels
                                         </button>
                                         <small>Send a test notification to verify all configurations</small>
                                     </div>
@@ -1395,7 +1439,8 @@
                             <div class="config-status" id="notification-status" style="display: none;">
                                 <div class="config-status-content">
                                     <i class="fas fa-info-circle"></i>
-                                    <span id="notification-status-text">Notification settings updated successfully</span>
+                                    <span id="notification-status-text">Notification settings updated
+                                        successfully</span>
                                 </div>
                             </div>
                         </section>
@@ -1406,7 +1451,7 @@
                         <section class="card">
                             <h2><i class="fas fa-chart-bar"></i> System Monitoring Configuration</h2>
                             <p>Configure monitoring thresholds and alert conditions for real-time system monitoring</p>
-                            
+
                             <!-- Current System Status -->
                             <div class="monitoring-status-section">
                                 <div class="section-header">
@@ -1425,7 +1470,7 @@
                                         </div>
                                         <div class="status-indicator" id="cpu-indicator">🟡</div>
                                     </div>
-                                    
+
                                     <div class="status-card" id="memory-status-card">
                                         <div class="status-icon">🧠</div>
                                         <div class="status-info">
@@ -1435,7 +1480,7 @@
                                         </div>
                                         <div class="status-indicator" id="memory-indicator">🟡</div>
                                     </div>
-                                    
+
                                     <div class="status-card" id="disk-status-card">
                                         <div class="status-icon">💾</div>
                                         <div class="status-info">
@@ -1445,7 +1490,7 @@
                                         </div>
                                         <div class="status-indicator" id="disk-indicator">🟡</div>
                                     </div>
-                                    
+
                                     <div class="status-card" id="temperature-status-card">
                                         <div class="status-icon">🌡️</div>
                                         <div class="status-info">
@@ -1461,7 +1506,7 @@
                             <!-- Threshold Configuration -->
                             <div class="threshold-section">
                                 <h3><i class="fas fa-sliders-h"></i> Alert Thresholds</h3>
-                                
+
                                 <!-- CPU Thresholds -->
                                 <div class="threshold-group">
                                     <h4><i class="fas fa-microchip"></i> CPU Usage Thresholds</h4>
@@ -1469,8 +1514,10 @@
                                         <div class="threshold-item">
                                             <label>Warning Level (%)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="cpu-warning-slider" min="50" max="100" value="75">
-                                                <input type="number" id="cpu-warning-input" min="50" max="100" value="75">
+                                                <input type="range" id="cpu-warning-slider" min="50" max="100"
+                                                    value="75">
+                                                <input type="number" id="cpu-warning-input" min="50" max="100"
+                                                    value="75">
                                                 <span class="threshold-color warning"></span>
                                             </div>
                                             <small>Alert when CPU usage exceeds this level</small>
@@ -1478,8 +1525,10 @@
                                         <div class="threshold-item">
                                             <label>Critical Level (%)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="cpu-critical-slider" min="60" max="100" value="90">
-                                                <input type="number" id="cpu-critical-input" min="60" max="100" value="90">
+                                                <input type="range" id="cpu-critical-slider" min="60" max="100"
+                                                    value="90">
+                                                <input type="number" id="cpu-critical-input" min="60" max="100"
+                                                    value="90">
                                                 <span class="threshold-color critical"></span>
                                             </div>
                                             <small>Critical alert when CPU usage exceeds this level</small>
@@ -1494,8 +1543,10 @@
                                         <div class="threshold-item">
                                             <label>Warning Level (%)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="memory-warning-slider" min="50" max="100" value="80">
-                                                <input type="number" id="memory-warning-input" min="50" max="100" value="80">
+                                                <input type="range" id="memory-warning-slider" min="50" max="100"
+                                                    value="80">
+                                                <input type="number" id="memory-warning-input" min="50" max="100"
+                                                    value="80">
                                                 <span class="threshold-color warning"></span>
                                             </div>
                                             <small>Alert when memory usage exceeds this level</small>
@@ -1503,8 +1554,10 @@
                                         <div class="threshold-item">
                                             <label>Critical Level (%)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="memory-critical-slider" min="60" max="100" value="95">
-                                                <input type="number" id="memory-critical-input" min="60" max="100" value="95">
+                                                <input type="range" id="memory-critical-slider" min="60" max="100"
+                                                    value="95">
+                                                <input type="number" id="memory-critical-input" min="60" max="100"
+                                                    value="95">
                                                 <span class="threshold-color critical"></span>
                                             </div>
                                             <small>Critical alert when memory usage exceeds this level</small>
@@ -1519,8 +1572,10 @@
                                         <div class="threshold-item">
                                             <label>Warning Level (%)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="disk-warning-slider" min="50" max="100" value="85">
-                                                <input type="number" id="disk-warning-input" min="50" max="100" value="85">
+                                                <input type="range" id="disk-warning-slider" min="50" max="100"
+                                                    value="85">
+                                                <input type="number" id="disk-warning-input" min="50" max="100"
+                                                    value="85">
                                                 <span class="threshold-color warning"></span>
                                             </div>
                                             <small>Alert when disk usage exceeds this level</small>
@@ -1528,8 +1583,10 @@
                                         <div class="threshold-item">
                                             <label>Critical Level (%)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="disk-critical-slider" min="60" max="100" value="95">
-                                                <input type="number" id="disk-critical-input" min="60" max="100" value="95">
+                                                <input type="range" id="disk-critical-slider" min="60" max="100"
+                                                    value="95">
+                                                <input type="number" id="disk-critical-input" min="60" max="100"
+                                                    value="95">
                                                 <span class="threshold-color critical"></span>
                                             </div>
                                             <small>Critical alert when disk usage exceeds this level</small>
@@ -1544,8 +1601,10 @@
                                         <div class="threshold-item">
                                             <label>Warning Level (°C)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="temperature-warning-slider" min="60" max="100" value="75">
-                                                <input type="number" id="temperature-warning-input" min="60" max="100" value="75">
+                                                <input type="range" id="temperature-warning-slider" min="60" max="100"
+                                                    value="75">
+                                                <input type="number" id="temperature-warning-input" min="60" max="100"
+                                                    value="75">
                                                 <span class="threshold-color warning"></span>
                                             </div>
                                             <small>Alert when system temperature exceeds this level</small>
@@ -1553,8 +1612,10 @@
                                         <div class="threshold-item">
                                             <label>Critical Level (°C)</label>
                                             <div class="threshold-input-group">
-                                                <input type="range" id="temperature-critical-slider" min="70" max="100" value="85">
-                                                <input type="number" id="temperature-critical-input" min="70" max="100" value="85">
+                                                <input type="range" id="temperature-critical-slider" min="70" max="100"
+                                                    value="85">
+                                                <input type="number" id="temperature-critical-input" min="70" max="100"
+                                                    value="85">
                                                 <span class="threshold-color critical"></span>
                                             </div>
                                             <small>Critical alert when system temperature exceeds this level</small>
@@ -1569,7 +1630,8 @@
                                 <div class="config-grid">
                                     <div class="config-item">
                                         <label for="monitoring-interval-config">Check Interval (seconds)</label>
-                                        <input type="number" id="monitoring-interval-config" min="5" max="300" value="30">
+                                        <input type="number" id="monitoring-interval-config" min="5" max="300"
+                                            value="30">
                                         <small>How often to check system metrics (5-300 seconds)</small>
                                     </div>
                                     <div class="config-item">
@@ -1599,7 +1661,7 @@
                                 <div class="app-monitor-list" id="app-monitor-list">
                                     <!-- Dynamic application entries will be added here -->
                                 </div>
-                                
+
                                 <div class="app-monitor-add-section">
                                     <h4><i class="fas fa-plus"></i> Add Application to Monitor</h4>
                                     <div class="config-grid">
@@ -1638,12 +1700,13 @@
                             <!-- Network Ping Monitoring -->
                             <div class="network-ping-section">
                                 <h3><i class="fas fa-network-wired"></i> Network Ping Monitoring</h3>
-                                <p>Monitor network connectivity by pinging specific IP addresses on a regular interval. Useful for tracking internet connectivity and device availability.</p>
-                                
+                                <p>Monitor network connectivity by pinging specific IP addresses on a regular interval.
+                                    Useful for tracking internet connectivity and device availability.</p>
+
                                 <div class="ping-monitor-list" id="ping-monitor-list">
                                     <!-- Dynamic ping entries will be added here -->
                                 </div>
-                                
+
                                 <div class="ping-monitor-add-section">
                                     <h4><i class="fas fa-plus"></i> Add IP Address to Monitor</h4>
                                     <div class="config-grid">
@@ -1688,7 +1751,7 @@
                                         <i class="fas fa-plus"></i> Add Ping Monitor
                                     </button>
                                 </div>
-                                
+
                                 <div class="ping-log-section">
                                     <h4><i class="fas fa-file-alt"></i> Ping Log Settings</h4>
                                     <div class="config-grid">
@@ -1699,7 +1762,8 @@
                                         </div>
                                         <div class="config-item">
                                             <label for="ping-log-location">Log Directory</label>
-                                            <input type="text" id="ping-log-location" value="~/logs/ping-monitoring" readonly>
+                                            <input type="text" id="ping-log-location" value="~/logs/ping-monitoring"
+                                                readonly>
                                             <small>Directory where ping logs are stored</small>
                                         </div>
                                     </div>
@@ -1746,11 +1810,12 @@
                                         <i class="fas fa-sync-alt"></i> Refresh
                                     </button>
                                 </div>
-                                
+
                                 <div class="suggestions-grid" id="launch-agent-suggestions">
                                     <div class="suggestion-placeholder">
                                         <i class="fas fa-search"></i>
-                                        <p>Click "Refresh" to scan for applications that could benefit from launch agent protection</p>
+                                        <p>Click "Refresh" to scan for applications that could benefit from launch agent
+                                            protection</p>
                                     </div>
                                 </div>
                             </div>
@@ -1762,7 +1827,8 @@
                                     <small>JSON format - edit with caution</small>
                                 </div>
                                 <div class="config-editor-container">
-                                    <textarea id="monitoring-config-editor" class="config-editor" rows="12" placeholder="Configuration will load here..."></textarea>
+                                    <textarea id="monitoring-config-editor" class="config-editor" rows="12"
+                                        placeholder="Configuration will load here..."></textarea>
                                 </div>
                             </div>
 
@@ -1790,7 +1856,8 @@
                             <div class="config-status" id="monitoring-status" style="display: none;">
                                 <div class="config-status-content">
                                     <i class="fas fa-info-circle"></i>
-                                    <span id="monitoring-status-text">Monitoring configuration updated successfully</span>
+                                    <span id="monitoring-status-text">Monitoring configuration updated
+                                        successfully</span>
                                 </div>
                             </div>
                         </section>
@@ -1800,26 +1867,32 @@
                     <div id="installation-settings-tab" class="tab-pane">
                         <section class="card">
                             <h2><i class="fas fa-microchip"></i> Installation Settings</h2>
-                            <p>Configure installation-specific parameters and thresholds for your creative technology setup</p>
+                            <p>Configure installation-specific parameters and thresholds for your creative technology
+                                setup</p>
                             <div class="info-banner">
                                 <i class="fas fa-info-circle"></i>
-                                <strong>Demo Mode:</strong> These settings demonstrate API capabilities for real installations with cameras, sensors, and audio equipment. Values can be configured and saved but won't control actual hardware in this demo.
+                                <strong>Demo Mode:</strong> These settings demonstrate API capabilities for real
+                                installations with cameras, sensors, and audio equipment. Values can be configured and
+                                saved but won't control actual hardware in this demo.
                             </div>
-                            
+
                             <!-- Camera Settings Section -->
                             <div class="installation-section">
-                                <h3><i class="fas fa-camera"></i> Camera Settings <span class="example-label">(Example)</span></h3>
+                                <h3><i class="fas fa-camera"></i> Camera Settings <span
+                                        class="example-label">(Example)</span></h3>
                                 <div class="settings-grid">
                                     <div class="setting-item">
                                         <label for="camera-threshold">Motion Detection Threshold</label>
                                         <div class="threshold-input-group">
-                                            <input type="range" id="camera-threshold-slider" min="0" max="100" value="25">
-                                            <input type="number" id="camera-threshold-input" min="0" max="100" value="25">
+                                            <input type="range" id="camera-threshold-slider" min="0" max="100"
+                                                value="25">
+                                            <input type="number" id="camera-threshold-input" min="0" max="100"
+                                                value="25">
                                             <span class="unit">%</span>
                                         </div>
                                         <small>Sensitivity level for motion detection triggers</small>
                                     </div>
-                                    
+
                                     <div class="setting-item">
                                         <label for="camera-timeout">Motion Timeout</label>
                                         <div class="input-group">
@@ -1828,7 +1901,7 @@
                                         </div>
                                         <small>Time to wait before considering motion stopped</small>
                                     </div>
-                                    
+
                                     <div class="setting-item">
                                         <label for="camera-fps">Frame Rate</label>
                                         <select id="camera-fps">
@@ -1840,30 +1913,34 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Capacitive Sensing Section -->
                             <div class="installation-section">
-                                <h3><i class="fas fa-hand-paper"></i> Capacitive Sensing <span class="example-label">(Example)</span></h3>
+                                <h3><i class="fas fa-hand-paper"></i> Capacitive Sensing <span
+                                        class="example-label">(Example)</span></h3>
                                 <div class="settings-grid">
                                     <div class="setting-item">
                                         <label for="capacitive-threshold">Touch Sensitivity</label>
                                         <div class="threshold-input-group">
-                                            <input type="range" id="capacitive-threshold-slider" min="0" max="100" value="50">
-                                            <input type="number" id="capacitive-threshold-input" min="0" max="100" value="50">
+                                            <input type="range" id="capacitive-threshold-slider" min="0" max="100"
+                                                value="50">
+                                            <input type="number" id="capacitive-threshold-input" min="0" max="100"
+                                                value="50">
                                             <span class="unit">%</span>
                                         </div>
                                         <small>Sensitivity level for capacitive touch detection</small>
                                     </div>
-                                    
+
                                     <div class="setting-item">
                                         <label for="capacitive-debounce">Debounce Time</label>
                                         <div class="input-group">
-                                            <input type="number" id="capacitive-debounce" min="10" max="1000" value="100">
+                                            <input type="number" id="capacitive-debounce" min="10" max="1000"
+                                                value="100">
                                             <span class="unit">ms</span>
                                         </div>
                                         <small>Minimum time between touch events</small>
                                     </div>
-                                    
+
                                     <div class="setting-item">
                                         <label for="capacitive-pins">Active Pins</label>
                                         <div class="pin-selector">
@@ -1884,21 +1961,24 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Audio Settings Section -->
                             <div class="installation-section">
-                                <h3><i class="fas fa-volume-up"></i> Audio Settings <span class="example-label">(Example)</span></h3>
+                                <h3><i class="fas fa-volume-up"></i> Audio Settings <span
+                                        class="example-label">(Example)</span></h3>
                                 <div class="settings-grid">
                                     <div class="setting-item">
                                         <label for="audio-threshold">Audio Trigger Level</label>
                                         <div class="threshold-input-group">
-                                            <input type="range" id="audio-threshold-slider" min="0" max="100" value="40">
-                                            <input type="number" id="audio-threshold-input" min="0" max="100" value="40">
+                                            <input type="range" id="audio-threshold-slider" min="0" max="100"
+                                                value="40">
+                                            <input type="number" id="audio-threshold-input" min="0" max="100"
+                                                value="40">
                                             <span class="unit">dB</span>
                                         </div>
                                         <small>Minimum audio level to trigger events</small>
                                     </div>
-                                    
+
                                     <div class="setting-item">
                                         <label for="audio-sample-rate">Sample Rate</label>
                                         <select id="audio-sample-rate">
@@ -1910,7 +1990,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Custom Parameters Section -->
                             <div class="installation-section">
                                 <h3><i class="fas fa-wrench"></i> Custom Parameters</h3>
@@ -1923,7 +2003,7 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <!-- Installation Profiles -->
                             <div class="installation-section">
                                 <h3><i class="fas fa-save"></i> Installation Profiles</h3>
@@ -1942,7 +2022,7 @@
                                             <i class="fas fa-download"></i> Load
                                         </button>
                                     </div>
-                                    
+
                                     <div class="profile-actions">
                                         <input type="text" id="profile-name" placeholder="Profile name...">
                                         <button id="save-profile" class="btn btn-success">
@@ -1958,16 +2038,19 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Apply Settings -->
                             <div class="action-buttons">
-                                <button id="test-installation-settings" class="btn btn-secondary" title="Validate the current installation settings without applying them">
+                                <button id="test-installation-settings" class="btn btn-secondary"
+                                    title="Validate the current installation settings without applying them">
                                     <i class="fas fa-play-circle"></i> Test Settings
                                 </button>
-                                <button id="reset-installation-settings" class="btn btn-warning" title="Reset all installation settings to their default values">
+                                <button id="reset-installation-settings" class="btn btn-warning"
+                                    title="Reset all installation settings to their default values">
                                     <i class="fas fa-undo"></i> Reset to Defaults
                                 </button>
-                                <button id="apply-installation-settings" class="btn btn-success" title="Save these installation settings to configuration files">
+                                <button id="apply-installation-settings" class="btn btn-success"
+                                    title="Save these installation settings to configuration files">
                                     <i class="fas fa-check"></i> Apply Settings
                                 </button>
                             </div>
@@ -1990,8 +2073,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-        </main>
+    </div>
+    </main>
     </div>
 
     <!-- Loading Overlay -->
@@ -2007,4 +2090,5 @@
 
     <script type="module" src="js/main.js"></script>
 </body>
+
 </html>

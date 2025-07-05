@@ -13,3 +13,4 @@ installation-up-4evr-debug.log
 # Ignore npm lock files (optional - you can commit these if you want)
 package-lock.json
 backend/package-lock.json
+backend/server.log
