@@ -17,10 +17,11 @@ async function loadSystemPreferences() {
             apiCall('/api/system/settings/status')
         ]);
 
-        const statusLookup = (statusData.data || statusData).reduce((acc, status) => {
+        const statusLookup = statusData.reduce((acc, status) => {
             acc[status.setting] = status;
             return acc;
         }, {});
+
 
         const requiredContainer = document.getElementById('required-settings');
         const optionalContainer = document.getElementById('optional-settings');

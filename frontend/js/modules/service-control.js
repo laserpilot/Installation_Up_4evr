@@ -26,7 +26,8 @@ export function initServiceControl() {
 
 async function updateServiceStatus() {
     try {
-        const status = await apiCall('/api/system/status');
+        const response = await apiCall('/api/system/status');
+        const status = response.data || response;
         updateServiceStatusDisplay(status);
     } catch (error) {
         console.error('Failed to fetch service status:', error);

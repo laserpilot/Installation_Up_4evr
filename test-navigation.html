@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tab Navigation Test</title>
+    <script>
+        function testNavigation() {
+            console.log('=== TAB NAVIGATION DEBUG TEST ===');
+            
+            // Check if main elements exist
+            const buttons = document.querySelectorAll('.sidebar-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            console.log(`Found ${buttons.length} sidebar buttons`);
+            console.log(`Found ${tabPanes.length} tab panes`);
+            
+            // Check if app exists
+            if (window.app) {
+                console.log('✅ window.app exists:', typeof window.app);
+                console.log('✅ navigateToTab method:', typeof window.app.navigateToTab);
+            } else {
+                console.log('❌ window.app not found');
+            }
+            
+            // Check global navigateToTab
+            if (window.navigateToTab) {
+                console.log('✅ Global navigateToTab exists');
+            } else {
+                console.log('❌ Global navigateToTab not found');
+            }
+            
+            // Test clicking first button
+            if (buttons.length > 0) {
+                const firstButton = buttons[0];
+                const dataTab = firstButton.getAttribute('data-tab');
+                console.log(`First button data-tab: ${dataTab}`);
+                
+                // Check if button has event listeners
+                console.log('Clicking first button...');
+                firstButton.click();
+                
+                setTimeout(() => {
+                    const activeButtons = document.querySelectorAll('.sidebar-button.active');
+                    const activeTabPanes = document.querySelectorAll('.tab-pane.active');
+                    console.log(`Active buttons: ${activeButtons.length}`);
+                    console.log(`Active tab panes: ${activeTabPanes.length}`);
+                }, 100);
+            }
+        }
+        
+        // Run test after page loads
+        setTimeout(testNavigation, 2000);
+    </script>
+</head>
+<body>
+    <h1>Tab Navigation Test</h1>
+    <p>Check browser console for debug output. This page will automatically test navigation after 2 seconds.</p>
+    
+    <h2>Manual Test:</h2>
+    <button onclick="testNavigation()">Run Navigation Test</button>
+    
+    <h2>Direct Navigation Test:</h2>
+    <button onclick="if(window.navigateToTab) window.navigateToTab('system-prefs'); else console.log('navigateToTab not available')">Navigate to System Prefs</button>
+    
+    <p><a href="/" target="_blank">Open Main App in New Tab</a></p>
+</body>
+</html>

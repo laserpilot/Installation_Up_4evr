@@ -19,6 +19,91 @@ import { initServiceControl } from './modules/service-control.js';
 import { initConfiguration } from './modules/configuration.js';
 import { initSetupWizard } from './modules/setup-wizard.js';
 import { initDashboard } from './modules/dashboard.js';
+import { apiCall } from './utils/api.js';
+
+// Header status indicator management
+let headerStatusInterval = null;
+
+async function updateHeaderStatusIndicators() {
+    await Promise.all([
+        updateServerStatus(),
+        updateSipStatus()
+    ]);
+}
+
+async function updateServerStatus() {
+    const serverStatusElement = document.getElementById('server-status');
+    if (!serverStatusElement) return;
+    
+    try {
+        const response = await apiCall('/api/system/status');
+        const status = response.data || response;
+        
+        // Clear existing status classes
+        serverStatusElement.className = 'status-indicator';
+        
+        if (status.status === 'running') {
+            serverStatusElement.classList.add('online');
+            serverStatusElement.querySelector('i').style.color = '#28a745'; // Green
+        } else {
+            serverStatusElement.classList.add('offline');
+            serverStatusElement.querySelector('i').style.color = '#dc3545'; // Red
+        }
+    } catch (error) {
+        // Server is not responding
+        serverStatusElement.className = 'status-indicator offline';
+        serverStatusElement.querySelector('i').style.color = '#dc3545'; // Red
+    }
+}
+
+async function updateSipStatus() {
+    const sipStatusElement = document.getElementById('sip-status');
+    if (!sipStatusElement) return;
+    
+    try {
+        // Check SIP status - this is usually a system command check
+        const response = await apiCall('/api/system/sip-status');
+        const sipData = response.data || response;
+        
+        // Clear existing status classes
+        sipStatusElement.className = 'status-indicator';
+        
+        if (sipData.enabled === false) {
+            // SIP disabled (good for our use case)
+            sipStatusElement.classList.add('online');
+            sipStatusElement.querySelector('i').style.color = '#28a745'; // Green
+            sipStatusElement.title = 'SIP Disabled';
+        } else {
+            // SIP enabled (might restrict functionality)
+            sipStatusElement.classList.add('warning');
+            sipStatusElement.querySelector('i').style.color = '#ffc107'; // Yellow
+            sipStatusElement.title = 'SIP Enabled - May restrict functionality';
+        }
+    } catch (error) {
+        // Default to unknown status
+        sipStatusElement.className = 'status-indicator';
+        sipStatusElement.querySelector('i').style.color = '#6c757d'; // Gray
+        sipStatusElement.title = 'SIP Status Unknown';
+    }
+}
+
+function startHeaderStatusUpdates() {
+    // Update immediately
+    updateHeaderStatusIndicators();
+    
+    // Update every 30 seconds
+    if (headerStatusInterval) {
+        clearInterval(headerStatusInterval);
+    }
+    headerStatusInterval = setInterval(updateHeaderStatusIndicators, 30000);
+}
+
+function stopHeaderStatusUpdates() {
+    if (headerStatusInterval) {
+        clearInterval(headerStatusInterval);
+        headerStatusInterval = null;
+    }
+}
 
 function initMonitoringTab() {
     console.log('[INIT] Initializing Monitoring tab...');
@@ -413,6 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         window.app = new InstallationUp4evr();
         console.log('[INIT] ✅ window.app created successfully');
+        
+        // Start header status indicator updates
+        startHeaderStatusUpdates();
+        console.log('[INIT] ✅ Header status indicators started');
         
         // Dispatch app ready event for any queued navigations
         setTimeout(() => {
