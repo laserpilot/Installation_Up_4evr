@@ -27,7 +27,7 @@ export function initNotifications() {
 }
 
 function setupChannelToggles() {
-    const channels = ['slack', 'discord', 'webhook'];
+    const channels = ['slack', 'discord', 'webhook', 'email'];
     
     channels.forEach(channel => {
         const toggle = document.getElementById(`${channel}-enabled`);
@@ -40,6 +40,12 @@ function setupChannelToggles() {
             // Remove any existing event listeners by cloning the element
             const newToggle = toggle.cloneNode(true);
             toggle.parentNode.replaceChild(newToggle, toggle);
+
+            // FIX: Find the visual slider and link its click to the actual checkbox
+            const slider = channelElement ? channelElement.querySelector('.toggle-slider') : null;
+            if (slider) {
+                slider.addEventListener('click', () => newToggle.click());
+            }
             
             // Add event listener to the new element
             newToggle.addEventListener('change', (e) => {
