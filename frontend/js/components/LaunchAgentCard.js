@@ -20,13 +20,21 @@ function getAgentIcon(agent) {
 export function createAgentCard(agent, status) {
     const statusClass = status.isRunning ? 'status-running' : 'status-stopped';
     const icon = getAgentIcon(agent);
+    
+    // Detect if this agent was created by our tool
+    const isToolCreated = agent.label.includes('installation-up-4evr') || 
+                         agent.plistPath.includes('installation-up-4evr') ||
+                         (agent.webAppInfo && agent.webAppInfo.isWebApp) ||
+                         agent.createdByTool === true;
+    
+    const toolBadge = isToolCreated ? '<span class="tool-created-badge"><i class="fas fa-rocket"></i> Tool Created</span>' : '';
 
     return `
-        <div class="agent-card ${statusClass}" data-label="${agent.label}">
+        <div class="agent-card ${statusClass} ${isToolCreated ? 'tool-created' : ''}" data-label="${agent.label}">
             <div class="agent-header">
                 <i class="fas ${icon} agent-icon"></i>
                 <div class="agent-title">
-                    <h4>${agent.label}</h4>
+                    <h4>${agent.label} ${toolBadge}</h4>
                     <p>${agent.plistPath}</p>
                 </div>
             </div>
