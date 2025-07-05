@@ -19,7 +19,10 @@ export function initNotifications() {
     // Setup form interactions
     setupFormInteractions();
     
-    // Load current configuration and setup toggles
+    // Setup toggles first (before config load)
+    setupChannelToggles();
+    
+    // Load current configuration
     loadMainNotificationConfig();
 }
 
@@ -32,11 +35,17 @@ function setupChannelToggles() {
         const channelElement = document.querySelector(`.notification-channel[data-channel="${channel}"]`);
         
         if (toggle && config) {
-            // Note: Can't easily remove existing listeners, but this shouldn't cause issues
+            console.log(`[NOTIFICATIONS] Setting up ${channel} toggle`);
             
-            // Add event listener
-            toggle.addEventListener('change', (e) => {
+            // Remove any existing event listeners by cloning the element
+            const newToggle = toggle.cloneNode(true);
+            toggle.parentNode.replaceChild(newToggle, toggle);
+            
+            // Add event listener to the new element
+            newToggle.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
+                console.log(`[NOTIFICATIONS] ${channel} toggle changed:`, isChecked);
+                
                 config.style.display = isChecked ? 'block' : 'none';
                 
                 // Add/remove .enabled class for CSS styling
@@ -48,11 +57,11 @@ function setupChannelToggles() {
                     }
                 }
                 
-                console.log(`[NOTIFICATIONS] ${channel} toggle:`, isChecked ? 'shown' : 'hidden');
+                console.log(`[NOTIFICATIONS] ${channel} config visibility:`, isChecked ? 'shown' : 'hidden');
             });
             
             // Set initial state based on current checkbox value
-            const isChecked = toggle.checked;
+            const isChecked = newToggle.checked;
             config.style.display = isChecked ? 'block' : 'none';
             
             // Set initial .enabled class state
@@ -65,6 +74,8 @@ function setupChannelToggles() {
             }
             
             console.log(`[NOTIFICATIONS] ${channel} initial state:`, isChecked ? 'shown' : 'hidden');
+        } else {
+            console.warn(`[NOTIFICATIONS] Could not find elements for ${channel}:`, { toggle: !!toggle, config: !!config });
         }
     });
 }
@@ -181,9 +192,6 @@ function populateNotificationConfig(config) {
     setValue('webhook-method', config.webhook?.method || 'POST');
     setValue('webhook-format', config.webhook?.format || 'json');
     
-    // Setup toggle events and ensure visibility is correct
-    setupChannelToggles();
-    
     // Update visibility and enabled class based on toggle states after config is loaded
     const channels = ['slack', 'discord', 'webhook'];
     channels.forEach(channel => {
@@ -204,7 +212,7 @@ function populateNotificationConfig(config) {
                 }
             }
             
-            console.log(`[NOTIFICATIONS] ${channel} config visibility:`, isChecked ? 'shown' : 'hidden');
+            console.log(`[NOTIFICATIONS] ${channel} config loaded with visibility:`, isChecked ? 'shown' : 'hidden');
         }
     });
 }

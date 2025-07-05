@@ -805,6 +805,38 @@ class MacOSProcessManager extends ProcessManagerInterface {
             };
         }
     }
+
+    /**
+     * Extract web app information from launch agent plist content
+     * This looks for Chrome/browser-specific launch agent patterns
+     */
+    extractWebAppInfo(plistContent) {
+        try {
+            // Check if this is a Chrome kiosk mode or browser-based launch agent
+            if (plistContent.includes('google-chrome') || 
+                plistContent.includes('Google Chrome') ||
+                plistContent.includes('--kiosk') ||
+                plistContent.includes('--app=') ||
+                plistContent.includes('browser')) {
+                
+                // Extract URL if present
+                const urlMatch = plistContent.match(/--app=(https?:\/\/[^\s<]+)/i);
+                const kioskMatch = plistContent.includes('--kiosk');
+                
+                return {
+                    isWebApp: true,
+                    url: urlMatch ? urlMatch[1] : null,
+                    isKioskMode: kioskMatch,
+                    browser: plistContent.includes('google-chrome') ? 'chrome' : 'browser'
+                };
+            }
+            
+            return null; // Not a web app launch agent
+        } catch (error) {
+            console.warn('Error extracting web app info:', error.message);
+            return null;
+        }
+    }
 }
 
 module.exports = MacOSProcessManager;
