@@ -194,7 +194,7 @@ class MacOSSystemManager extends SystemManagerInterface {
                 description: "⚠️ DANGER: Prevent 'Application Unexpectedly Quit' dialogs (requires SIP disabled)",
                 command: 'sudo chmod 000 "/System/Library/CoreServices/Problem Reporter.app"',
                 revert: 'sudo chmod 755 "/System/Library/CoreServices/Problem Reporter.app"',
-                verify: 'ls -la "/System/Library/CoreServices/Problem Reporter.app" | awk \'{print $1}\'',
+                verify: 'ls -ld "/System/Library/CoreServices/Problem Reporter.app" | awk \'{print $1}\'',
                 required: false,
                 category: 'danger'
             },
@@ -315,6 +315,14 @@ class MacOSSystemManager extends SystemManagerInterface {
             try {
                 const { stdout } = await execAsync(setting.verify);
                 const status = this.evaluateSettingStatus(key, stdout);
+                
+                // Debug logging for problematic settings
+                if (key === 'enableAutomaticLogin' || key === 'disableCrashReporter') {
+                    console.log(`[DEBUG] Setting: ${key}`);
+                    console.log(`[DEBUG] Raw output: "${stdout}"`);
+                    console.log(`[DEBUG] Trimmed output: "${stdout.trim()}"`);
+                    console.log(`[DEBUG] Status applied: ${status.applied}`);
+                }
                 
                 results.push({
                     setting: key,
@@ -586,6 +594,15 @@ echo "Review the output above for any errors."
             case 'disableGatekeeper':
             case 'allowAppsAnywhere':
                 return { applied: output.includes('disabled') };
+            
+            case 'enableAutomaticLogin':
+                // Check if automatic login is actually enabled (contains username, not "Not set")
+                return { applied: !output.includes('Not set') && output.trim().length > 0 };
+            
+            case 'disableCrashReporter':
+                // Check if Problem Reporter app has no permissions (000 means disabled)
+                // Output should be like "d---------" for disabled or "drwxr-xr-x" for enabled
+                return { applied: output.trim().startsWith('d---------') };
             
             default:
                 // Generic check - if command succeeded, consider it applied
