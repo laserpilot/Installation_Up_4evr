@@ -42,22 +42,26 @@
                         <h3><i class="fas fa-desktop"></i> Installation Up 4evr</h3>
                     </div>
 
-                    <!-- CORE Section -->
+                    <!-- Primary Navigation -->
                     <div class="sidebar-section">
-                        <h4 class="sidebar-section-title">
-                            <i class="fas fa-star"></i> CORE
-                        </h4>
                         <button class="sidebar-button primary-nav active" data-tab="dashboard">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </button>
                         <button class="sidebar-button primary-nav" data-tab="setup-wizard">
                             <i class="fas fa-magic"></i> Setup Wizard
                         </button>
+                    </div>
+
+                    <!-- Advanced Tools Section -->
+                    <div class="sidebar-section">
+                        <h4 class="sidebar-section-title">
+                            <i class="fas fa-tools"></i> Advanced Tools
+                        </h4>
                         <button class="sidebar-button" data-tab="system">
                             <i class="fas fa-cog"></i> System
                         </button>
-                        <button class="sidebar-button macos-only" data-tab="applications">
-                            <i class="fas fa-rocket"></i> Applications
+                        <button class="sidebar-button macos-only" data-tab="launch-agents">
+                            <i class="fas fa-rocket"></i> Launch Agents
                         </button>
                         <button class="sidebar-button windows-only" data-tab="services" style="display:none;">
                             <i class="fas fa-cogs"></i> Services
@@ -67,16 +71,16 @@
                         </button>
                     </div>
 
-                    <!-- SETTINGS Section -->
+                    <!-- Settings Section -->
                     <div class="sidebar-section">
                         <h4 class="sidebar-section-title">
-                            <i class="fas fa-sliders-h"></i> SETTINGS
+                            <i class="fas fa-sliders-h"></i> Settings
                         </h4>
-                        <button class="sidebar-button" data-tab="backend-service">
-                            <i class="fas fa-server"></i> Backend Service
+                        <button class="sidebar-button" data-tab="service-control">
+                            <i class="fas fa-server"></i> Service Control
                         </button>
-                        <button class="sidebar-button" data-tab="global">
-                            <i class="fas fa-sliders-h"></i> Global
+                        <button class="sidebar-button" data-tab="configuration">
+                            <i class="fas fa-sliders-h"></i> Configuration
                         </button>
                         <button class="sidebar-button" data-tab="notifications">
                             <i class="fas fa-bell"></i> Notifications
@@ -740,7 +744,7 @@
                     </div>
 
                     <!-- Launch Agents Tab -->
-                    <div id="applications-tab" class="tab-pane macos-only">
+                    <div id="launch-agents-tab" class="tab-pane macos-only">
                         <section class="card">
                             <h2 id="launch-agents-title"><i class="fas fa-rocket"></i> Launch Agents</h2>
                             <p>Create launch agents to keep your apps and web applications running forever</p>
@@ -1390,7 +1394,7 @@
                     </div>
 
                     <!-- Service Control Tab -->
-                    <div id="backend-service-tab" class="tab-pane">
+                    <div id="service-control-tab" class="tab-pane">
                         <section class="card">
                             <h2><i class="fas fa-server"></i> Backend Service Control</h2>
                             <p>Manage the Installation Up 4evr backend service</p>
@@ -1486,7 +1490,7 @@
                     </div>
 
                     <!-- Configuration Management Tab -->
-                    <div id="global-tab" class="tab-pane">
+                    <div id="configuration-tab" class="tab-pane">
                         <section class="card">
                             <h2><i class="fas fa-sliders-h"></i> Configuration Management</h2>
                             <p>Centralized configuration for all automation settings</p>
@@ -2012,6 +2016,198 @@
                     </div>
 
                     <!-- Installation Settings Tab -->
+                    <div id="installation-settings-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-microchip"></i> Installation Settings</h2>
+                            <p>Configure installation-specific parameters and thresholds for your creative technology
+                                setup</p>
+                            <div class="info-banner">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Demo Mode:</strong> These settings demonstrate API capabilities for real
+                                installations with cameras, sensors, and audio equipment. Values can be configured and
+                                saved but won't control actual hardware in this demo.
+                            </div>
+
+                            <!-- Camera Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-camera"></i> Camera Settings <span
+                                        class="example-label">(Example)</span></h3>
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="camera-threshold">Motion Detection Threshold</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="camera-threshold-slider" min="0" max="100"
+                                                value="25">
+                                            <input type="number" id="camera-threshold-input" min="0" max="100"
+                                                value="25">
+                                            <span class="unit">%</span>
+                                        </div>
+                                        <small>Sensitivity level for motion detection triggers</small>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <label for="camera-timeout">Motion Timeout</label>
+                                        <div class="input-group">
+                                            <input type="number" id="camera-timeout" min="1" max="3600" value="30">
+                                            <span class="unit">seconds</span>
+                                        </div>
+                                        <small>Time to wait before considering motion stopped</small>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <label for="camera-fps">Frame Rate</label>
+                                        <select id="camera-fps">
+                                            <option value="15">15 FPS</option>
+                                            <option value="30" selected>30 FPS</option>
+                                            <option value="60">60 FPS</option>
+                                        </select>
+                                        <small>Camera capture frame rate</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Capacitive Sensing Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-hand-paper"></i> Capacitive Sensing <span
+                                        class="example-label">(Example)</span></h3>
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="capacitive-threshold">Touch Sensitivity</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="capacitive-threshold-slider" min="0" max="100"
+                                                value="50">
+                                            <input type="number" id="capacitive-threshold-input" min="0" max="100"
+                                                value="50">
+                                            <span class="unit">%</span>
+                                        </div>
+                                        <small>Sensitivity level for capacitive touch detection</small>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <label for="capacitive-debounce">Debounce Time</label>
+                                        <div class="input-group">
+                                            <input type="number" id="capacitive-debounce" min="10" max="1000"
+                                                value="100">
+                                            <span class="unit">ms</span>
+                                        </div>
+                                        <small>Minimum time between touch events</small>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <label for="capacitive-pins">Active Pins</label>
+                                        <div class="pin-selector">
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="0" checked> Pin 0
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="1" checked> Pin 1
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="2"> Pin 2
+                                            </label>
+                                            <label class="checkbox-item">
+                                                <input type="checkbox" value="3"> Pin 3
+                                            </label>
+                                        </div>
+                                        <small>Select which capacitive pins to monitor</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Audio Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-volume-up"></i> Audio Settings <span
+                                        class="example-label">(Example)</span></h3>
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="audio-threshold">Audio Trigger Level</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="audio-threshold-slider" min="0" max="100"
+                                                value="40">
+                                            <input type="number" id="audio-threshold-input" min="0" max="100"
+                                                value="40">
+                                            <span class="unit">dB</span>
+                                        </div>
+                                        <small>Minimum audio level to trigger events</small>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <label for="audio-sample-rate">Sample Rate</label>
+                                        <select id="audio-sample-rate">
+                                            <option value="22050">22.05 kHz</option>
+                                            <option value="44100" selected>44.1 kHz</option>
+                                            <option value="48000">48 kHz</option>
+                                        </select>
+                                        <small>Audio input sample rate</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Parameters Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-wrench"></i> Custom Parameters</h3>
+                                <div class="custom-params-container">
+                                    <div id="custom-params-list">
+                                        <!-- Custom parameters populated by JavaScript -->
+                                    </div>
+                                    <button id="add-custom-param" class="btn btn-secondary">
+                                        <i class="fas fa-plus"></i> Add Custom Parameter
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Installation Profiles -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-save"></i> Installation Profiles</h3>
+                                <div class="profile-controls">
+                                    <div class="profile-selector">
+                                        <label for="installation-profile">Load Profile:</label>
+                                        <select id="installation-profile">
+                                            <option value="">-- Select Profile --</option>
+                                            <option value="interactive-wall">Interactive Wall</option>
+                                            <option value="motion-tracking">Motion Tracking Setup</option>
+                                            <option value="audio-reactive">Audio Reactive Installation</option>
+                                            <option value="touch-interface">Touch Interface</option>
+                                            <option value="sensor-array">Sensor Array Setup</option>
+                                        </select>
+                                        <button id="load-profile" class="btn btn-secondary">
+                                            <i class="fas fa-download"></i> Load
+                                        </button>
+                                    </div>
+
+                                    <div class="profile-actions">
+                                        <input type="text" id="profile-name" placeholder="Profile name...">
+                                        <button id="save-profile" class="btn btn-success">
+                                            <i class="fas fa-save"></i> Save Profile
+                                        </button>
+                                        <button id="export-profile" class="btn btn-primary">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                        <input type="file" id="import-profile" accept=".json" style="display: none;">
+                                        <button id="import-profile-btn" class="btn btn-secondary">
+                                            <i class="fas fa-upload"></i> Import
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Apply Settings -->
+                            <div class="action-buttons">
+                                <button id="test-installation-settings" class="btn btn-secondary"
+                                    title="Validate the current installation settings without applying them">
+                                    <i class="fas fa-play-circle"></i> Test Settings
+                                </button>
+                                <button id="reset-installation-settings" class="btn btn-warning"
+                                    title="Reset all installation settings to their default values">
+                                    <i class="fas fa-undo"></i> Reset to Defaults
+                                </button>
+                                <button id="apply-installation-settings" class="btn btn-success"
+                                    title="Save these installation settings to configuration files">
+                                    <i class="fas fa-check"></i> Apply Settings
+                                </button>
+                            </div>
+                        </section>
+                    </div>
 
                     <!-- Results Section (moved inside content area) -->
                     <div id="results-section" class="tab-pane results-section" style="display: none;">

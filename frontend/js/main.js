@@ -11,11 +11,11 @@ import { UIManager } from './modules/UIManager.js';
 import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
 import { initSystem } from './modules/system.js';
-import { initLaunchAgents, startRealtimeStatusUpdates, stopRealtimeStatusUpdates } from './modules/launch-agents.js';
+import { initApplications, startRealtimeStatusUpdates, stopRealtimeStatusUpdates } from './modules/applications.js';
 import { initNotificationConfig } from './modules/notifications-config.js';
 import { initNotifications } from './modules/notifications.js';
-import { initServiceControl } from './modules/service-control.js';
-import { initConfiguration } from './modules/configuration.js';
+import { initBackendService } from './modules/backend-service.js';
+import { initGlobalSettings } from './modules/global-settings.js';
 import { initSetupWizard } from './modules/setup-wizard.js';
 import { initDashboard } from './modules/dashboard.js';
 import { apiCall } from './utils/api.js';
@@ -502,10 +502,10 @@ InstallationUp4evr.prototype.moduleInitializers = {
     'dashboard': initDashboard,
     'setup-wizard': initSetupWizard,
     'system': initSystem,
-    'launch-agents': initLaunchAgents,
+    'applications': initApplications,
     'monitoring': () => { initMonitoringTab(); },
-    'service-control': initServiceControl,
-    'configuration': initConfiguration,
+    'backend-service': initBackendService,
+    'global': initGlobalSettings,
     'notifications': initNotifications
 };
 

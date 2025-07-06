@@ -7,7 +7,7 @@ import { apiCall } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
 import { setValue, getValue, setCheckbox, getCheckbox } from '../utils/form-helpers.js';
 
-export function initConfiguration() {
+export function initGlobalSettings() {
     console.log('[INIT] Initializing Configuration tab...');
     
     // Load current configuration
