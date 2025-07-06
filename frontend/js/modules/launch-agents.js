@@ -55,9 +55,10 @@ function renderLaunchAgents(filterType = 'all') {
         return a.label.localeCompare(b.label);
     });
 
-    console.log('[LAUNCH-AGENTS] Total agents from backend:', allAgents.length);
-    console.log('[LAUNCH-AGENTS] User agents after filtering:', agents.length);
-    console.log('[LAUNCH-AGENTS] Sample agent paths:', allAgents.slice(0, 3).map(a => a.plistPath));
+    // Debug logging reduced - only show when there are issues
+    if (agents.length === 0 && allAgents.length > 0) {
+        console.warn('[LAUNCH-AGENTS] No user agents found despite backend data:', allAgents.length);
+    }
 
     if (agents.length === 0) {
         container.innerHTML = `
@@ -210,9 +211,10 @@ async function handleLaunchAgentAction(label, action) {
                 downloadAgentFile(label, result);
                 return;
             case 'view':
-                console.log('[LAUNCH-AGENTS] View plist for:', label);
                 result = await apiCall(`/api/launch-agents/view`, { method: 'POST', body: JSON.stringify({ label }) });
-                console.log('[LAUNCH-AGENTS] View result:', result);
+                if (!result.success) {
+                    console.error('[LAUNCH-AGENTS] View plist failed for:', label, result);
+                }
                 showPlistContent(label, result);
                 return;
             case 'edit':
@@ -846,10 +848,8 @@ function showTestResults(label, result) {
 }
 
 function downloadAgentFile(label, result) {
-    console.log('[LAUNCH-AGENTS] downloadAgentFile called with:', { label, result });
-    
     if (!result.success || !result.data) {
-        console.error('[LAUNCH-AGENTS] Export failed:', result);
+        console.error('[LAUNCH-AGENTS] Export failed for', label, ':', result);
         showToast('Failed to export launch agent', 'error');
         return;
     }
@@ -857,7 +857,10 @@ function downloadAgentFile(label, result) {
     const content = result.data.content || result.data.plistContent;
     const filename = result.data.filename || `${label}.plist`;
     
-    console.log('[LAUNCH-AGENTS] Export content:', { content, filename });
+    // Debug content only if it appears to be invalid
+    if (!content || content === 'undefined') {
+        console.error('[LAUNCH-AGENTS] Invalid export content for', label, ':', { content, filename, result });
+    }
     
     const blob = new Blob([content], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
@@ -876,10 +879,8 @@ function downloadAgentFile(label, result) {
 }
 
 function showPlistContent(label, result) {
-    console.log('[LAUNCH-AGENTS] showPlistContent called with:', { label, result });
-    
     if (!result.success || !result.data) {
-        console.error('[LAUNCH-AGENTS] View plist failed:', result);
+        console.error('[LAUNCH-AGENTS] View plist failed for', label, ':', result);
         showToast('Failed to load plist content', 'error');
         return;
     }

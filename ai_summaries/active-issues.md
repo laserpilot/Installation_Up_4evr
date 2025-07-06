@@ -9,7 +9,8 @@
 ## High Priority 🔥
 *Critical issues that block core functionality*
 
-**Currently:** No high priority issues identified ✅
+**Currently:** 
+- [ ] Console logs in browser seem excessive - let's streamline these so they aren't so busy
 
 ---
 

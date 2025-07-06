@@ -1166,12 +1166,15 @@ class PlatformManager {
 
         this.monitoring.on('dataCollected', (data) => {
             // Could emit to external systems, logging, etc.
-            console.log('[MONITORING] Data collected:', {
-                timestamp: data.timestamp,
-                cpu: data.system.cpu?.usage,
-                memory: data.system.memory?.usage,
-                apps: data.applications?.length
-            });
+            // Data collection logging reduced to prevent spam
+            // Only log when CPU/Memory exceed thresholds or errors occur
+            if (data.system.cpu?.usage > 80 || data.system.memory?.usage > 90) {
+                console.log('[MONITORING] High resource usage:', {
+                    cpu: data.system.cpu?.usage,
+                    memory: data.system.memory?.usage,
+                    apps: data.applications?.length
+                });
+            }
         });
 
         this.monitoring.on('alerts', (alerts) => {
@@ -1183,7 +1186,10 @@ class PlatformManager {
         });
 
         this.monitoring.on('heartbeat', (heartbeat) => {
-            console.log('[MONITORING] Heartbeat:', heartbeat.installationId, heartbeat.status);
+            // Reduced heartbeat logging - only show important status changes
+            if (heartbeat.status !== 'good') {
+                console.log('[MONITORING] Heartbeat:', heartbeat.installationId, heartbeat.status);
+            }
         });
 
         this.monitoring.on('monitoringError', (error) => {

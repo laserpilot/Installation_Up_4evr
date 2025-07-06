@@ -28,15 +28,15 @@
 ## Active Issues 🎯
 
 **Currently:** 
-- [ ] Sort "Tool Created" launch agents to the top of the list
-- [ ] View plist button does not work - clicking it gives no UI response and no console error
+- [ ] View plist button does not work - clicking it gives no UI response and no console error (debugging added)
 - [ ] Test plist button - unclear what this does and doesnt seem to have an effect. may need clearer explanations
-- [ ] Bottom of window may benefit from a Legend explaining what each of the buttons under each launch agent is intended to do
-- [ ] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist
+- [ ] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist (debugging added)
 - [ ] Edit plist button - clicking it results in an error "Failed to load plist content"
-- [ ] Web application launch agent - preview command seems to say the right thing, but when clicking "Create Web App launch agent" it gives the error "Failed to create web app launch agent: Failed to process POST /launch-agents/create-web"
 
 **Recently Fixed (Latest Session):**
+- ✅ Sort "Tool Created" launch agents to the top of the list
+- ✅ Legend explaining what each button under launch agents does  
+- ✅ Web application launch agent creation (added missing backend method)
 - ✅ Web Applications button now works properly (fixed missing function call)
 - ✅ Launch agent action buttons display horizontally (removed duplicate CSS)
 - ✅ Agent filter buttons now functional (All/User/Apps/System filtering)
