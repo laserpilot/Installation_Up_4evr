@@ -1008,6 +1008,20 @@ body {
     gap: var(--spacing-sm);
 }
 
+/* Tool-created app styling */
+.app-status-card.tool-created-app {
+    border-left: 3px solid var(--primary-color);
+    background: linear-gradient(90deg, rgba(0, 122, 255, 0.05) 0%, var(--card-background) 20%);
+}
+
+.app-type {
+    color: var(--text-tertiary);
+    font-size: 0.7rem;
+    font-style: italic;
+    display: block;
+    margin-top: 2px;
+}
+
 .health-status {
     display: flex;
     align-items: center;

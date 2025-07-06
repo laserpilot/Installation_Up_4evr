@@ -453,7 +453,37 @@ class PlatformManager {
 
         this.api.registerRoute('/monitoring/applications', 'GET', async () => {
             const data = this.monitoring.getCurrentData();
-            return APIResponse.success(DataTransformer.sanitizeApplicationList(data.applications));
+            let applications = DataTransformer.sanitizeApplicationList(data.applications);
+            
+            // Include tool-created launch agents on macOS
+            if (this.platform === 'macos') {
+                try {
+                    const agents = await this.processManager.getAutoStartEntries();
+                    const toolCreatedAgents = agents.filter(agent => 
+                        agent.label.includes('installation-up-4evr') || 
+                        agent.plistPath.includes('installation-up-4evr') ||
+                        (agent.webAppInfo && agent.webAppInfo.isWebApp) ||
+                        agent.createdByTool === true
+                    );
+                    
+                    // Convert launch agents to application format
+                    const agentApplications = toolCreatedAgents.map(agent => ({
+                        name: agent.displayName || agent.label,
+                        running: agent.isRunning,
+                        pid: agent.pid || null,
+                        type: 'launch-agent',
+                        source: 'tool-created',
+                        agentData: agent
+                    }));
+                    
+                    // Merge with existing applications
+                    applications = [...applications, ...agentApplications];
+                } catch (error) {
+                    console.error('[APPS] Failed to fetch tool-created launch agents:', error);
+                }
+            }
+            
+            return APIResponse.success(applications);
         });
 
         this.api.registerRoute('/monitoring/applications/add', 'POST', async (data) => {
