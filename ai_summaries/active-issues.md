@@ -10,15 +10,18 @@
 *Critical issues that block core functionality*
 
 **Currently:** 
-- [ ] Console logs in browser seem excessive - let's streamline these so they aren't so busy
+- [ ] Launch Agents Export button - file contains "undefined" instead of plist content (debugging added)
 
 ---
 
 ## Medium Priority 🟡  
 *Important improvements and enhancements*
 
-**Currently:** No medium priority issues identified ✅
-- [ ] Logging from the app should be fairly comprehensive but the logs at the moment aren't great. Should probably capture on an interval general system info like: uptime, display connection, ping states, recent alerts. It should be treated as a log so that users can identify patterns or events if something goes wrong
+**Currently:** 
+- [ ] Tool-created launch agents should also appear in Dashboard Application Status section  
+- [ ] Service Control tab needs investigation - unclear purpose vs Launch Agents, shows "Mode: Electron-managed"
+- [ ] Configuration tab needs assessment - scope and functionality unclear
+- [ ] Logging improvements - capture system info on intervals (uptime, display connection, ping states, recent alerts) for pattern identification
 
 ---
 
@@ -34,7 +37,10 @@
 ## In Progress 🔄
 *Issues currently being worked on*
 
-**Currently:** No issues in progress ✅
+**Recently Completed:**
+- ✅ Excessive console logging streamlined - selective API logging, reduced monitoring noise
+- ✅ Launch Agents UI fixes - View/Edit/Test buttons, modal visibility, MasterConfigAPI error, web app loop prevention
+- ✅ Complete module documentation - trackers for all 8 major application modules
 
 ---
 
