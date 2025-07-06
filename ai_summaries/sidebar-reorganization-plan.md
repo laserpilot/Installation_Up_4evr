@@ -46,30 +46,30 @@ This checklist provides a step-by-step guide for the planned sidebar reorganizat
 
 ---
 
-### Phase 2: Consolidate System Settings
+### Phase 2: Consolidate System Settings ✅ COMPLETE
 
 **Goal:** Merge `System Preferences` and `Installation Settings` into a single `System` tab.
 
-#### **Step 2.1: `frontend/index.html`**
-- [ ] **Move Content:** Cut the entire `<div id="installation-settings-tab" ...></div>` block.
-- [ ] **Paste Content:** Paste the cut block inside the `<div id="system-prefs-tab" ...></div>`, after the existing `<section class="card">`.
-- [ ] **Update Sidebar:** Delete the `<button ... data-tab="installation-settings">`.
-- [ ] **Rename Sidebar Button:** Change the `system-prefs` button text from "System Configuration" to "System" and its `data-tab` to `system`.
-- [ ] **Rename Tab Pane:** Rename the tab pane ID from `system-prefs-tab` to `system-tab`.
+#### **Step 2.1: `frontend/index.html`** ✅
+- [x] **Move Content:** Cut the entire `<div id="installation-settings-tab" ...></div>` block.
+- [x] **Paste Content:** Paste the cut block inside the `<div id="system-prefs-tab" ...></div>`, after the existing `<section class="card">`.
+- [x] **Update Sidebar:** Delete the `<button ... data-tab="installation-settings">`.
+- [x] **Rename Sidebar Button:** Change the `system-prefs` button text from "System Configuration" to "System" and its `data-tab` to `system`.
+- [x] **Rename Tab Pane:** Rename the tab pane ID from `system-prefs-tab` to `system-tab`.
 
-#### **Step 2.2: `frontend/js/main.js`**
-- [ ] **Remove Import:** Delete the line for `installation-settings.js`.
-- [ ] **Update Import:** Change the import from `./modules/system-preferences.js` to `./modules/system.js`.
-- [ ] **Update Initializer:** In `moduleInitializers`, remove the `'installation-settings'` entry and rename `'system-prefs'` to `'system'`.
-- [ ] **Update Initializer Function:** Ensure the function for the `'system'` key is `initSystem`.
+#### **Step 2.2: `frontend/js/main.js`** ✅
+- [x] **Remove Import:** Delete the line for `installation-settings.js`.
+- [x] **Update Import:** Change the import from `./modules/system-preferences.js` to `./modules/system.js`.
+- [x] **Update Initializer:** In `moduleInitializers`, remove the `'installation-settings'` entry and rename `'system-prefs'` to `'system'`.
+- [x] **Update Initializer Function:** Ensure the function for the `'system'` key is `initSystem`.
 
-#### **Step 2.3: JavaScript Logic**
-- [ ] **Copy Logic:** Copy the contents of `frontend/js/modules/installation-settings.js`.
-- [ ] **Paste Logic:** Paste the code into the end of `frontend/js/modules/system-preferences.js`.
-- [ ] **Integrate Initializer:** Move the code from `initInstallationSettings()` into `initSystemPreferences()`.
-- [ ] **Rename Initializer:** Rename the `initSystemPreferences()` function to `initSystem()`.
-- [ ] **Delete File:** Delete `frontend/js/modules/installation-settings.js`.
-- [ ] **Rename File:** Rename `frontend/js/modules/system-preferences.js` to `frontend/js/modules/system.js`.
+#### **Step 2.3: JavaScript Logic** ✅
+- [x] **Copy Logic:** Copy the contents of `frontend/js/modules/installation-settings.js`.
+- [x] **Paste Logic:** Paste the code into the end of `frontend/js/modules/system-preferences.js`.
+- [x] **Integrate Initializer:** Move the code from `initInstallationSettings()` into `initSystem()`.
+- [x] **Rename Initializer:** Rename the `initSystemPreferences()` function to `initSystem()`.
+- [x] **Delete File:** Delete `frontend/js/modules/installation-settings.js`.
+- [x] **Rename File:** Rename `frontend/js/modules/system-preferences.js` to `frontend/js/modules/system.js`.
 
 ---
 

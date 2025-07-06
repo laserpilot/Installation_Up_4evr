@@ -27,7 +27,7 @@ export function createAgentCard(agent, status) {
                          (agent.webAppInfo && agent.webAppInfo.isWebApp) ||
                          agent.createdByTool === true;
     
-    const toolBadge = isToolCreated ? '<span class="tool-created-badge"><i class="fas fa-rocket"></i> Tool Created</span>' : '';
+    const toolBadge = isToolCreated ? '<span class="tool-created-badge"><i class="fas fa-rocket"></i> Created by Up4Evr</span>' : '';
 
     return `
         <div class="agent-card ${statusClass} ${isToolCreated ? 'tool-created' : ''}" data-label="${agent.label}">
