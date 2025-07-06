@@ -1,9 +1,11 @@
 # Monitoring Module Tracker
 
-**Module:** Real-time System Monitoring  
+**Module:** Real-time System Monitoring & Configuration  
 **Files:** `frontend/js/modules/monitoring.js`, `frontend/js/modules/monitoring-config.js`, `frontend/js/utils/monitoring-display.js`, `backend/src/core/monitoring-manager.js`  
-**Last Updated:** 2025-07-05  
+**Last Updated:** 2025-07-06  
 **Status:** ✅ Fully Functional
+
+**Note:** *This consolidated tracker covers both System Monitoring and Monitoring Configuration functionality after the sidebar reorganization (Phase 1)*
 
 ---
 
@@ -147,6 +149,30 @@
 
 ---
 
+## Configuration Management
+
+### **Threshold Settings**
+```json
+{
+  "cpu": {"warning": 70, "critical": 85},
+  "memory": {"warning": 75, "critical": 90},
+  "disk": {"warning": 80, "critical": 95},
+  "temperature": {"warning": 75, "critical": 85}
+}
+```
+
+### **Launch Agent Integration**
+- **Auto-suggestion** - Detects existing launch agents for monitoring
+- **One-click Addition** - Easy integration with monitoring system
+- **Status Synchronization** - Real-time agent status updates
+- **Threshold Application** - Monitoring thresholds apply to all agents
+
+### **Configuration Features**
+- **Real-time Preview** - See current metrics while configuring
+- **Professional Interface** - Clean threshold setting controls
+- **Immediate Application** - Configuration changes apply instantly
+- **Persistent Storage** - Settings saved across sessions
+
 ## Potential Improvements 💡
 
 - [ ] **Historical Data** - Store and display metric history
@@ -154,6 +180,8 @@
 - [ ] **Custom Metrics** - User-defined monitoring parameters
 - [ ] **Export Functionality** - Export monitoring data to files
 - [ ] **Advanced Filtering** - Filter processes by criteria
+- [ ] **Advanced Thresholds** - Time-based and conditional thresholds
+- [ ] **Monitoring Profiles** - Different configuration sets for different use cases
 
 ---
 
@@ -284,3 +312,14 @@ const status = healthScore >= 80 ? 'good' :
 - Configurable refresh intervals for different use cases
 
 **For new issues or enhancements related to Monitoring functionality, add them to the main `active-issues.md` file with the `[Monitoring]` tag.**
+
+---
+
+## Reorganization Notes
+
+**Phase 1 Consolidation (2025-07-06):**
+- Successfully merged System Monitoring and Monitoring Configuration into single "Monitoring" tab
+- Unified display manager ensures consistency between monitoring display and configuration
+- All functionality preserved while improving user experience
+- Threshold configuration now integrated with real-time monitoring display
+- Launch agent auto-suggestion system remains fully functional

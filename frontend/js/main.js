@@ -9,9 +9,9 @@ import { AuthSessionManager } from './modules/auth.js';
 import { MonitoringDataManager } from './modules/monitoring.js';
 import { UIManager } from './modules/UIManager.js';
 import { monitoringDisplay } from './utils/monitoring-display.js';
+import { initMonitoringConfig } from './modules/monitoring-config.js';
 import { initSystemPreferences } from './modules/system-preferences.js';
 import { initLaunchAgents, startRealtimeStatusUpdates, stopRealtimeStatusUpdates } from './modules/launch-agents.js';
-import { initMonitoringConfig } from './modules/monitoring-config.js';
 import { initNotificationConfig } from './modules/notifications-config.js';
 import { initNotifications } from './modules/notifications.js';
 import { initInstallationSettings } from './modules/installation-settings.js';
@@ -147,6 +147,9 @@ function initMonitoringTab() {
     // Setup monitoring controls
     setupMonitoringControls(monitoringManager);
     
+    // Initialize monitoring configuration functionality
+    initMonitoringConfig();
+    
     // Force initial update
     const currentData = monitoringManager.getCurrentData();
     if (currentData.lastUpdate) {
@@ -168,11 +171,14 @@ function setupMonitoringControls(monitoringManager) {
         });
     }
 
-    // Settings button - navigate to monitoring config
+    // Settings button - scroll to monitoring config section
     const settingsBtn = document.getElementById('monitoring-settings');
     if (settingsBtn) {
         settingsBtn.addEventListener('click', () => {
-            navigateToTab('monitoring-config');
+            const configSection = document.querySelector('.monitoring-config-section');
+            if (configSection) {
+                configSection.scrollIntoView({ behavior: 'smooth' });
+            }
         });
     }
 }
@@ -499,7 +505,6 @@ InstallationUp4evr.prototype.moduleInitializers = {
     'system-prefs': initSystemPreferences,
     'launch-agents': initLaunchAgents,
     'monitoring': () => { initMonitoringTab(); },
-    'monitoring-config': initMonitoringConfig,
     'installation-settings': initInstallationSettings,
     'service-control': initServiceControl,
     'configuration': initConfiguration,
