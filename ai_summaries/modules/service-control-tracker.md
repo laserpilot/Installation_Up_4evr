@@ -3,13 +3,13 @@
 **Module:** System Service Management  
 **Files:** `frontend/js/modules/service-control.js`, `frontend/index.html` (service control section)  
 **Last Updated:** 2025-07-06  
-**Status:**   Needs Investigation
+**Status:** ï¿½ Needs Investigation
 
 ---
 
-## Current Status  
+## Current Status ï¿½
 
-**  Status Unknown:**
+**ï¿½ Status Unknown:**
 - Service Control tab functionality needs verification
 - Integration with monitoring and launch agents unclear
 - Server state accuracy issues reported
@@ -17,13 +17,14 @@
 
 ---
 
-## Active Issues <¯
+## Active Issues <ï¿½
 
 **Currently:** 
 - [ ] Service Control showing inaccurate server state (from Phase 9 reports)
 - [ ] Unclear distinction between Service Control and Launch Agents functionality
 - [ ] Tab may be redundant or need clearer purpose definition
 - [ ] Integration with monitoring system needs verification
+- [ ] Shows "Mode: Electron-managed" which is unclear, especially if it is running from npm
 
 ---
 

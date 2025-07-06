@@ -9,6 +9,7 @@
 
 ## Current Status ✅
 
+
 **✅ Core Features Working:**
 - Real-time system metrics display (CPU, memory, disk, uptime)
 - System health overview with color-coded indicators
@@ -27,7 +28,8 @@
 
 ## Active Issues 🎯
 
-**Currently:** No major issues identified ✅
+**Currently:** 
+- [ ] If a tool created launch agent is added, it should also show up in the Application Status area of the dashboard
 
 **Potential Improvements:**
 - [ ] Add system overview graphs/charts for trend analysis

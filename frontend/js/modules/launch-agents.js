@@ -202,9 +202,14 @@ async function handleLaunchAgentAction(label, action) {
                 break;
             case 'test':
                 showLoading('Testing launch agent...');
-                result = await apiCall(`/api/launch-agents/test`, { method: 'POST', body: JSON.stringify({ label }) });
-                hideLoading();
-                showTestResults(label, result);
+                try {
+                    result = await apiCall(`/api/launch-agents/test`, { method: 'POST', body: JSON.stringify({ label }) });
+                    hideLoading();
+                    showTestResults(label, result);
+                } catch (error) {
+                    hideLoading();
+                    showToast(`Test failed for ${label}: ${error.message}`, 'error');
+                }
                 return;
             case 'export':
                 result = await apiCall(`/api/launch-agents/export`, { method: 'POST', body: JSON.stringify({ label }) });
@@ -508,7 +513,7 @@ async function createWebLaunchAgent() {
                     disableExtensions,
                     incognitoMode,
                     keepAlive: true,
-                    runAtLoad: true
+                    runAtLoad: false  // Don't auto-start to prevent immediate loop
                 }
             })
         });
@@ -526,7 +531,7 @@ async function createWebLaunchAgent() {
             
             await addToMonitoring(agentInfo);
             
-            showToast(`Web app launch agent created: ${name}`, 'success');
+            showToast(`Web app launch agent created: ${name}. Use the Start button to launch it in kiosk mode.`, 'success');
             
             // Clear form
             document.getElementById('web-app-url').value = '';
@@ -743,7 +748,7 @@ export function initLaunchAgents() {
 // Master Configuration Integration
 async function loadLaunchAgentsMasterConfig() {
     try {
-        const response = await MasterConfigAPI.load();
+        const response = await MasterConfigAPI.getMasterProfile();
         if (response.success && response.data.launchAgents) {
             console.log('[LAUNCH-AGENTS] Loaded master config state:', response.data.launchAgents);
             
@@ -811,7 +816,7 @@ export { startRealtimeStatusUpdates, stopRealtimeStatusUpdates };
 
 function showTestResults(label, result) {
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = 'modal-overlay show';
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -858,8 +863,20 @@ function downloadAgentFile(label, result) {
     const filename = result.data.filename || `${label}.plist`;
     
     // Debug content only if it appears to be invalid
-    if (!content || content === 'undefined') {
-        console.error('[LAUNCH-AGENTS] Invalid export content for', label, ':', { content, filename, result });
+    console.log('[LAUNCH-AGENTS] Export content analysis for', label, ':');
+    console.log('  - result.data:', result.data);
+    console.log('  - content:', content);
+    console.log('  - filename:', filename);
+    
+    if (!content || content === 'undefined' || content === undefined) {
+        console.error('[LAUNCH-AGENTS] Invalid export content for', label, ':', { 
+            content, 
+            filename, 
+            result,
+            'result.data.content': result.data?.content,
+            'result.data.plistContent': result.data?.plistContent,
+            'result.content': result.content
+        });
     }
     
     const blob = new Blob([content], { type: 'application/xml' });
@@ -879,14 +896,19 @@ function downloadAgentFile(label, result) {
 }
 
 function showPlistContent(label, result) {
+    console.log('[LAUNCH-AGENTS] showPlistContent called for:', label);
+    console.log('[LAUNCH-AGENTS] Result data structure:', result);
+    
     if (!result.success || !result.data) {
         console.error('[LAUNCH-AGENTS] View plist failed for', label, ':', result);
         showToast('Failed to load plist content', 'error');
         return;
     }
     
+    console.log('[LAUNCH-AGENTS] Creating modal for plist content...');
+    
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = 'modal-overlay show';
     modal.innerHTML = `
         <div class="modal-content script-modal">
             <div class="modal-header">
@@ -904,7 +926,11 @@ function showPlistContent(label, result) {
         </div>
     `;
     
+    console.log('[LAUNCH-AGENTS] Appending modal to body...');
     document.body.appendChild(modal);
+    console.log('[LAUNCH-AGENTS] Modal appended, checking if visible...');
+    console.log('[LAUNCH-AGENTS] Modal element:', modal);
+    console.log('[LAUNCH-AGENTS] Modal styles:', getComputedStyle(modal));
     
     modal.querySelector('.modal-close').addEventListener('click', () => {
         document.body.removeChild(modal);
@@ -931,7 +957,7 @@ function showPlistEditor(label, result) {
     }
     
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = 'modal-overlay show';
     modal.innerHTML = `
         <div class="modal-content script-modal">
             <div class="modal-header">
