@@ -24,7 +24,8 @@ function createSettingItem(setting, status) {
     const tooltips = {
         disableGatekeeper: 'This setting removes Apple\'s Gatekeeper protection. Gatekeeper prevents unsigned and potentially malicious software from running. Disabling it significantly increases security risks.',
         allowAppsAnywhere: 'This bypasses all macOS app verification. Extremely dangerous as it allows any code to run without checks. Only use in controlled environments with trusted software.',
-        disableCrashReporter: 'This prevents crash reports from appearing but requires disabling System Integrity Protection. May hide critical issues and make debugging impossible.'
+        disableCrashReporter: 'This prevents crash reports from appearing but requires disabling System Integrity Protection. May hide critical issues and make debugging impossible.',
+        enableAutomaticLogin: 'This enables automatic login without password for the current user. Essential for scheduled reboots but completely removes login security. Only use on physically secure systems.'
     };
     
     const tooltipContent = tooltips[setting.id] || (isDangerZone ? 'This is an advanced setting that may compromise system security. Proceed with caution and ensure you understand the implications.' : '');
