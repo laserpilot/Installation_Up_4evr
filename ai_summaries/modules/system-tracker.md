@@ -1,9 +1,11 @@
-# System Preferences Module Tracker
+# System Module Tracker
 
-**Module:** System Configuration Management  
-**Files:** `frontend/js/modules/system-preferences.js`, `frontend/js/components/SystemSettings.js`, `backend/src/platform/macos/system-manager.js`  
-**Last Updated:** 2025-07-05  
+**Module:** System Configuration & Installation Settings Management  
+**Files:** `frontend/js/modules/system.js` (renamed from system-preferences.js), `frontend/js/modules/installation-settings.js`, `frontend/js/components/SystemSettings.js`, `backend/src/platform/macos/system-manager.js`  
+**Last Updated:** 2025-07-06  
 **Status:** ✅ Fully Functional
+
+**Note:** *This consolidated tracker covers both System Preferences and Installation Settings functionality after the sidebar reorganization (Phase 2)*
 
 ---
 
@@ -16,6 +18,9 @@
 - Terminal command generation for manual application
 - Current state verification and status reporting
 - Professional warning overlays for dangerous settings
+- **Installation settings management** (consolidated from Installation Settings tab)
+- **Installation profile support** for different system configurations
+- **Unified system configuration** interface
 
 **✅ Recently Fixed (Phase 9.2):**
 - Fixed "unknown" status display issue
@@ -240,4 +245,15 @@
 - Batch operations for multiple setting application
 - Caching of system state for responsive UI updates
 
-**For new issues or enhancements related to System Preferences functionality, add them to the main `active-issues.md` file with the `[System Config]` tag.**
+**For new issues or enhancements related to System functionality, add them to the main `active-issues.md` file with the `[System]` tag.**
+
+---
+
+## Reorganization Notes
+
+**Phase 2 Consolidation (2025-07-06):**
+- Successfully merged System Preferences and Installation Settings into single "System" tab
+- All system configuration functionality consolidated into unified interface
+- Installation profiles and system preferences managed in one location
+- Renamed module from `system-preferences.js` to `system.js` for clarity
+- All functionality preserved while improving organization and reducing cognitive load

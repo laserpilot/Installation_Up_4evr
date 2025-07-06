@@ -67,10 +67,7 @@
                             <i class="fas fa-cogs"></i> Services
                         </button>
                         <button class="sidebar-button" data-tab="monitoring">
-                            <i class="fas fa-chart-line"></i> System Monitoring
-                        </button>
-                        <button class="sidebar-button" data-tab="monitoring-config">
-                            <i class="fas fa-chart-bar"></i> Monitoring Configuration
+                            <i class="fas fa-chart-line"></i> Monitoring
                         </button>
                         <button class="sidebar-button" data-tab="installation-settings">
                             <i class="fas fa-microchip"></i> Installation Settings
@@ -476,6 +473,13 @@
                         <section class="card">
                             <h2><i class="fas fa-cog"></i> System Preferences</h2>
                             <p>Configure macOS settings for 24/7 installation use</p>
+                            
+                            <div class="refresh-section">
+                                <button id="refresh-settings" class="btn btn-outline btn-sm"
+                                    title="Refresh and re-check the current status of all system settings">
+                                    <i class="fas fa-sync-alt"></i> Refresh Settings Status
+                                </button>
+                            </div>
 
                             <div class="preferences-container">
                                 <!-- Required Settings -->
@@ -858,6 +862,313 @@
                                 <div class="detail-card">
                                     <h4><i class="fas fa-list-check"></i> Monitored Apps</h4>
                                     <div id="apps-status" class="detail-content">Loading...</div>
+                                </div>
+                            </div>
+
+                            <!-- Monitoring Configuration Section -->
+                            <div class="monitoring-config-section">
+                                <h2><i class="fas fa-chart-bar"></i> System Monitoring Configuration</h2>
+                                <p>Configure monitoring thresholds and alert conditions for real-time system monitoring</p>
+
+                                <!-- Current System Status -->
+                                <div class="monitoring-status-section">
+                                    <div class="section-header">
+                                        <h3><i class="fas fa-heartbeat"></i> System Monitoring Status</h3>
+                                        <button id="refresh-system-status" class="btn btn-small btn-secondary">
+                                            <i class="fas fa-sync-alt"></i> Refresh
+                                        </button>
+                                    </div>
+                                    <div class="status-grid">
+                                        <div class="status-card" id="cpu-status-card">
+                                            <div class="status-icon">💻</div>
+                                            <div class="status-info">
+                                                <div class="status-label">CPU Usage</div>
+                                                <div class="status-value" id="current-cpu">--</div>
+                                                <div class="status-trend" id="cpu-trend"></div>
+                                            </div>
+                                            <div class="status-indicator" id="cpu-indicator">🟡</div>
+                                        </div>
+
+                                        <div class="status-card" id="memory-status-card">
+                                            <div class="status-icon">🧠</div>
+                                            <div class="status-info">
+                                                <div class="status-label">Memory Usage</div>
+                                                <div class="status-value" id="current-memory">--</div>
+                                                <div class="status-trend" id="memory-trend"></div>
+                                            </div>
+                                            <div class="status-indicator" id="memory-indicator">🟡</div>
+                                        </div>
+
+                                        <div class="status-card" id="disk-status-card">
+                                            <div class="status-icon">💾</div>
+                                            <div class="status-info">
+                                                <div class="status-label">Disk Usage</div>
+                                                <div class="status-value" id="current-disk">--</div>
+                                                <div class="status-trend" id="disk-trend"></div>
+                                            </div>
+                                            <div class="status-indicator" id="disk-indicator">🟡</div>
+                                        </div>
+
+                                        <div class="status-card" id="temperature-status-card">
+                                            <div class="status-icon">🌡️</div>
+                                            <div class="status-info">
+                                                <div class="status-label">Temperature</div>
+                                                <div class="status-value" id="current-temperature">--</div>
+                                                <div class="status-trend" id="temperature-trend"></div>
+                                            </div>
+                                            <div class="status-indicator" id="temperature-indicator">🟡</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Threshold Configuration -->
+                                <div class="threshold-section">
+                                    <h3><i class="fas fa-sliders-h"></i> Alert Thresholds</h3>
+
+                                    <!-- CPU Thresholds -->
+                                    <div class="threshold-group">
+                                        <h4><i class="fas fa-microchip"></i> CPU Usage Thresholds</h4>
+                                        <div class="threshold-controls">
+                                            <div class="threshold-item">
+                                                <label>Warning Level (%)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="cpu-warning-slider" min="50" max="100"
+                                                        value="75">
+                                                    <input type="number" id="cpu-warning-input" min="50" max="100"
+                                                        value="75">
+                                                    <span class="threshold-color warning"></span>
+                                                </div>
+                                                <small>Alert when CPU usage exceeds this level</small>
+                                            </div>
+                                            <div class="threshold-item">
+                                                <label>Critical Level (%)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="cpu-critical-slider" min="60" max="100"
+                                                        value="90">
+                                                    <input type="number" id="cpu-critical-input" min="60" max="100"
+                                                        value="90">
+                                                    <span class="threshold-color critical"></span>
+                                                </div>
+                                                <small>Critical alert when CPU usage exceeds this level</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Memory Thresholds -->
+                                    <div class="threshold-group">
+                                        <h4><i class="fas fa-memory"></i> Memory Usage Thresholds</h4>
+                                        <div class="threshold-controls">
+                                            <div class="threshold-item">
+                                                <label>Warning Level (%)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="memory-warning-slider" min="50" max="100"
+                                                        value="80">
+                                                    <input type="number" id="memory-warning-input" min="50" max="100"
+                                                        value="80">
+                                                    <span class="threshold-color warning"></span>
+                                                </div>
+                                                <small>Alert when memory usage exceeds this level</small>
+                                            </div>
+                                            <div class="threshold-item">
+                                                <label>Critical Level (%)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="memory-critical-slider" min="60" max="100"
+                                                        value="95">
+                                                    <input type="number" id="memory-critical-input" min="60" max="100"
+                                                        value="95">
+                                                    <span class="threshold-color critical"></span>
+                                                </div>
+                                                <small>Critical alert when memory usage exceeds this level</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Disk Thresholds -->
+                                    <div class="threshold-group">
+                                        <h4><i class="fas fa-hdd"></i> Disk Usage Thresholds</h4>
+                                        <div class="threshold-controls">
+                                            <div class="threshold-item">
+                                                <label>Warning Level (%)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="disk-warning-slider" min="50" max="100"
+                                                        value="85">
+                                                    <input type="number" id="disk-warning-input" min="50" max="100"
+                                                        value="85">
+                                                    <span class="threshold-color warning"></span>
+                                                </div>
+                                                <small>Alert when disk usage exceeds this level</small>
+                                            </div>
+                                            <div class="threshold-item">
+                                                <label>Critical Level (%)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="disk-critical-slider" min="60" max="100"
+                                                        value="95">
+                                                    <input type="number" id="disk-critical-input" min="60" max="100"
+                                                        value="95">
+                                                    <span class="threshold-color critical"></span>
+                                                </div>
+                                                <small>Critical alert when disk usage exceeds this level</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Temperature Thresholds -->
+                                    <div class="threshold-group">
+                                        <h4><i class="fas fa-thermometer-half"></i> Temperature Thresholds</h4>
+                                        <div class="threshold-controls">
+                                            <div class="threshold-item">
+                                                <label>Warning Level (°C)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="temperature-warning-slider" min="60" max="100"
+                                                        value="75">
+                                                    <input type="number" id="temperature-warning-input" min="60" max="100"
+                                                        value="75">
+                                                    <span class="threshold-color warning"></span>
+                                                </div>
+                                                <small>Alert when system temperature exceeds this level</small>
+                                            </div>
+                                            <div class="threshold-item">
+                                                <label>Critical Level (°C)</label>
+                                                <div class="threshold-input-group">
+                                                    <input type="range" id="temperature-critical-slider" min="70" max="100"
+                                                        value="85">
+                                                    <input type="number" id="temperature-critical-input" min="70" max="100"
+                                                        value="85">
+                                                    <span class="threshold-color critical"></span>
+                                                </div>
+                                                <small>Critical alert when system temperature exceeds this level</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Alert Behavior Configuration -->
+                                <div class="alert-behavior-section">
+                                    <h3><i class="fas fa-cogs"></i> Alert Behavior</h3>
+                                    <div class="config-grid">
+                                        <div class="config-item">
+                                            <label for="monitoring-interval-config">Check Interval (seconds)</label>
+                                            <input type="number" id="monitoring-interval-config" min="5" max="300"
+                                                value="30">
+                                            <small>How often to check system metrics (5-300 seconds)</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="alert-cooldown">Alert Cooldown (minutes)</label>
+                                            <input type="number" id="alert-cooldown" min="1" max="60" value="5">
+                                            <small>Minimum time between identical alerts</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="escalation-time">Escalation Time (minutes)</label>
+                                            <input type="number" id="escalation-time" min="5" max="120" value="15">
+                                            <small>Escalate warning to critical after this duration</small>
+                                        </div>
+                                        <div class="config-item">
+                                            <label for="auto-recovery-check">Auto-Recovery Detection</label>
+                                            <div class="toggle-switch">
+                                                <input type="checkbox" id="auto-recovery-check" checked>
+                                                <span class="toggle-slider"></span>
+                                            </div>
+                                            <small>Automatically send recovery notifications when issues resolve</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Application Monitoring -->
+                                <div class="app-monitoring-section">
+                                    <h3><i class="fas fa-cogs"></i> Application Monitoring</h3>
+                                    <div class="app-monitor-list" id="app-monitor-list">
+                                        <!-- Dynamic application entries will be added here -->
+                                    </div>
+
+                                    <div class="app-monitor-add-section">
+                                        <h4><i class="fas fa-plus"></i> Add Application to Monitor</h4>
+                                        <div class="config-grid">
+                                            <div class="config-item">
+                                                <label for="app-monitor-name">Application Name</label>
+                                                <input type="text" id="app-monitor-name" placeholder="My App">
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="app-monitor-process">Process Name</label>
+                                                <input type="text" id="app-monitor-process" placeholder="MyApp.app">
+                                                <small>Exact process name or app bundle name</small>
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="app-monitor-critical">Critical Process</label>
+                                                <div class="toggle-switch">
+                                                    <input type="checkbox" id="app-monitor-critical">
+                                                    <span class="toggle-slider"></span>
+                                                </div>
+                                                <small>Send critical alerts if this process stops</small>
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="app-monitor-restart">Auto-Restart</label>
+                                                <div class="toggle-switch">
+                                                    <input type="checkbox" id="app-monitor-restart" checked>
+                                                    <span class="toggle-slider"></span>
+                                                </div>
+                                                <small>Automatically restart if process crashes</small>
+                                            </div>
+                                        </div>
+                                        <button id="add-app-monitor" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i> Add Application Monitor
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Network Ping Monitoring -->
+                                <div class="network-ping-section">
+                                    <h3><i class="fas fa-network-wired"></i> Network Ping Monitoring</h3>
+                                    <p>Monitor network connectivity by pinging specific IP addresses on a regular interval.
+                                        Useful for tracking internet connectivity and device availability.</p>
+
+                                    <div class="ping-monitor-list" id="ping-monitor-list">
+                                        <!-- Dynamic ping entries will be added here -->
+                                    </div>
+
+                                    <div class="ping-monitor-add-section">
+                                        <h4><i class="fas fa-plus"></i> Add IP Address to Monitor</h4>
+                                        <div class="config-grid">
+                                            <div class="config-item">
+                                                <label for="ping-ip-address">IP Address or Hostname</label>
+                                                <input type="text" id="ping-ip-address" placeholder="8.8.8.8 or google.com">
+                                                <small>IPv4 address or resolvable hostname</small>
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="ping-description">Description (Optional)</label>
+                                                <input type="text" id="ping-description" placeholder="Google DNS">
+                                                <small>Friendly name for this ping target</small>
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="ping-interval">Ping Interval (seconds)</label>
+                                                <input type="number" id="ping-interval" min="10" max="300" value="30">
+                                                <small>How often to ping this address (10-300 seconds)</small>
+                                            </div>
+                                            <div class="config-item">
+                                                <label for="ping-timeout">Timeout (seconds)</label>
+                                                <input type="number" id="ping-timeout" min="1" max="30" value="5">
+                                                <small>Maximum time to wait for ping response</small>
+                                            </div>
+                                        </div>
+                                        <button id="add-ping-monitor" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i> Add Ping Monitor
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Configuration Actions -->
+                                <div class="config-actions">
+                                    <button id="save-monitoring-config" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Configuration
+                                    </button>
+                                    <button id="reset-monitoring-config" class="btn btn-outline">
+                                        <i class="fas fa-undo"></i> Reset to Defaults
+                                    </button>
+                                    <button id="export-monitoring-config" class="btn btn-secondary">
+                                        <i class="fas fa-download"></i> Export Config
+                                    </button>
+                                    <button id="import-monitoring-config" class="btn btn-secondary">
+                                        <i class="fas fa-upload"></i> Import Config
+                                    </button>
                                 </div>
                             </div>
                         </section>
@@ -1479,423 +1790,6 @@
                                 <div class="config-status-content">
                                     <i class="fas fa-info-circle"></i>
                                     <span id="notification-status-text">Notification settings updated
-                                        successfully</span>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-
-                    <!-- Monitoring & Alerts Configuration Tab -->
-                    <div id="monitoring-config-tab" class="tab-pane">
-                        <section class="card">
-                            <h2><i class="fas fa-chart-bar"></i> System Monitoring Configuration</h2>
-                            <p>Configure monitoring thresholds and alert conditions for real-time system monitoring</p>
-
-                            <!-- Current System Status -->
-                            <div class="monitoring-status-section">
-                                <div class="section-header">
-                                    <h3><i class="fas fa-heartbeat"></i> System Monitoring Status</h3>
-                                    <button id="refresh-system-status" class="btn btn-small btn-secondary">
-                                        <i class="fas fa-sync-alt"></i> Refresh
-                                    </button>
-                                </div>
-                                <div class="status-grid">
-                                    <div class="status-card" id="cpu-status-card">
-                                        <div class="status-icon">💻</div>
-                                        <div class="status-info">
-                                            <div class="status-label">CPU Usage</div>
-                                            <div class="status-value" id="current-cpu">--</div>
-                                            <div class="status-trend" id="cpu-trend"></div>
-                                        </div>
-                                        <div class="status-indicator" id="cpu-indicator">🟡</div>
-                                    </div>
-
-                                    <div class="status-card" id="memory-status-card">
-                                        <div class="status-icon">🧠</div>
-                                        <div class="status-info">
-                                            <div class="status-label">Memory Usage</div>
-                                            <div class="status-value" id="current-memory">--</div>
-                                            <div class="status-trend" id="memory-trend"></div>
-                                        </div>
-                                        <div class="status-indicator" id="memory-indicator">🟡</div>
-                                    </div>
-
-                                    <div class="status-card" id="disk-status-card">
-                                        <div class="status-icon">💾</div>
-                                        <div class="status-info">
-                                            <div class="status-label">Disk Usage</div>
-                                            <div class="status-value" id="current-disk">--</div>
-                                            <div class="status-trend" id="disk-trend"></div>
-                                        </div>
-                                        <div class="status-indicator" id="disk-indicator">🟡</div>
-                                    </div>
-
-                                    <div class="status-card" id="temperature-status-card">
-                                        <div class="status-icon">🌡️</div>
-                                        <div class="status-info">
-                                            <div class="status-label">Temperature</div>
-                                            <div class="status-value" id="current-temperature">--</div>
-                                            <div class="status-trend" id="temperature-trend"></div>
-                                        </div>
-                                        <div class="status-indicator" id="temperature-indicator">🟡</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Threshold Configuration -->
-                            <div class="threshold-section">
-                                <h3><i class="fas fa-sliders-h"></i> Alert Thresholds</h3>
-
-                                <!-- CPU Thresholds -->
-                                <div class="threshold-group">
-                                    <h4><i class="fas fa-microchip"></i> CPU Usage Thresholds</h4>
-                                    <div class="threshold-controls">
-                                        <div class="threshold-item">
-                                            <label>Warning Level (%)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="cpu-warning-slider" min="50" max="100"
-                                                    value="75">
-                                                <input type="number" id="cpu-warning-input" min="50" max="100"
-                                                    value="75">
-                                                <span class="threshold-color warning"></span>
-                                            </div>
-                                            <small>Alert when CPU usage exceeds this level</small>
-                                        </div>
-                                        <div class="threshold-item">
-                                            <label>Critical Level (%)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="cpu-critical-slider" min="60" max="100"
-                                                    value="90">
-                                                <input type="number" id="cpu-critical-input" min="60" max="100"
-                                                    value="90">
-                                                <span class="threshold-color critical"></span>
-                                            </div>
-                                            <small>Critical alert when CPU usage exceeds this level</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Memory Thresholds -->
-                                <div class="threshold-group">
-                                    <h4><i class="fas fa-memory"></i> Memory Usage Thresholds</h4>
-                                    <div class="threshold-controls">
-                                        <div class="threshold-item">
-                                            <label>Warning Level (%)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="memory-warning-slider" min="50" max="100"
-                                                    value="80">
-                                                <input type="number" id="memory-warning-input" min="50" max="100"
-                                                    value="80">
-                                                <span class="threshold-color warning"></span>
-                                            </div>
-                                            <small>Alert when memory usage exceeds this level</small>
-                                        </div>
-                                        <div class="threshold-item">
-                                            <label>Critical Level (%)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="memory-critical-slider" min="60" max="100"
-                                                    value="95">
-                                                <input type="number" id="memory-critical-input" min="60" max="100"
-                                                    value="95">
-                                                <span class="threshold-color critical"></span>
-                                            </div>
-                                            <small>Critical alert when memory usage exceeds this level</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Disk Thresholds -->
-                                <div class="threshold-group">
-                                    <h4><i class="fas fa-hdd"></i> Disk Usage Thresholds</h4>
-                                    <div class="threshold-controls">
-                                        <div class="threshold-item">
-                                            <label>Warning Level (%)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="disk-warning-slider" min="50" max="100"
-                                                    value="85">
-                                                <input type="number" id="disk-warning-input" min="50" max="100"
-                                                    value="85">
-                                                <span class="threshold-color warning"></span>
-                                            </div>
-                                            <small>Alert when disk usage exceeds this level</small>
-                                        </div>
-                                        <div class="threshold-item">
-                                            <label>Critical Level (%)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="disk-critical-slider" min="60" max="100"
-                                                    value="95">
-                                                <input type="number" id="disk-critical-input" min="60" max="100"
-                                                    value="95">
-                                                <span class="threshold-color critical"></span>
-                                            </div>
-                                            <small>Critical alert when disk usage exceeds this level</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Temperature Thresholds -->
-                                <div class="threshold-group">
-                                    <h4><i class="fas fa-thermometer-half"></i> Temperature Thresholds</h4>
-                                    <div class="threshold-controls">
-                                        <div class="threshold-item">
-                                            <label>Warning Level (°C)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="temperature-warning-slider" min="60" max="100"
-                                                    value="75">
-                                                <input type="number" id="temperature-warning-input" min="60" max="100"
-                                                    value="75">
-                                                <span class="threshold-color warning"></span>
-                                            </div>
-                                            <small>Alert when system temperature exceeds this level</small>
-                                        </div>
-                                        <div class="threshold-item">
-                                            <label>Critical Level (°C)</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="temperature-critical-slider" min="70" max="100"
-                                                    value="85">
-                                                <input type="number" id="temperature-critical-input" min="70" max="100"
-                                                    value="85">
-                                                <span class="threshold-color critical"></span>
-                                            </div>
-                                            <small>Critical alert when system temperature exceeds this level</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Alert Behavior Configuration -->
-                            <div class="alert-behavior-section">
-                                <h3><i class="fas fa-cogs"></i> Alert Behavior</h3>
-                                <div class="config-grid">
-                                    <div class="config-item">
-                                        <label for="monitoring-interval-config">Check Interval (seconds)</label>
-                                        <input type="number" id="monitoring-interval-config" min="5" max="300"
-                                            value="30">
-                                        <small>How often to check system metrics (5-300 seconds)</small>
-                                    </div>
-                                    <div class="config-item">
-                                        <label for="alert-cooldown">Alert Cooldown (minutes)</label>
-                                        <input type="number" id="alert-cooldown" min="1" max="60" value="5">
-                                        <small>Minimum time between identical alerts</small>
-                                    </div>
-                                    <div class="config-item">
-                                        <label for="escalation-time">Escalation Time (minutes)</label>
-                                        <input type="number" id="escalation-time" min="5" max="120" value="15">
-                                        <small>Escalate warning to critical after this duration</small>
-                                    </div>
-                                    <div class="config-item">
-                                        <label for="auto-recovery-check">Auto-Recovery Detection</label>
-                                        <div class="toggle-switch">
-                                            <input type="checkbox" id="auto-recovery-check" checked>
-                                            <span class="toggle-slider"></span>
-                                        </div>
-                                        <small>Automatically send recovery notifications when issues resolve</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Application Monitoring -->
-                            <div class="app-monitoring-section">
-                                <h3><i class="fas fa-cogs"></i> Application Monitoring</h3>
-                                <div class="app-monitor-list" id="app-monitor-list">
-                                    <!-- Dynamic application entries will be added here -->
-                                </div>
-
-                                <div class="app-monitor-add-section">
-                                    <h4><i class="fas fa-plus"></i> Add Application to Monitor</h4>
-                                    <div class="config-grid">
-                                        <div class="config-item">
-                                            <label for="app-monitor-name">Application Name</label>
-                                            <input type="text" id="app-monitor-name" placeholder="My App">
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="app-monitor-process">Process Name</label>
-                                            <input type="text" id="app-monitor-process" placeholder="MyApp.app">
-                                            <small>Exact process name or app bundle name</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="app-monitor-critical">Critical Process</label>
-                                            <div class="toggle-switch">
-                                                <input type="checkbox" id="app-monitor-critical">
-                                                <span class="toggle-slider"></span>
-                                            </div>
-                                            <small>Send critical alerts if this process stops</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="app-monitor-restart">Auto-Restart</label>
-                                            <div class="toggle-switch">
-                                                <input type="checkbox" id="app-monitor-restart" checked>
-                                                <span class="toggle-slider"></span>
-                                            </div>
-                                            <small>Automatically restart if process crashes</small>
-                                        </div>
-                                    </div>
-                                    <button id="add-app-monitor" class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Add Application Monitor
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Network Ping Monitoring -->
-                            <div class="network-ping-section">
-                                <h3><i class="fas fa-network-wired"></i> Network Ping Monitoring</h3>
-                                <p>Monitor network connectivity by pinging specific IP addresses on a regular interval.
-                                    Useful for tracking internet connectivity and device availability.</p>
-
-                                <div class="ping-monitor-list" id="ping-monitor-list">
-                                    <!-- Dynamic ping entries will be added here -->
-                                </div>
-
-                                <div class="ping-monitor-add-section">
-                                    <h4><i class="fas fa-plus"></i> Add IP Address to Monitor</h4>
-                                    <div class="config-grid">
-                                        <div class="config-item">
-                                            <label for="ping-ip-address">IP Address or Hostname</label>
-                                            <input type="text" id="ping-ip-address" placeholder="8.8.8.8 or google.com">
-                                            <small>IPv4 address or resolvable hostname</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="ping-label">Description</label>
-                                            <input type="text" id="ping-label" placeholder="Google DNS Server">
-                                            <small>Friendly name for this ping target</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="ping-interval">Ping Interval (minutes)</label>
-                                            <input type="number" id="ping-interval" min="1" max="60" value="5">
-                                            <small>How often to ping this target (1-60 minutes)</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="ping-timeout">Timeout (seconds)</label>
-                                            <input type="number" id="ping-timeout" min="1" max="30" value="5">
-                                            <small>How long to wait for ping response</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="ping-critical">Critical Target</label>
-                                            <div class="toggle-switch">
-                                                <input type="checkbox" id="ping-critical">
-                                                <span class="toggle-slider"></span>
-                                            </div>
-                                            <small>Send critical alerts if this target becomes unreachable</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="ping-log-file">Log Results to File</label>
-                                            <div class="toggle-switch">
-                                                <input type="checkbox" id="ping-log-file" checked>
-                                                <span class="toggle-slider"></span>
-                                            </div>
-                                            <small>Save ping results to log file for analysis</small>
-                                        </div>
-                                    </div>
-                                    <button id="add-ping-monitor" class="btn btn-primary">
-                                        <i class="fas fa-plus"></i> Add Ping Monitor
-                                    </button>
-                                </div>
-
-                                <div class="ping-log-section">
-                                    <h4><i class="fas fa-file-alt"></i> Ping Log Settings</h4>
-                                    <div class="config-grid">
-                                        <div class="config-item">
-                                            <label for="ping-log-retention">Log Retention (days)</label>
-                                            <input type="number" id="ping-log-retention" min="1" max="365" value="30">
-                                            <small>How long to keep ping log files</small>
-                                        </div>
-                                        <div class="config-item">
-                                            <label for="ping-log-location">Log Directory</label>
-                                            <input type="text" id="ping-log-location" value="~/logs/ping-monitoring"
-                                                readonly>
-                                            <small>Directory where ping logs are stored</small>
-                                        </div>
-                                    </div>
-                                    <div class="ping-log-actions">
-                                        <button id="view-ping-logs" class="btn btn-secondary">
-                                            <i class="fas fa-eye"></i> View Recent Logs
-                                        </button>
-                                        <button id="export-ping-logs" class="btn btn-secondary">
-                                            <i class="fas fa-download"></i> Export Logs
-                                        </button>
-                                        <button id="clear-ping-logs" class="btn btn-warning">
-                                            <i class="fas fa-trash"></i> Clear Old Logs
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Test Alert System -->
-                            <div class="test-alert-section">
-                                <h3><i class="fas fa-vial"></i> Test Alert System</h3>
-                                <div class="test-buttons-grid">
-                                    <button id="test-warning-alert" class="btn btn-warning">
-                                        <i class="fas fa-exclamation-triangle"></i> Test Warning Alert
-                                    </button>
-                                    <button id="test-critical-alert" class="btn btn-danger">
-                                        <i class="fas fa-exclamation-circle"></i> Test Critical Alert
-                                    </button>
-                                    <button id="test-recovery-alert" class="btn btn-success">
-                                        <i class="fas fa-check-circle"></i> Test Recovery Alert
-                                    </button>
-                                    <button id="simulate-high-load" class="btn btn-secondary">
-                                        <i class="fas fa-chart-line"></i> Simulate High Load
-                                    </button>
-                                </div>
-                                <div class="test-result" id="alert-test-result"></div>
-                            </div>
-
-                            <!-- Launch Agent Suggestions -->
-                            <div class="launch-agent-suggestions-section">
-                                <div class="section-header">
-                                    <h3><i class="fas fa-rocket"></i> Suggested Launch Agents</h3>
-                                    <small>Applications that could benefit from auto-start protection</small>
-                                    <button id="refresh-suggestions" class="btn btn-small btn-secondary">
-                                        <i class="fas fa-sync-alt"></i> Refresh
-                                    </button>
-                                </div>
-
-                                <div class="suggestions-grid" id="launch-agent-suggestions">
-                                    <div class="suggestion-placeholder">
-                                        <i class="fas fa-search"></i>
-                                        <p>Click "Refresh" to scan for applications that could benefit from launch agent
-                                            protection</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Configuration Editor -->
-                            <div class="monitoring-config-section">
-                                <div class="section-header">
-                                    <h3><i class="fas fa-cog"></i> Advanced Configuration</h3>
-                                    <small>JSON format - edit with caution</small>
-                                </div>
-                                <div class="config-editor-container">
-                                    <textarea id="monitoring-config-editor" class="config-editor" rows="12"
-                                        placeholder="Configuration will load here..."></textarea>
-                                </div>
-                            </div>
-
-                            <!-- Monitoring Actions -->
-                            <div class="config-actions">
-                                <div class="config-actions-left">
-                                    <button id="load-monitoring-config" class="btn btn-secondary">
-                                        <i class="fas fa-folder-open"></i> Load Config
-                                    </button>
-                                    <button id="save-monitoring-config" class="btn btn-secondary">
-                                        <i class="fas fa-save"></i> Save Config
-                                    </button>
-                                </div>
-                                <div class="config-actions-right">
-                                    <button id="reset-monitoring-config" class="btn btn-danger">
-                                        <i class="fas fa-undo"></i> Reset to Defaults
-                                    </button>
-                                    <button id="apply-monitoring-config" class="btn btn-success">
-                                        <i class="fas fa-check"></i> Apply Configuration
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Monitoring Status -->
-                            <div class="config-status" id="monitoring-status" style="display: none;">
-                                <div class="config-status-content">
-                                    <i class="fas fa-info-circle"></i>
-                                    <span id="monitoring-status-text">Monitoring configuration updated
                                         successfully</span>
                                 </div>
                             </div>

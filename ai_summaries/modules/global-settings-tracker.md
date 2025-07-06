@@ -1,9 +1,11 @@
-# Configuration Module Tracker
+# Global Settings Module Tracker
 
-**Module:** Application Configuration Management  
-**Files:** `frontend/js/modules/configuration.js`, `frontend/index.html` (configuration section)  
+**Module:** Global Application Settings Management  
+**Files:** `frontend/js/modules/global-settings.js` (renamed from configuration.js), `frontend/index.html` (global settings section)  
 **Last Updated:** 2025-07-06  
 **Status:** ⚠️ Needs Assessment
+
+**Note:** *This tracker covers global application configuration functionality after the sidebar reorganization (Phase 3) - renamed from "Configuration" to "Global" for clarity*
 
 ---
 
@@ -170,4 +172,14 @@
 - **Needs Development** - Placeholder needing full implementation
 - **Integration Focus** - Configuration scattered across modules needing centralization
 
-**For new issues or findings related to Configuration functionality, add them to the main `active-issues.md` file with the `[Configuration]` tag.**
+**For new issues or findings related to Global Settings functionality, add them to the main `active-issues.md` file with the `[Global]` tag.**
+
+---
+
+## Reorganization Notes
+
+**Phase 3 Rename (2025-07-06):**
+- Successfully renamed "Configuration" tab to "Global" for better clarity and brevity
+- Module file renamed from `configuration.js` to `global-settings.js`
+- "Global" better represents app-wide settings while being concise in the sidebar
+- Assessment still needed to clarify functionality and complete documentation

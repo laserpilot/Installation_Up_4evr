@@ -1,6 +1,6 @@
 # Active Issues Tracker - Installation Up 4evr
 
-**Last Updated:** 2025-07-05  
+**Last Updated:** 2025-07-06  
 **Current Sprint:** Post-Phase 9 Development  
 **Status:** Application production ready, monitoring for new issues
 
@@ -10,7 +10,7 @@
 *Critical issues that block core functionality*
 
 **Currently:** 
-- [ ] Launch Agents Export button - file contains "undefined" instead of plist content (debugging added)
+- [ ] Applications Export button - file contains "undefined" instead of plist content (debugging added)
 
 ---
 
@@ -18,9 +18,9 @@
 *Important improvements and enhancements*
 
 **Currently:** 
-- [ ] Tool-created launch agents should also appear in Dashboard Application Status section  
-- [ ] Service Control tab needs investigation - unclear purpose vs Launch Agents, shows "Mode: Electron-managed"
-- [ ] Configuration tab needs assessment - scope and functionality unclear
+- [ ] Tool-created applications should also appear in Dashboard Application Status section  
+- [ ] Backend Service tab needs investigation - unclear purpose vs Applications, shows "Mode: Electron-managed"
+- [ ] Global tab needs assessment - scope and functionality unclear
 - [ ] Logging improvements - capture system info on intervals (uptime, display connection, ping states, recent alerts) for pattern identification
 
 ---
@@ -40,7 +40,7 @@
 
 **Recently Completed:**
 - ✅ Excessive console logging streamlined - selective API logging, reduced monitoring noise
-- ✅ Launch Agents UI fixes - View/Edit/Test buttons, modal visibility, MasterConfigAPI error, web app loop prevention
+- ✅ Applications UI fixes - View/Edit/Test buttons, modal visibility, MasterConfigAPI error, web app loop prevention
 - ✅ Complete module documentation - trackers for all 8 major application modules
 
 ---
@@ -48,11 +48,11 @@
 ## Recently Completed ✅
 *Recently resolved issues for reference*
 
-- [x] **[Launch Agents]** "No user launch agents found" error - Fixed missing `extractWebAppInfo` method in backend *(2025-07-05)*
-- [x] **[System Config]** Settings showing "unknown" status - Fixed API data structure mismatch in statusLookup *(2025-07-05)*
+- [x] **[Applications]** "No user launch agents found" error - Fixed missing `extractWebAppInfo` method in backend *(2025-07-05)*
+- [x] **[System]** Settings showing "unknown" status - Fixed API data structure mismatch in statusLookup *(2025-07-05)*
 - [x] **[Notifications]** Toggle functionality broken - Fixed duplicate event listeners and initialization order *(2025-07-05)*
 - [x] **[UI/UX]** Modal sizing issues - Improved proportions (900px wide, 80vh tall) *(2025-07-05)*
-- [x] **[Service Control]** Inaccurate server status - Fixed API data extraction from nested response *(2025-07-05)*
+- [x] **[Backend Service]** Inaccurate server status - Fixed API data extraction from nested response *(2025-07-05)*
 - [x] **[UI/UX]** Header status indicators black - Added real-time server and SIP status with live updates *(2025-07-05)*
 
 ---

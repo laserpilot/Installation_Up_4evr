@@ -1,9 +1,11 @@
-# Launch Agents Module Tracker
+# Applications Module Tracker
 
-**Module:** Launch Agents Management  
-**Files:** `frontend/js/modules/launch-agents.js`, `frontend/js/components/LaunchAgentCard.js`, `backend/src/platform/macos/process-manager.js`  
-**Last Updated:** 2025-07-05  
+**Module:** Application Launch Management  
+**Files:** `frontend/js/modules/applications.js` (renamed from launch-agents.js), `frontend/js/components/LaunchAgentCard.js`, `backend/src/platform/macos/process-manager.js`  
+**Last Updated:** 2025-07-06  
 **Status:** ✅ Fully Functional
+
+**Note:** *This tracker covers application launch management functionality after the sidebar reorganization (Phase 3) - renamed from "Launch Agents" to "Applications" for clarity*
 
 ---
 
@@ -172,4 +174,14 @@
 - Safe file operations with proper error handling
 - User confirmation for destructive actions (delete)
 
-**For new issues or enhancements related to Launch Agents functionality, add them to the main `active-issues.md` file with the `[Launch Agents]` tag.**
+**For new issues or enhancements related to Applications functionality, add them to the main `active-issues.md` file with the `[Applications]` tag.**
+
+---
+
+## Reorganization Notes
+
+**Phase 3 Rename (2025-07-06):**
+- Successfully renamed "Launch Agents" tab to "Applications" for better user understanding
+- Module file renamed from `launch-agents.js` to `applications.js`
+- All functionality preserved while improving clarity and user experience
+- "Applications" better represents the end-user purpose of managing desktop and web applications
