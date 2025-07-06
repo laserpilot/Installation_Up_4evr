@@ -197,6 +197,15 @@ class MacOSSystemManager extends SystemManagerInterface {
                 verify: 'ls -la "/System/Library/CoreServices/Problem Reporter.app" | awk \'{print $1}\'',
                 required: false,
                 category: 'danger'
+            },
+            enableAutomaticLogin: {
+                name: "Enable Automatic Login",
+                description: "⚠️ SECURITY RISK: Enable automatic login for scheduled reboots (removes login security)",
+                command: 'sudo defaults write /Library/Preferences/com.apple.loginwindow autoLoginUser -string "$(whoami)"',
+                revert: 'sudo defaults delete /Library/Preferences/com.apple.loginwindow autoLoginUser',
+                verify: 'defaults read /Library/Preferences/com.apple.loginwindow autoLoginUser 2>/dev/null || echo "Not set"',
+                required: false,
+                category: 'danger'
             }
         };
     }

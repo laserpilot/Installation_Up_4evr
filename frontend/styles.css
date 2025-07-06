@@ -184,7 +184,7 @@ body {
 }
 
 .setting-item {
-    padding: var(--spacing-md);
+    padding: 6px;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     background: var(--background-color);
@@ -206,7 +206,7 @@ body {
     display: flex;
     align-items: flex-start;
     cursor: pointer;
-    gap: var(--spacing-sm);
+    gap: 6px;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -240,14 +240,16 @@ body {
 
 .setting-item h4 {
     font-weight: 600;
-    margin-bottom: var(--spacing-xs);
+    font-size: 0.85rem;
+    margin-bottom: 1px;
     color: var(--text-primary);
 }
 
 .setting-item p {
     color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.4;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    margin: 0;
 }
 
 /* Launch Agents */
@@ -5131,6 +5133,112 @@ input:checked+.toggle-slider:before {
     border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
 }
 
+/* Educational Tooltip System */
+.educational-tooltip {
+    position: relative;
+    display: none;
+    margin-top: var(--spacing-sm);
+    margin-left: var(--spacing-md);
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: var(--spacing-md);
+    max-width: 400px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.educational-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.educational-tooltip .tooltip-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.educational-tooltip .tooltip-header i {
+    margin-right: var(--spacing-xs);
+    font-size: 1rem;
+}
+
+.educational-tooltip .tooltip-content {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.educational-tooltip .tooltip-content p {
+    margin: 0;
+    margin-bottom: var(--spacing-sm);
+}
+
+.educational-tooltip .undo-info {
+    display: flex;
+    align-items: flex-start;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--background-color);
+    border-radius: 6px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.educational-tooltip .undo-info i {
+    margin-right: var(--spacing-xs);
+    margin-top: 2px;
+    color: var(--warning-color);
+    flex-shrink: 0;
+}
+
+/* Refresh section for system preferences */
+.refresh-section {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.refresh-section .btn {
+    font-size: 0.85rem;
+}
+
+/* Position tooltips to avoid covering buttons */
+.button-group, .action-buttons {
+    position: relative;
+}
+
+.button-group .educational-tooltip,
+.action-buttons .educational-tooltip {
+    position: absolute;
+    bottom: calc(100% + var(--spacing-xs));
+    left: 50px;
+    margin-top: 0;
+    margin-left: 0;
+    z-index: 1001;
+    max-width: 350px;
+}
+
+/* Fallback positioning for narrow screens */
+@media (max-width: 768px) {
+    .button-group .educational-tooltip,
+    .action-buttons .educational-tooltip {
+        position: static;
+        margin-top: var(--spacing-sm);
+        margin-left: 0;
+        max-width: 100%;
+    }
+}
+
 /* --- Animations --- */
 @keyframes fadeIn {
     from {
@@ -5985,18 +6093,7 @@ select:focus {
     margin-right: auto;
 }
 
-.setting-item {
-    background: white;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1rem;
-    transition: all 0.2s ease;
-}
-
-.setting-item:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.1);
-}
+/* Conflicting setting-item styles removed to prevent CSS specificity issues */
 
 .setting-label {
     display: flex;
