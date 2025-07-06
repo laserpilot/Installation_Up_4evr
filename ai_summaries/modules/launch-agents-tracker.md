@@ -28,16 +28,14 @@
 ## Active Issues 🎯
 
 **Currently:** 
-- [ ] View plist button does not work - clicking it gives no UI response and no console error (debugging added)
-   - [ ] Still not working - nothing happens on the UI - console says [API] POST /api/launch-agents/view api.js:33 [API] Response status: 200 (7ms) api.js:44 [API] Response data: {success: true, data: {…}, message: 'Operation completed successfully', error: null, timestamp: '2025-07-06T04:00:35.849Z'} so it might be CSS related?
-- [ ] Test plist button - unclear what this does and doesnt seem to have an effect. may need clearer explanations
-   - [ ] Test button is still unclear - shows "Processing" in the UI and then it dismisses and no message about succeeding or failing
-- [ ] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist (debugging added)
-   - [ ] This is still a bug, export still shows undefined
-- [ ] Edit plist button - clicking it results in an error "Failed to load plist content"
-   - [ ] Still not working, no response in the UI - i see "[API] POST /api/launch-agents/view api.js:33 [API] Response status: 200 (5ms) api.js:44 [API] Response data: " so it might be CSS related?
-- [ ] Error when visiting page: launch-agents.js:778 [LAUNCH-AGENTS] Failed to load master config state: TypeError: MasterConfigAPI. load is not a function at loadLaunchAgentsMasterConfig (launch-agents.js:746:48) at launch-agents.js:739:9
-- [ ] Web app launch agent does work, but chrome does not enter full screen. Also - there should be a warning or a different handling method because when you select "Create Launch Agent" for the web app, it just tries to keep opening a tab in chrome with the URL over and over and you have to quickly delete it. Maybe we need a warning or some way to only have it happen on reboot after it is created?
+- [ ] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist (debugging added for investigation)
+
+**Recently Fixed (Latest Session):**
+- ✅ View plist button now working - Fixed missing 'show' CSS class for modal visibility
+- ✅ Edit plist button now working - Fixed missing 'show' CSS class for modal visibility  
+- ✅ Test button feedback improved - Enhanced error handling and clear success/failure indication
+- ✅ MasterConfigAPI error fixed - Changed .load() to .getMasterProfile() method
+- ✅ Web app infinite loop prevented - Set runAtLoad: false, added user guidance about manual start
 
 **Recently Fixed (Latest Session):**
 - ✅ Sort "Tool Created" launch agents to the top of the list
