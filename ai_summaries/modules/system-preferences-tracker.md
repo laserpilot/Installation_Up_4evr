@@ -28,7 +28,29 @@
 ## Active Issues 🎯
 
 **Currently:** 
-- [ ] Automatic login should also be a feature we help the user enable, otherwise scheduled reboots will cause issues and get stuck at login.
+- [x] Still a persistent issue where all system preferences show "Status Unknown" this is what shows up in terminal - <div class="setting-item status-unknown " data-setting-id="undefined" data-category="power">
+            <label class="checkbox-label">
+                <input type="checkbox" data-setting="undefined">
+                <span class="checkbox-custom"></span>
+                <div class="setting-content">
+                    <div class="setting-header">
+                        <h4>Screensaver <span class="status-emoji">⚪</span></h4>
+                        <span class="status-text">Unknown</span>
+                    </div>
+                    <p>Set screensaver to Never</p>
+                </div>
+            </label>
+        </div>
+- [x] tooltips for Verify Settings, Generate Terminal Commands, and Apply Required Settings all appear annoyingly on top of the button making them hard to click and read. They need to show up maybe to the right or left or more offset so the user can read the button and the tooltip. The tooltip text could be smaller if that is easier
+   - [x] This is still problematic - now the tooltips appear all the way to the right and are cut off by the edge of the window. they need to move back to being closer - maybe just like 50px off from the center of the button or from the edge of the button instead?
+- [x] Lets add a "Refresh" button to the top of the page in case people change a setting elsewhere and they want to see if it is now detected as "enabled"
+- [x] I think the styling of div.setting-item section could overall be slimmer - they are readable but almost too large. maybe we need to just shrink the fonts a bit and lessen some padding? *FIXED: CSS specificity issue resolved*
+- [x] Automatic login should also be a feature we help the user enable, otherwise scheduled reboots will cause issues and get stuck at login. I think this might want to be in the Expert zone though, just because it is not secure
+- [x] The two column layout of the page seems to be causing issues with the display og the div.help-toggle items - they are essentially showing up twice side by side now instead of spanning the width of the container 
+- [x] Automatic login incorrectly shows as "Applied" but that is not the case with the current system, so its checking logic needs to be verified
+- [x] Disable application crash reporter also shows as "Applied" but it is incorrect to the system or it needs to be verified
+
+
 
 ---
 

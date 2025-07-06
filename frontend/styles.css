@@ -3424,6 +3424,7 @@ input:checked+.toggle-slider:before {
     border-radius: 8px;
     margin-bottom: var(--spacing-md);
     border: 1px solid #e1bee7;
+    grid-column: 1 / -1; /* Span all columns in grid layout */
 }
 
 .help-toggle {
@@ -3433,6 +3434,7 @@ input:checked+.toggle-slider:before {
     padding: var(--spacing-md);
     cursor: pointer;
     transition: background-color 0.2s ease;
+    grid-column: 1 / -1; /* Span all columns in grid layout */
 }
 
 .help-toggle:hover {
