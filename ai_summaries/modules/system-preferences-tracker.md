@@ -27,7 +27,8 @@
 
 ## Active Issues 🎯
 
-**Currently:** No active issues ✅
+**Currently:** 
+- [ ] Automatic login should also be a feature we help the user enable, otherwise scheduled reboots will cause issues and get stuck at login.
 
 ---
 

@@ -196,7 +196,7 @@ class MonitoringCore extends EventEmitter {
             }
         };
 
-        console.log('[DEBUG] Heartbeat sent', heartbeat);
+        // Heartbeat logging reduced - only log on errors or major status changes
         this.emit('heartbeat', heartbeat);
     }
 

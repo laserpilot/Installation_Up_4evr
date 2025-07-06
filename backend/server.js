@@ -43,9 +43,18 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from frontend directory
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Request logging
+// Selective request logging - only important operations
 app.use((req, res, next) => {
-    console.log(`[API] ${req.method} ${req.path} (platform mode)`);
+    // Skip logging for frequent monitoring endpoints
+    const skipLogging = req.path.includes('/monitoring/') || 
+                       req.path.includes('/health') ||
+                       req.path.includes('/status') ||
+                       req.path.includes('/.well-known/') ||
+                       req.path.includes('/api/platform');
+    
+    if (!skipLogging) {
+        console.log(`[API] ${req.method} ${req.path}`);
+    }
     next();
 });
 
