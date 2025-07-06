@@ -23,11 +23,14 @@ import { apiCall } from './utils/api.js';
 
 // Header status indicator management
 let headerStatusInterval = null;
+let sipStatusCache = null;
+let sipStatusLastChecked = 0;
+const SIP_STATUS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 async function updateHeaderStatusIndicators() {
     await Promise.all([
         updateServerStatus(),
-        updateSipStatus()
+        updateSipStatusCached()
     ]);
 }
 
@@ -56,34 +59,57 @@ async function updateServerStatus() {
     }
 }
 
-async function updateSipStatus() {
-    const sipStatusElement = document.getElementById('sip-status');
-    if (!sipStatusElement) return;
+async function updateSipStatusCached() {
+    const now = Date.now();
     
+    // Check if we have a valid cache
+    if (sipStatusCache && (now - sipStatusLastChecked) < SIP_STATUS_CACHE_DURATION) {
+        // Use cached data, no API call needed
+        updateSipStatusDisplay(sipStatusCache);
+        return;
+    }
+    
+    // Cache expired or doesn't exist, fetch new data
     try {
-        // Check SIP status - this is usually a system command check
         const response = await apiCall('/api/system/sip-status');
         const sipData = response.data || response;
         
-        // Clear existing status classes
-        sipStatusElement.className = 'status-indicator';
+        // Update cache
+        sipStatusCache = sipData;
+        sipStatusLastChecked = now;
         
-        if (sipData.enabled === false) {
-            // SIP disabled (good for our use case)
-            sipStatusElement.classList.add('online');
-            sipStatusElement.querySelector('i').style.color = '#28a745'; // Green
-            sipStatusElement.title = 'SIP Disabled';
-        } else {
-            // SIP enabled (might restrict functionality)
-            sipStatusElement.classList.add('warning');
-            sipStatusElement.querySelector('i').style.color = '#ffc107'; // Yellow
-            sipStatusElement.title = 'SIP Enabled - May restrict functionality';
-        }
+        updateSipStatusDisplay(sipData);
     } catch (error) {
-        // Default to unknown status
-        sipStatusElement.className = 'status-indicator';
+        console.error('Failed to get SIP status:', error);
+        // Don't update cache on error
+        updateSipStatusDisplay(null);
+    }
+}
+
+function updateSipStatusDisplay(sipData) {
+    const sipStatusElement = document.getElementById('sip-status');
+    if (!sipStatusElement) return;
+    
+    // Clear existing status classes
+    sipStatusElement.className = 'status-indicator';
+    
+    if (!sipData) {
+        // Error state
         sipStatusElement.querySelector('i').style.color = '#6c757d'; // Gray
         sipStatusElement.title = 'SIP Status Unknown';
+        return;
+    }
+    
+    if (sipData.enabled === false) {
+        // SIP disabled (good for our use case)
+        sipStatusElement.classList.add('online');
+        sipStatusElement.querySelector('i').style.color = '#28a745'; // Green
+        sipStatusElement.title = 'SIP Disabled';
+    } else {
+        // SIP enabled (might restrict functionality)
+        sipStatusElement.classList.add('warning');
+        sipStatusElement.querySelector('i').style.color = '#ffc107'; // Yellow
+        sipStatusElement.title = 'SIP Enabled - May restrict functionality';
     }
 }
 

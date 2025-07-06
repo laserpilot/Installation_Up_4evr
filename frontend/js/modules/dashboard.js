@@ -209,24 +209,42 @@ function updateApplications(applications) {
         return;
     }
     
-    container.innerHTML = applications.map(app => `
-        <div class="app-status-card">
-            <div class="app-icon">
-                <i class="fas ${app.running ? 'fa-play-circle text-green' : 'fa-stop-circle text-red'}"></i>
+    container.innerHTML = applications.map(app => {
+        const isLaunchAgent = app.type === 'launch-agent';
+        const isToolCreated = app.source === 'tool-created';
+        const toolBadge = isToolCreated ? '<span class="tool-created-badge"><i class="fas fa-rocket"></i> Up4Evr</span>' : '';
+        
+        return `
+            <div class="app-status-card ${isToolCreated ? 'tool-created-app' : ''}">
+                <div class="app-icon">
+                    <i class="fas ${app.running ? 'fa-play-circle text-green' : 'fa-stop-circle text-red'}"></i>
+                </div>
+                <div class="app-info">
+                    <h4>${app.name} ${toolBadge}</h4>
+                    <p>${app.running ? 'Running' : 'Stopped'}</p>
+                    ${app.pid ? `<small>PID: ${app.pid}</small>` : ''}
+                    ${isLaunchAgent ? '<small class="app-type">Launch Agent</small>' : ''}
+                </div>
+                <div class="app-actions">
+                    ${isLaunchAgent ? `
+                        <button class="btn btn-sm ${app.running ? 'btn-danger' : 'btn-success'}" 
+                                onclick="toggleLaunchAgent('${app.agentData.label}')">
+                            ${app.running ? 'Stop' : 'Start'}
+                        </button>
+                        <button class="btn btn-sm btn-outline" 
+                                onclick="viewLaunchAgent('${app.agentData.label}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    ` : `
+                        <button class="btn btn-sm ${app.running ? 'btn-danger' : 'btn-success'}" 
+                                onclick="toggleApplication('${app.name}')">
+                            ${app.running ? 'Stop' : 'Start'}
+                        </button>
+                    `}
+                </div>
             </div>
-            <div class="app-info">
-                <h4>${app.name}</h4>
-                <p>${app.running ? 'Running' : 'Stopped'}</p>
-                ${app.pid ? `<small>PID: ${app.pid}</small>` : ''}
-            </div>
-            <div class="app-actions">
-                <button class="btn btn-sm ${app.running ? 'btn-danger' : 'btn-success'}" 
-                        onclick="toggleApplication('${app.name}')">
-                    ${app.running ? 'Stop' : 'Start'}
-                </button>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function updateRecentActivity(alerts) {
@@ -283,6 +301,56 @@ window.toggleApplication = async function(appName) {
     } catch (error) {
         console.error('App toggle failed:', error);
         showToast(`Failed to toggle ${appName}`, 'error');
+    }
+};
+
+// Global function for launch agent toggle (called from HTML)
+window.toggleLaunchAgent = async function(agentLabel) {
+    try {
+        // Get current status first
+        const statusResponse = await apiCall('/api/launch-agents/status');
+        const agent = statusResponse.find(a => a.label === agentLabel);
+        
+        if (!agent) {
+            showToast(`Launch agent ${agentLabel} not found`, 'error');
+            return;
+        }
+        
+        // Toggle the agent
+        const action = agent.isRunning ? 'stop' : 'start';
+        const response = await apiCall(`/api/launch-agents/${action}`, {
+            method: 'POST',
+            body: JSON.stringify({ label: agentLabel })
+        });
+        
+        if (response.success) {
+            showToast(`Launch agent ${action}ed successfully`, 'success');
+            refreshDashboardData(); // Refresh to show updated status
+        } else {
+            showToast(`Failed to ${action} launch agent`, 'error');
+        }
+    } catch (error) {
+        console.error('Launch agent toggle failed:', error);
+        showToast(`Failed to toggle launch agent`, 'error');
+    }
+};
+
+// Global function for viewing launch agent (called from HTML)
+window.viewLaunchAgent = function(agentLabel) {
+    // Navigate to launch agents tab and show the specific agent
+    if (window.navigateToTab) {
+        navigateToTab('launch-agents');
+        // Set a small delay to allow tab to load, then highlight the agent
+        setTimeout(() => {
+            const agentCard = document.querySelector(`[data-label="${agentLabel}"]`);
+            if (agentCard) {
+                agentCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                agentCard.style.outline = '2px solid var(--primary-color)';
+                setTimeout(() => {
+                    agentCard.style.outline = '';
+                }, 3000);
+            }
+        }, 500);
     }
 };
 
