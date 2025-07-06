@@ -1,6 +1,6 @@
 /**
- * @file launch-agents.js
- * @description Logic for the Launch Agents tab.
+ * @file applications.js
+ * @description Logic for the Applications tab.
  */
 
 import { apiCall, MasterConfigAPI } from '../utils/api.js';
@@ -671,7 +671,7 @@ function showCommandPreview(command, url, browserPath) {
     document.addEventListener('keydown', escapeHandler);
 }
 
-export function initLaunchAgents() {
+export function initApplications() {
     // Mode switching
     document.querySelectorAll('.mode-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {

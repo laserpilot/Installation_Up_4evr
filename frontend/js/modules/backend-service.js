@@ -8,7 +8,7 @@ import { showToast } from '../utils/ui.js';
 
 let serviceStatusInterval = null;
 
-export function initServiceControl() {
+export function initBackendService() {
     console.log('[INIT] Initializing Service Control tab...');
     
     // Initialize service status display
