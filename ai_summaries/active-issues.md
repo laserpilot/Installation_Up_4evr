@@ -18,13 +18,16 @@
 *Important improvements and enhancements*
 
 **Currently:** No medium priority issues identified ✅
+- [ ] Logging from the app should be fairly comprehensive but the logs at the moment aren't great. Should probably capture on an interval general system info like: uptime, display connection, ping states, recent alerts. It should be treated as a log so that users can identify patterns or events if something goes wrong
 
 ---
 
 ## Low Priority ⚪
 *Nice-to-have improvements and optimizations*
 
-**Currently:** No low priority issues identified ✅
+**Currently:** 
+
+- [ ] Future feature - optional toggle for the user to get screenshots of the screen on a regular interval and save them on a cycle with a timestamp. We don't want to keep too many, so it might be better to keep them on a cycle of like every X minutes but only keep the last 100 or something, and older ones get deleted.
 
 ---
 
