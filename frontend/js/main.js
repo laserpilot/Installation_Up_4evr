@@ -10,11 +10,10 @@ import { MonitoringDataManager } from './modules/monitoring.js';
 import { UIManager } from './modules/UIManager.js';
 import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
-import { initSystemPreferences } from './modules/system-preferences.js';
+import { initSystem } from './modules/system.js';
 import { initLaunchAgents, startRealtimeStatusUpdates, stopRealtimeStatusUpdates } from './modules/launch-agents.js';
 import { initNotificationConfig } from './modules/notifications-config.js';
 import { initNotifications } from './modules/notifications.js';
-import { initInstallationSettings } from './modules/installation-settings.js';
 import { initServiceControl } from './modules/service-control.js';
 import { initConfiguration } from './modules/configuration.js';
 import { initSetupWizard } from './modules/setup-wizard.js';
@@ -502,10 +501,9 @@ class InstallationUp4evr {
 InstallationUp4evr.prototype.moduleInitializers = {
     'dashboard': initDashboard,
     'setup-wizard': initSetupWizard,
-    'system-prefs': initSystemPreferences,
+    'system': initSystem,
     'launch-agents': initLaunchAgents,
     'monitoring': () => { initMonitoringTab(); },
-    'installation-settings': initInstallationSettings,
     'service-control': initServiceControl,
     'configuration': initConfiguration,
     'notifications': initNotifications
