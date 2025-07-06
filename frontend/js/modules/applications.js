@@ -859,12 +859,15 @@ function downloadAgentFile(label, result) {
         return;
     }
     
-    const content = result.data.content || result.data.plistContent;
-    const filename = result.data.filename || `${label}.plist`;
+    // Handle double-wrapped API response structure
+    const dataObj = result.data.data || result.data;
+    const content = dataObj.content || dataObj.plistContent;
+    const filename = dataObj.filename || `${label}.plist`;
     
     // Debug content only if it appears to be invalid
     console.log('[LAUNCH-AGENTS] Export content analysis for', label, ':');
     console.log('  - result.data:', result.data);
+    console.log('  - dataObj:', dataObj);
     console.log('  - content:', content);
     console.log('  - filename:', filename);
     
@@ -873,10 +876,14 @@ function downloadAgentFile(label, result) {
             content, 
             filename, 
             result,
+            dataObj,
+            'result.data.data': result.data?.data,
             'result.data.content': result.data?.content,
             'result.data.plistContent': result.data?.plistContent,
             'result.content': result.content
         });
+        showToast('Failed to export launch agent - invalid content', 'error');
+        return;
     }
     
     const blob = new Blob([content], { type: 'application/xml' });
