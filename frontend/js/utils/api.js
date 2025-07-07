@@ -4,6 +4,36 @@
  */
 
 /**
+ * Logs user actions to the backend for audit trail
+ */
+async function logUserAction(method, endpoint, options, statusCode, duration) {
+    try {
+        const actionData = {
+            method,
+            endpoint,
+            statusCode,
+            duration,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+            hasBody: !!options.body,
+            bodySize: options.body ? JSON.stringify(options.body).length : 0
+        };
+
+        // Send to logging endpoint (but don't wait for response to avoid blocking)
+        fetch(`${window.location.origin}/api/user-actions/log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(actionData)
+        }).catch(() => {
+            // Ignore logging errors to avoid infinite loops
+        });
+    } catch (error) {
+        // Ignore logging errors
+    }
+}
+
+/**
  * Performs an API call to the backend server.
  * @param {string} endpoint - The API endpoint to call (e.g., '/api/health').
  * @param {object} [options={}] - Optional fetch options (method, body, etc.).
@@ -42,6 +72,11 @@ export async function apiCall(endpoint, options = {}) {
             console.log(`[API] Response data: [REDACTED - AUTH CALL]`);
         } else {
             console.log(`[API] Response data:`, responseData);
+        }
+
+        // Log user actions to backend for important endpoints
+        if (method !== 'GET' && !endpoint.includes('/logs/') && !endpoint.includes('/monitoring/') && !endpoint.includes('/health')) {
+            logUserAction(method, endpoint, options, response.status, duration);
         }
 
         return responseData;

@@ -23,6 +23,14 @@ class MacOSSystemManager extends SystemManagerInterface {
         super();
         this.platform = 'macos';
         this.settings = this.initializeSettings();
+        this.logger = null;
+    }
+
+    /**
+     * Inject logger for structured logging
+     */
+    setLogger(logger) {
+        this.logger = logger;
     }
 
     initializeSettings() {
@@ -241,17 +249,46 @@ class MacOSSystemManager extends SystemManagerInterface {
     }
 
     async applySettings(settingKeys) {
+        // Log the settings application attempt
+        if (this.logger) {
+            await this.logger.system(1, `Applying system settings`, {
+                settingKeys,
+                settingCount: settingKeys.length,
+                action: 'apply_settings_start'
+            });
+        }
+
         const results = [];
 
         for (const key of settingKeys) {
             const setting = this.settings[key];
             if (!setting) {
-                results.push({
+                const errorResult = {
                     setting: key,
                     success: false,
                     error: 'Setting not found'
-                });
+                };
+                results.push(errorResult);
+                
+                // Log setting not found error
+                if (this.logger) {
+                    await this.logger.system(3, `System setting not found: ${key}`, {
+                        settingKey: key,
+                        action: 'apply_setting_not_found'
+                    });
+                }
                 continue;
+            }
+
+            // Log individual setting attempt
+            if (this.logger) {
+                await this.logger.system(1, `Applying system setting: ${setting.name}`, {
+                    settingKey: key,
+                    settingName: setting.name,
+                    command: setting.command,
+                    requiresSudo: setting.command.startsWith('sudo '),
+                    action: 'apply_setting_attempt'
+                });
             }
 
             try {
@@ -261,37 +298,94 @@ class MacOSSystemManager extends SystemManagerInterface {
                     const commandWithoutSudo = setting.command.replace(/^sudo /, '');
                     const result = await this.executeSudoCommand(commandWithoutSudo, setting.name);
                     
-                    results.push({
+                    const settingResult = {
                         setting: key,
                         name: setting.name,
                         success: result.success,
                         output: result.stdout || '',
                         stderr: result.stderr || null
-                    });
+                    };
+                    results.push(settingResult);
+
+                    // Log sudo command result
+                    if (this.logger) {
+                        await this.logger.system(result.success ? 1 : 3, 
+                            `System setting ${result.success ? 'applied successfully' : 'failed'}: ${setting.name}`, {
+                            settingKey: key,
+                            settingName: setting.name,
+                            success: result.success,
+                            requiresSudo: true,
+                            output: result.stdout,
+                            error: result.stderr,
+                            action: result.success ? 'apply_setting_success' : 'apply_setting_failure'
+                        });
+                    }
                 } else {
                     // Execute regular command without sudo
                     const { stdout, stderr } = await execAsync(setting.command);
-                    results.push({
+                    const settingResult = {
                         setting: key,
                         name: setting.name,
                         success: true,
                         output: stdout,
                         stderr: stderr || null
-                    });
+                    };
+                    results.push(settingResult);
+
+                    // Log regular command success
+                    if (this.logger) {
+                        await this.logger.system(1, `System setting applied successfully: ${setting.name}`, {
+                            settingKey: key,
+                            settingName: setting.name,
+                            success: true,
+                            requiresSudo: false,
+                            output: stdout,
+                            action: 'apply_setting_success'
+                        });
+                    }
                 }
             } catch (error) {
-                results.push({
+                const errorResult = {
                     setting: key,
                     name: setting.name,
                     success: false,
                     error: error.message,
                     stderr: error.stderr || null
-                });
+                };
+                results.push(errorResult);
+
+                // Log setting application error
+                if (this.logger) {
+                    await this.logger.system(3, `System setting failed: ${setting.name}`, {
+                        settingKey: key,
+                        settingName: setting.name,
+                        success: false,
+                        error: error.message,
+                        stderr: error.stderr,
+                        action: 'apply_setting_error'
+                    });
+                }
             }
         }
 
+        const overallSuccess = results.every(r => r.success);
+        const failedCount = results.filter(r => !r.success).length;
+
+        // Log overall results
+        if (this.logger) {
+            await this.logger.system(overallSuccess ? 1 : 2, 
+                `System settings application complete`, {
+                totalSettings: settingKeys.length,
+                successCount: results.length - failedCount,
+                failedCount,
+                overallSuccess,
+                settingKeys,
+                action: 'apply_settings_complete'
+            });
+        }
+
         return {
-            success: results.every(r => r.success),
+            success: overallSuccess,
             results,
             timestamp: new Date().toISOString()
         };
@@ -299,6 +393,17 @@ class MacOSSystemManager extends SystemManagerInterface {
 
     async verifySettings(settingKeys = null) {
         const keysToCheck = settingKeys || Object.keys(this.settings);
+        
+        // Log the settings verification attempt
+        if (this.logger) {
+            await this.logger.system(1, `Verifying system settings`, {
+                settingKeys: keysToCheck,
+                settingCount: keysToCheck.length,
+                isFullVerification: settingKeys === null,
+                action: 'verify_settings_start'
+            });
+        }
+
         const results = [];
 
         for (const key of keysToCheck) {

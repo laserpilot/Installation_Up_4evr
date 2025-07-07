@@ -23,6 +23,7 @@ class MonitoringCore extends EventEmitter {
             temperatureCpu: 85,
             appRestarts: 5
         };
+        this.logger = null;
         
         // Initialize platform-specific provider
         try {
@@ -31,6 +32,13 @@ class MonitoringCore extends EventEmitter {
             console.warn('Failed to initialize platform-specific monitoring:', error.message);
             this.provider = null;
         }
+    }
+
+    /**
+     * Inject logger for structured logging
+     */
+    setLogger(logger) {
+        this.logger = logger;
     }
 
     generateInstallationId() {
@@ -131,52 +139,108 @@ class MonitoringCore extends EventEmitter {
 
         // CPU usage alert
         if (system.cpu && system.cpu.usage > this.alertThresholds.cpuUsage) {
-            alerts.push({
+            const alert = {
                 type: 'cpu_high',
                 level: 'warning',
                 message: `High CPU usage: ${system.cpu.usage.toFixed(1)}%`,
                 value: system.cpu.usage,
                 threshold: this.alertThresholds.cpuUsage
-            });
+            };
+            alerts.push(alert);
+
+            // Log CPU threshold alert
+            if (this.logger) {
+                this.logger.monitoring(2, `High CPU usage detected`, {
+                    type: 'cpu_high',
+                    currentUsage: system.cpu.usage,
+                    threshold: this.alertThresholds.cpuUsage,
+                    action: 'threshold_alert_cpu'
+                }).catch(() => {}); // Don't block on logging errors
+            }
         }
 
         // Memory usage alert
         if (system.memory && system.memory.usage > this.alertThresholds.memoryUsage) {
-            alerts.push({
+            const alert = {
                 type: 'memory_high',
                 level: 'warning',
                 message: `High memory usage: ${system.memory.usage.toFixed(1)}%`,
                 value: system.memory.usage,
                 threshold: this.alertThresholds.memoryUsage
-            });
+            };
+            alerts.push(alert);
+
+            // Log memory threshold alert
+            if (this.logger) {
+                this.logger.monitoring(2, `High memory usage detected`, {
+                    type: 'memory_high',
+                    currentUsage: system.memory.usage,
+                    threshold: this.alertThresholds.memoryUsage,
+                    action: 'threshold_alert_memory'
+                }).catch(() => {}); // Don't block on logging errors
+            }
         }
 
         // Disk usage alert
         if (system.disk && system.disk.usage > this.alertThresholds.diskUsage) {
-            alerts.push({
+            const alert = {
                 type: 'disk_high',
                 level: 'critical',
                 message: `High disk usage: ${system.disk.usage.toFixed(1)}%`,
                 value: system.disk.usage,
                 threshold: this.alertThresholds.diskUsage
-            });
+            };
+            alerts.push(alert);
+
+            // Log disk threshold alert (critical level)
+            if (this.logger) {
+                this.logger.monitoring(4, `Critical disk usage detected`, {
+                    type: 'disk_high',
+                    currentUsage: system.disk.usage,
+                    threshold: this.alertThresholds.diskUsage,
+                    action: 'threshold_alert_disk_critical'
+                }).catch(() => {}); // Don't block on logging errors
+            }
         }
 
         // Application alerts
         this.monitoringData.applications.forEach(app => {
             if (app.status === 'stopped' && app.shouldBeRunning) {
-                alerts.push({
+                const alert = {
                     type: 'app_stopped',
                     level: 'critical',
                     message: `Application stopped: ${app.name}`,
                     application: app.name
-                });
+                };
+                alerts.push(alert);
+
+                // Log application stopped alert (critical level)
+                if (this.logger) {
+                    this.logger.monitoring(4, `Critical application failure: ${app.name}`, {
+                        type: 'app_stopped',
+                        applicationName: app.name,
+                        pid: app.pid,
+                        shouldBeRunning: app.shouldBeRunning,
+                        action: 'application_stopped_critical'
+                    }).catch(() => {}); // Don't block on logging errors
+                }
             }
         });
 
         // Emit alerts if any
         if (alerts.length > 0) {
             this.emit('alerts', alerts);
+            
+            // Log alert summary
+            if (this.logger) {
+                this.logger.monitoring(2, `Monitoring alerts generated`, {
+                    alertCount: alerts.length,
+                    alertTypes: alerts.map(a => a.type),
+                    criticalCount: alerts.filter(a => a.level === 'critical').length,
+                    warningCount: alerts.filter(a => a.level === 'warning').length,
+                    action: 'monitoring_alerts_generated'
+                }).catch(() => {}); // Don't block on logging errors
+            }
         }
     }
 
