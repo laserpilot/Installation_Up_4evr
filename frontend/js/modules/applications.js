@@ -672,37 +672,55 @@ function showCommandPreview(command, url, browserPath) {
     document.addEventListener('keydown', escapeHandler);
 }
 
-function handleAppSelection(file) {
-    // For .app files, we need to get the full path
-    // Since web browsers don't provide full file paths for security reasons,
-    // we need to work with the file name and make assumptions about common paths
-    
-    const fileName = file.name;
-    
-    // Check if it's a .app file
-    if (!fileName.endsWith('.app')) {
-        showToast('Please select a .app file', 'error');
-        return;
+async function handleAppSelection(file) {
+    try {
+        // For .app files, we need to get the full path
+        // Since web browsers don't provide full file paths for security reasons,
+        // we need to work with the file name and make assumptions about common paths
+        
+        const fileName = file.name;
+        
+        // Check if it's a .app file
+        if (!fileName.endsWith('.app')) {
+            showToast('Please select a .app file', 'error');
+            return;
+        }
+        
+        // Show loading for app info retrieval
+        showLoading('Processing application...');
+        
+        // For dropped .app files, assume they're in /Applications unless told otherwise
+        // This is a limitation of web browsers - they don't provide full paths
+        const assumedPath = `/Applications/${fileName}`;
+        currentAppPath = assumedPath;
+        
+        // Extract app name without .app extension
+        const appName = fileName.replace('.app', '');
+        
+        // Show app info
+        document.getElementById('app-info').style.display = 'block';
+        document.getElementById('app-name').textContent = appName;
+        document.getElementById('app-path').textContent = assumedPath;
+        
+        // Auto-populate form fields
+        document.getElementById('custom-label').value = `${appName}_up4evr`;
+        document.getElementById('program-filepath').value = `${assumedPath}/Contents/MacOS/${appName}`;
+        
+        // Set some default values
+        document.getElementById('app-version').textContent = 'Unknown';
+        document.getElementById('app-bundle-id').textContent = 'Unknown';
+        
+        // Try to get app info from the backend
+        await getAppInfo(assumedPath);
+        
+        showToast(`Selected: ${fileName}`, 'success');
+    } catch (error) {
+        console.error('Error in handleAppSelection:', error);
+        showToast('Failed to process application', 'error');
+    } finally {
+        // Always clear loading state
+        hideLoading();
     }
-    
-    // For dropped .app files, assume they're in /Applications unless told otherwise
-    // This is a limitation of web browsers - they don't provide full paths
-    const assumedPath = `/Applications/${fileName}`;
-    currentAppPath = assumedPath;
-    
-    // Show app info
-    document.getElementById('app-info').style.display = 'block';
-    document.getElementById('app-name').textContent = fileName.replace('.app', '');
-    document.getElementById('app-path').textContent = assumedPath;
-    
-    // Set some default values
-    document.getElementById('app-version').textContent = 'Unknown';
-    document.getElementById('app-bundle-id').textContent = 'Unknown';
-    
-    // Try to get app info from the backend
-    getAppInfo(assumedPath);
-    
-    showToast(`Selected: ${fileName}`, 'success');
 }
 
 async function getAppInfo(appPath) {
@@ -721,6 +739,8 @@ async function getAppInfo(appPath) {
             if (info.actualPath) {
                 currentAppPath = info.actualPath;
                 document.getElementById('app-path').textContent = info.actualPath;
+                // Also update the Program File Path field if we get a better path
+                document.getElementById('program-filepath').value = `${info.actualPath}/Contents/MacOS/${info.executableName || currentAppPath.split('/').pop().replace('.app', '')}`;
             }
         }
     } catch (error) {
@@ -747,11 +767,16 @@ export function initApplications() {
     const fileInput = document.getElementById('app-file-input');
 
     dropZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener('change', async (e) => {
         const files = e.target.files;
         if (files.length > 0) {
             const file = files[0];
-            handleAppSelection(file);
+            try {
+                await handleAppSelection(file);
+            } catch (error) {
+                console.error('Error handling file selection:', error);
+                showToast('Failed to process selected file', 'error');
+            }
         }
     });
     
@@ -765,14 +790,19 @@ export function initApplications() {
         dropZone.classList.remove('drag-over');
     });
     
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', async (e) => {
         e.preventDefault();
         dropZone.classList.remove('drag-over');
         
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             const file = files[0];
-            handleAppSelection(file);
+            try {
+                await handleAppSelection(file);
+            } catch (error) {
+                console.error('Error handling dropped file:', error);
+                showToast('Failed to process dropped file', 'error');
+            }
         }
     });
 

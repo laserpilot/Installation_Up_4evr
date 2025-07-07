@@ -37,7 +37,9 @@
 - [x] **Phase 5**: ✅ Rename from "Applications" to "Process Management" for clarity
 
 **Current Issues:**
-- [ ] **Drag and Drop Broken**: Dragging and dropping an application on the Application drag and drop zone does nothing. No console error, no notification, and no UI response. It should allow for us to create a PM2 process.
+- [x] **Drag and Drop Broken**: ✅ Fixed - Dragging and dropping an application now properly creates PM2 processes
+   - [x] ✅ Fixed loading spinner getting stuck on "Processing..." - Added proper loading state management
+- [x] ✅ Drag and drop desktop app now auto-fills the "Custom Label (optional)" field with "AppName_up4evr" format and auto-populates the Program File Path
 
 **Legacy Issues (Resolved by PM2 migration):**
 - [x] Export Agent Button - ✅ Removed (no plist files with PM2)
