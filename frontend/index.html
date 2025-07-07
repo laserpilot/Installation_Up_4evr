@@ -174,7 +174,7 @@
                                         <i class="fas fa-info-circle"></i>
                                         <p>No applications are currently being monitored.</p>
                                         <button class="btn btn-link" onclick="navigateToTab('launch-agents')">
-                                            <i class="fas fa-rocket"></i> Set up Launch Agents
+                                            <i class="fas fa-rocket"></i> Set up Applications
                                         </button>
                                     </div>
                                 </div>
@@ -384,9 +384,9 @@
                                         <!-- Application Creation Actions -->
                                         <div class="app-creation-actions">
                                             <button class="btn btn-success" id="wizard-create-launch-agent">
-                                                <i class="fas fa-plus"></i> Create Launch Agent
+                                                <i class="fas fa-plus"></i> Create Application Process
                                             </button>
-                                            <small class="help-text">This will create a launch agent for your selected
+                                            <small class="help-text">This will create a managed process for your selected
                                                 application</small>
                                         </div>
 
@@ -739,16 +739,11 @@
                         </section>
                     </div>
 
-                    <!-- Launch Agents Tab -->
+                    <!-- Applications Tab -->
                     <div id="applications-tab" class="tab-pane macos-only">
                         <section class="card">
-                            <h2 id="launch-agents-title"><i class="fas fa-rocket"></i> Launch Agents</h2>
-                            <p>Create launch agents to keep your apps and web applications running forever</p>
-                            
-                            <div class="info-banner">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Note:</strong> For backend services and Node.js applications, consider using PM2 (Process Manager 2) instead of launch agents. PM2 provides better logging, clustering, and monitoring capabilities for web applications and APIs. Launch agents are ideal for GUI applications and simple processes.
-                            </div>
+                            <h2 id="launch-agents-title"><i class="fas fa-rocket"></i> Applications</h2>
+                            <p>Create and manage processes to keep your apps and web applications running forever</p>
 
                             <!-- Creation Mode Selector -->
                             <div class="creation-mode-selector">
@@ -779,7 +774,7 @@
                             <div class="creation-mode" id="web-mode" style="display: none;">
                                 <div class="web-app-creator">
                                     <div class="web-app-form">
-                                        <h3><i class="fas fa-globe"></i> Create Web Application Launch Agent</h3>
+                                        <h3><i class="fas fa-globe"></i> Create Web Application Process</h3>
                                         <p>Launch web applications in Chrome kiosk mode for installations</p>
 
                                         <div class="form-group">
@@ -793,7 +788,7 @@
                                         <div class="form-group">
                                             <label for="web-app-name">Application Name:</label>
                                             <input type="text" id="web-app-name" placeholder="My Web App" required>
-                                            <small class="help-text">Friendly name for the launch agent</small>
+                                            <small class="help-text">Friendly name for the process</small>
                                         </div>
 
                                         <div class="form-group">
@@ -842,8 +837,8 @@
 
                                         <div class="action-buttons">
                                             <button id="create-web-launch-agent" class="btn btn-primary"
-                                                title="Create launch agent for this web application">
-                                                <i class="fas fa-plus"></i> Create Web App Launch Agent
+                                                title="Create process for this web application">
+                                                <i class="fas fa-plus"></i> Create Web App Process
                                             </button>
                                             <button id="preview-web-command" class="btn btn-outline"
                                                 title="Preview the browser command that will be used">
@@ -853,7 +848,7 @@
                                         
                                         <div class="info-banner warning">
                                             <i class="fas fa-lightbulb"></i>
-                                            <strong>Testing Tip:</strong> For best results when testing web app launch agents, close Chrome completely before testing. Web apps won't use "Keep Alive" mode to prevent browser restart loops when Chrome is already running.
+                                            <strong>Testing Tip:</strong> For best results when testing web app processes, close Chrome completely before testing. Web apps won't use "Keep Alive" mode to prevent browser restart loops when Chrome is already running.
                                         </div>
                                     </div>
                                 </div>
@@ -875,9 +870,9 @@
                                     </div>
                                 </div>
 
-                                <!-- Launch Agent Options -->
+                                <!-- Process Options -->
                                 <div class="launch-options">
-                                    <h4><i class="fas fa-wrench"></i> Launch Agent Options</h4>
+                                    <h4><i class="fas fa-wrench"></i> Process Options</h4>
                                     <div class="options-grid">
                                         <label class="checkbox-label">
                                             <input type="checkbox" id="keep-alive" checked>
@@ -912,20 +907,20 @@
 
                                 <div class="action-buttons">
                                     <button id="create-launch-agent" class="btn btn-primary"
-                                        title="Generate a launch agent configuration file for the selected application">
-                                        <i class="fas fa-plus"></i> Create Launch Agent
+                                        title="Create a managed process for the selected application">
+                                        <i class="fas fa-plus"></i> Create Process
                                     </button>
                                     <button id="install-launch-agent" class="btn btn-success"
-                                        title="Create and install the launch agent to automatically start your app on boot">
+                                        title="Create and start the process to automatically run your app">
                                         <i class="fas fa-rocket"></i> Install & Start
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Existing Launch Agents -->
+                            <!-- Existing Processes -->
                             <div class="existing-agents">
                                 <div class="section-header">
-                                    <h4><i class="fas fa-list"></i> Existing Launch Agents</h4>
+                                    <h4><i class="fas fa-list"></i> Managed Processes</h4>
                                     <div class="agent-filters">
                                         <button class="filter-btn active" data-filter="all">All</button>
                                         <button class="filter-btn" data-filter="user">User</button>
@@ -934,7 +929,7 @@
                                     </div>
                                 </div>
                                 <div class="search-container">
-                                    <input type="text" id="agent-search" placeholder="Search launch agents..."
+                                    <input type="text" id="agent-search" placeholder="Search processes..."
                                         class="search-input">
                                     <i class="fas fa-search search-icon"></i>
                                 </div>
@@ -948,37 +943,39 @@
                                     <div class="legend-grid">
                                         <div class="legend-item">
                                             <button class="btn-action legend-btn" title="Start"><i class="fas fa-play"></i></button>
-                                            <span><strong>Start:</strong> Load and start the launch agent</span>
+                                            <span><strong>Start:</strong> Start the process</span>
                                         </div>
                                         <div class="legend-item">
                                             <button class="btn-action legend-btn" title="Stop"><i class="fas fa-stop"></i></button>
-                                            <span><strong>Stop:</strong> Unload and stop the launch agent</span>
+                                            <span><strong>Stop:</strong> Stop the process</span>
                                         </div>
                                         <div class="legend-item">
                                             <button class="btn-action legend-btn" title="Restart"><i class="fas fa-sync-alt"></i></button>
-                                            <span><strong>Restart:</strong> Stop and start the agent</span>
+                                            <span><strong>Restart:</strong> Restart the process</span>
                                         </div>
                                         <div class="legend-item">
-                                            <button class="btn-action legend-btn" title="Test Agent"><i class="fas fa-flask"></i></button>
-                                            <span><strong>Test:</strong> Verify the agent configuration works</span>
+                                            <button class="btn-action legend-btn" title="View Process Info"><i class="fas fa-info-circle"></i></button>
+                                            <span><strong>Info:</strong> Show detailed process information</span>
                                         </div>
                                         <div class="legend-item">
-                                            <button class="btn-action legend-btn" title="Export Agent"><i class="fas fa-download"></i></button>
-                                            <span><strong>Export:</strong> Download the plist file</span>
+                                            <button class="btn-action legend-btn" title="Export PM2 Config"><i class="fas fa-download"></i></button>
+                                            <span><strong>Export:</strong> Download PM2 configuration</span>
                                         </div>
                                         <div class="legend-item">
-                                            <button class="btn-action legend-btn" title="View Plist"><i class="fas fa-eye"></i></button>
-                                            <span><strong>View:</strong> See the plist file contents</span>
+                                            <button class="btn-action legend-btn" title="View Process Details"><i class="fas fa-eye"></i></button>
+                                            <span><strong>View:</strong> Show process details and logs</span>
                                         </div>
                                         <div class="legend-item">
-                                            <button class="btn-action legend-btn" title="Edit Plist"><i class="fas fa-edit"></i></button>
-                                            <span><strong>Edit:</strong> Modify the plist file contents</span>
-                                        </div>
-                                        <div class="legend-item">
-                                            <button class="btn-action legend-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                                            <span><strong>Delete:</strong> Remove the launch agent permanently</span>
+                                            <button class="btn-action legend-btn" title="Remove Process"><i class="fas fa-trash-alt"></i></button>
+                                            <span><strong>Delete:</strong> Remove the process permanently</span>
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <!-- PM2 Information -->
+                                <div class="info-banner">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Process Management:</strong> This tool uses PM2 (Process Manager) to manage your applications. PM2 provides rich monitoring data including CPU usage, memory consumption, and restart counts. GUI applications are managed seamlessly alongside command-line tools, giving you comprehensive process control and monitoring.
                                 </div>
                             </div>
                         </section>

@@ -25,17 +25,18 @@ async function loadLaunchAgents() {
 
         renderLaunchAgents();
     } catch (error) {
-        console.error('Failed to load launch agents:', error);
-        showToast('Failed to load launch agents', 'error');
+        console.error('Failed to load processes:', error);
+        showToast('Failed to load processes', 'error');
     }
 }
 
 function renderLaunchAgents(filterType = 'all') {
     const container = document.getElementById('launch-agents-list');
-    // Show only user launch agents from ~/Library/LaunchAgents
+    // Show PM2-managed processes and any legacy launch agents
     let agents = allAgents.filter(agent => 
-        agent.plistPath && 
-        (agent.plistPath.includes('/Users/') && agent.plistPath.includes('/Library/LaunchAgents/'))
+        agent.managedByTool === true || 
+        (agent.plistPath && 
+         (agent.plistPath.includes('/Users/') && agent.plistPath.includes('/Library/LaunchAgents/')))
     );
     
     // Apply filter
@@ -57,14 +58,14 @@ function renderLaunchAgents(filterType = 'all') {
 
     // Debug logging reduced - only show when there are issues
     if (agents.length === 0 && allAgents.length > 0) {
-        console.warn('[LAUNCH-AGENTS] No user agents found despite backend data:', allAgents.length);
+        console.warn('[PROCESSES] No managed processes found despite backend data:', allAgents.length);
     }
 
     if (agents.length === 0) {
         container.innerHTML = `
             <div class="no-agents-message">
-                <p>No launch agents found in ~/Library/LaunchAgents</p>
-                <p><small>Debug: Backend returned ${allAgents.length} total agents</small></p>
+                <p>No managed processes found</p>
+                <p><small>Create your first application by dragging and dropping a .app file above, or use the Web Applications tab to launch browser-based apps.</small></p>
                 <button onclick="loadLaunchAgents()" class="btn btn-primary">Refresh List</button>
             </div>
         `;
@@ -201,7 +202,7 @@ async function handleLaunchAgentAction(label, action) {
                 result = await apiCall(`/api/launch-agents/restart`, { method: 'POST', body: JSON.stringify({ label }) });
                 break;
             case 'test':
-                showLoading('Testing launch agent...');
+                showLoading('Getting process info...');
                 try {
                     result = await apiCall(`/api/launch-agents/test`, { method: 'POST', body: JSON.stringify({ label }) });
                     hideLoading();
@@ -263,7 +264,7 @@ async function createLaunchAgent() {
 
     const options = getLaunchAgentOptions();
     
-    showLoading('Creating launch agent...');
+    showLoading('Creating application process...');
     try {
         const result = await apiCall('/api/launch-agents/create', {
             method: 'POST',
@@ -287,10 +288,10 @@ async function createLaunchAgent() {
             await addToMonitoring(agentInfo);
         }
         
-        showToast('Launch agent created successfully!', 'success');
+        showToast('Application process created successfully!', 'success');
         loadLaunchAgents();
     } catch (error) {
-        showToast('Failed to create launch agent', 'error');
+        showToast('Failed to create application process', 'error');
     } finally {
         hideLoading();
     }
