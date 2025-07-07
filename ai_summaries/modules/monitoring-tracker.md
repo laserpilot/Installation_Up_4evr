@@ -38,7 +38,8 @@
 - [ ] **Real-time Process Updates**: Live updates of PM2 process status and metrics
 - [ ] **Process Performance Tracking**: Historical data for PM2-managed applications
 
-**Currently:** No active issues ✅
+**Currently:**
+- [ ] Ping monitor does not work. it should show a list of things that are added, and allow for editing of their information like name, IP, interval and timeout, as well as allowing user to delete them from the list
 
 ---
 
