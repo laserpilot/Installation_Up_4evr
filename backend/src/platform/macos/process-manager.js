@@ -913,8 +913,6 @@ class MacOSProcessManager extends ProcessManagerInterface {
     </array>
     <key>RunAtLoad</key>
     <true/>
-    <key>KeepAlive</key>
-    <true/>
     <key>StandardOutPath</key>
     <string>/tmp/${label}.log</string>
     <key>StandardErrorPath</key>
