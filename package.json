@@ -54,7 +54,6 @@
     },
     "files": [
       "electron/**/*",
-      "frontend/**/*",
       "!backend/node_modules/.cache",
       "!backend/test-*.js"
     ],
@@ -62,6 +61,10 @@
       {
         "from": "backend",
         "to": "backend"
+      },
+      {
+        "from": "frontend",
+        "to": "frontend"
       }
     ],
     "mac": {

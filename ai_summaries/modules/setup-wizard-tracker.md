@@ -28,6 +28,7 @@
 ## Active Issues 🎯
 
 **Currently:** 
+- [ ] Web application launch agent creation needs more options to be in parity in terms of options with the Applications page in the web-app-creator div and the web-options. It should have application title, and the Full Screen Kiosk mode/Disable Developer Tools, Disable Extentions, Incognito options
 - [ ] Skip Step button works but may need better visual feedback
 - [ ] Generate Terminal Commands shows proper commands but UI could be more polished
 - [ ] Wizard flow could benefit from progress indicators

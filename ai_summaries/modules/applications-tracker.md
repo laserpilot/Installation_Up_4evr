@@ -30,7 +30,10 @@
 ## Active Issues 🎯
 
 **Currently:** 
-- [ ] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist (debugging added for investigation)
+- [x] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist (debugging added for investigation)
+- [ ] Web application plist seems like it may need a deeper look. When it is implemented, it just opens a new tab in Chrome with the URL every 10 seconds or so. We may need a different test scenario to try and make sure it is launching correctly. One issue might be because Chrome is already open, its not launching a new instance. I suspect the "keep alive" element is causing it to re-trigger because it maybe cant confirm how it is loading?
+- [ ] View and Edit modals for launch agent both show "undefined" in the text field areas when trying to look at an existing one
+- [ ] 
 
 **Recently Fixed (Latest Session):**
 - ✅ View plist button now working - Fixed missing 'show' CSS class for modal visibility

@@ -41,7 +41,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from frontend directory
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Fix path resolution for packaged vs development
+let frontendPath;
+if (__dirname.includes('.app/Contents/Resources')) {
+    // In packaged Electron app, frontend files are in extraResources
+    frontendPath = path.join(__dirname, '../frontend');
+} else {
+    // In development
+    frontendPath = path.join(__dirname, '../frontend');
+}
+
+console.log('SERVER: Serving static files from:', frontendPath);
+console.log('SERVER: __dirname is:', __dirname);
+console.log('SERVER: Frontend path exists:', require('fs').existsSync(frontendPath));
+
+// Also log the contents of the parent directory to debug
+try {
+    const parentDir = path.dirname(__dirname);
+    console.log('SERVER: Parent directory contents:', require('fs').readdirSync(parentDir));
+} catch (error) {
+    console.log('SERVER: Could not read parent directory:', error.message);
+}
+
+app.use(express.static(frontendPath));
 
 // Selective request logging - only important operations
 app.use((req, res, next) => {
@@ -513,6 +535,9 @@ async function startServer() {
             } else {
                 console.log('⚙️  Legacy mode active - set USE_PLATFORM_MANAGER=true to enable new features');
             }
+            
+            // Signal to Electron that the backend is ready
+            console.log('__BACKEND_READY__');
         });
 
     } catch (error) {

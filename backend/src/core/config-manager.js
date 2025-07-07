@@ -186,6 +186,10 @@ class ConfigManager {
         return value;
     }
 
+    async getAll() {
+        return this.config;
+    }
+
     set(path, value) {
         const keys = path.split('.');
         let current = this.config;

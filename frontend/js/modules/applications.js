@@ -512,7 +512,7 @@ async function createWebLaunchAgent() {
                     disableDevTools,
                     disableExtensions,
                     incognitoMode,
-                    keepAlive: true,
+                    keepAlive: false,  // Disable keepAlive for web apps to prevent Chrome restart loop
                     runAtLoad: false  // Don't auto-start to prevent immediate loop
                 }
             })
@@ -912,6 +912,20 @@ function showPlistContent(label, result) {
         return;
     }
     
+    // Handle nested API response structure - same fix as export bug
+    const dataObj = result.data.data || result.data;
+    const content = dataObj.content || dataObj.plistContent || result.content;
+    
+    if (!content || content === 'undefined') {
+        console.error('[LAUNCH-AGENTS] No valid content found in result:', {
+            result,
+            dataObj,
+            content
+        });
+        showToast('Failed to load plist content - no valid content found', 'error');
+        return;
+    }
+    
     console.log('[LAUNCH-AGENTS] Creating modal for plist content...');
     
     const modal = document.createElement('div');
@@ -923,7 +937,7 @@ function showPlistContent(label, result) {
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
-                <pre class="code-block">${result.data.content || result.content}</pre>
+                <pre class="code-block">${content}</pre>
                 <div class="modal-actions">
                     <button class="btn btn-primary" id="copy-plist-content">
                         <i class="fas fa-copy"></i> Copy to Clipboard
@@ -944,7 +958,6 @@ function showPlistContent(label, result) {
     });
     
     modal.querySelector('#copy-plist-content').addEventListener('click', () => {
-        const content = result.data.content || result.content;
         navigator.clipboard.writeText(content).then(() => {
             showToast('Plist content copied to clipboard!', 'success');
         });
@@ -963,6 +976,20 @@ function showPlistEditor(label, result) {
         return;
     }
     
+    // Handle nested API response structure - same fix as export bug
+    const dataObj = result.data.data || result.data;
+    const content = dataObj.content || dataObj.plistContent || result.content;
+    
+    if (!content || content === 'undefined') {
+        console.error('[LAUNCH-AGENTS] No valid content found in result for edit:', {
+            result,
+            dataObj,
+            content
+        });
+        showToast('Failed to load plist content for editing - no valid content found', 'error');
+        return;
+    }
+    
     const modal = document.createElement('div');
     modal.className = 'modal-overlay show';
     modal.innerHTML = `
@@ -976,7 +1003,7 @@ function showPlistEditor(label, result) {
                     <i class="fas fa-exclamation-triangle"></i>
                     <strong>Warning:</strong> Editing plist files directly can break launch agents. Make sure you understand the format.
                 </div>
-                <textarea class="code-editor" id="plist-editor">${result.data.content || result.content}</textarea>
+                <textarea class="code-editor" id="plist-editor">${content}</textarea>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" id="cancel-edit">Cancel</button>
                     <button class="btn btn-primary" id="save-plist">

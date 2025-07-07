@@ -108,16 +108,45 @@ class InstallationUp4evrApp {
                 enableRemoteModule: false,
                 preload: path.join(__dirname, 'preload.js')
             },
-            titleBarStyle: 'hiddenInset',
+            titleBarStyle: 'default', // Use default title bar for better UX
             title: 'Installation Up 4evr',
-            icon: path.join(__dirname, 'assets', 'icon.png')
+            icon: path.join(__dirname, 'assets', 'icon.png'),
+            movable: true, // Ensure window is movable
+            resizable: true // Ensure window is resizable
         });
 
-        // Load the frontend
+        // Load the frontend - always from the local server for API access
         const isDev = process.env.NODE_ENV === 'development';
-        const url = isDev ? 'http://localhost:3001' : `file://${path.join(__dirname, '../frontend/index.html')}`;
+        const url = 'http://localhost:3001';
         
-        await this.mainWindow.loadURL(url);
+        debugLog('Loading frontend from: ' + url);
+        debugLog('Development mode: ' + isDev);
+        
+        try {
+            await this.mainWindow.loadURL(url);
+            debugLog('Frontend loaded successfully');
+        } catch (error) {
+            debugLog('Failed to load frontend: ' + error.message);
+            
+            // If backend isn't ready yet, try a few more times
+            let retries = 3;
+            while (retries > 0) {
+                debugLog(`Retrying frontend load... attempts left: ${retries}`);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+                try {
+                    await this.mainWindow.loadURL(url);
+                    debugLog('Frontend loaded successfully on retry');
+                    break;
+                } catch (retryError) {
+                    debugLog('Retry failed: ' + retryError.message);
+                    retries--;
+                    if (retries === 0) {
+                        debugLog('All retries exhausted - frontend may not be accessible');
+                        // Could show an error page or fallback here
+                    }
+                }
+            }
+        }
 
         // Open DevTools in development
         if (isDev) {
@@ -684,10 +713,17 @@ class InstallationUp4evrApp {
                 debugLog('Node version test spawn error: ' + error.message);
             });
             
+            // Set the working directory to the backend directory for proper node_modules resolution
+            const backendDir = app.isPackaged 
+                ? path.join(process.resourcesPath, 'backend')
+                : path.join(__dirname, '../backend');
+            
+            debugLog('Backend working directory: ' + backendDir);
+            
             this.backendServer = spawn(nodePath, [serverPath], {
                 stdio: 'pipe',
-                env: { ...process.env, PORT: '3001' },
-                cwd: path.dirname(serverPath)
+                env: { ...process.env, PORT: '3001', NODE_PATH: path.join(backendDir, 'node_modules') },
+                cwd: backendDir
             });
 
             let serverStarted = false;
@@ -710,13 +746,17 @@ class InstallationUp4evrApp {
                 const errorOutput = data.toString();
                 debugLog(`Backend stderr: ${errorOutput}`);
                 
-                // Handle common port conflict errors
+                // Handle common errors
                 if (errorOutput.includes('EADDRINUSE') || errorOutput.includes('port 3001')) {
                     debugLog('Port 3001 is in use, server may already be running');
                     if (!serverStarted) {
                         serverStarted = true;
                         resolve(); // Continue anyway, server might be running elsewhere
                     }
+                } else if (errorOutput.includes('Cannot find module')) {
+                    debugLog('Module not found error - check node_modules in packaged app');
+                } else if (errorOutput.includes('ENOENT')) {
+                    debugLog('File not found error - check file paths in packaged app');
                 }
             });
 
