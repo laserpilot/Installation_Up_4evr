@@ -11,6 +11,7 @@ const { APIManager, APIResponse, DataTransformer } = require('./api-manager');
 const ConfigurationProfiles = require('./config-profiles');
 const HealthScoringEngine = require('./health-scoring');
 const ValidationWorkflow = require('./validation-workflow');
+const { Logger, LOG_LEVELS, LOG_CATEGORIES } = require('./logger');
 
 class PlatformManager {
     constructor() {
@@ -23,6 +24,7 @@ class PlatformManager {
         this.monitoring = null;
         this.systemManager = null;
         this.processManager = null;
+        this.logger = null;
         this.initialized = false;
     }
 
@@ -35,6 +37,21 @@ class PlatformManager {
             // Initialize configuration
             await this.config.initialize();
 
+            // Initialize logger with configuration
+            const config = await this.config.getAll();
+            this.logger = new Logger({
+                logLevel: config.monitoring?.debugMode ? LOG_LEVELS.DEBUG : LOG_LEVELS.INFO,
+                retentionDays: config.monitoring?.logRetention || 30,
+                installationId: this.monitoring?.installationId
+            });
+            await this.logger.ensureInitialized();
+            
+            // Log platform initialization
+            await this.logger.system(LOG_LEVELS.INFO, 'Platform manager initializing', {
+                platform: this.platform,
+                version: config.version || '1.0.0'
+            });
+
             // Initialize configuration profiles
             this.profiles = new ConfigurationProfiles(this.config);
             await this.profiles.initialize();
@@ -42,6 +59,14 @@ class PlatformManager {
             // Initialize platform-specific managers
             this.systemManager = PlatformFactory.createSystemManager();
             this.processManager = PlatformFactory.createProcessManager();
+            
+            // Inject logger into managers that support it
+            if (this.processManager.setLogger) {
+                this.processManager.setLogger(this.logger);
+            }
+            if (this.systemManager.setLogger) {
+                this.systemManager.setLogger(this.logger);
+            }
 
             // Initialize monitoring
             this.monitoring = new MonitoringCore();
@@ -1189,6 +1214,42 @@ class PlatformManager {
             
             return APIResponse.success({ logged: true, entry: logEntry });
         });
+
+        // Logging API routes
+        this.api.registerRoute('/logs/stats', 'GET', async (data) => {
+            if (!this.logger) {
+                return APIResponse.error({ message: 'Logger not initialized' });
+            }
+            
+            const hours = data.hours || 24;
+            const stats = await this.logger.getLogStats(hours);
+            return APIResponse.success(stats);
+        });
+
+        this.api.registerRoute('/logs/recent', 'GET', async (data) => {
+            if (!this.logger) {
+                return APIResponse.error({ message: 'Logger not initialized' });
+            }
+            
+            const options = {
+                category: data.category || null,
+                level: data.level ? LOG_LEVELS[data.level.toUpperCase()] : null,
+                limit: data.limit || 100,
+                startDate: data.startDate ? new Date(data.startDate) : null,
+                endDate: data.endDate ? new Date(data.endDate) : null
+            };
+            
+            const logs = await this.logger.getLogs(options);
+            return APIResponse.success(logs);
+        });
+
+        this.api.registerRoute('/logs/categories', 'GET', async () => {
+            return APIResponse.success(Object.values(LOG_CATEGORIES));
+        });
+
+        this.api.registerRoute('/logs/levels', 'GET', async () => {
+            return APIResponse.success(Object.keys(LOG_LEVELS));
+        });
     }
 
     setupMonitoringHandlers() {
@@ -1747,8 +1808,19 @@ class PlatformManager {
         }
     }
 
+    /**
+     * Get the logger instance
+     */
+    getLogger() {
+        return this.logger;
+    }
+
     async shutdown() {
         console.log('[PLATFORM] Shutting down...');
+        
+        if (this.logger) {
+            await this.logger.system(LOG_LEVELS.INFO, 'Platform manager shutting down');
+        }
         
         if (this.monitoring) {
             this.monitoring.stopMonitoring();
@@ -1756,6 +1828,10 @@ class PlatformManager {
 
         if (this.config) {
             await this.config.saveConfig();
+        }
+
+        if (this.logger) {
+            await this.logger.system(LOG_LEVELS.INFO, 'Platform manager shutdown complete');
         }
 
         this.initialized = false;

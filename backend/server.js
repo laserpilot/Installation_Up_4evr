@@ -53,7 +53,21 @@ app.use((req, res, next) => {
                        req.path.includes('/api/platform');
     
     if (!skipLogging) {
-        console.log(`[API] ${req.method} ${req.path}`);
+        console.log(`[API] ${req.method} ${req.path} (platform mode)`);
+        // Enhanced logging with structured logger (once platform manager is initialized)
+        if (platformManager.getLogger) {
+            const logger = platformManager.getLogger();
+            if (logger) {
+                logger.api(1, `API Request: ${req.method} ${req.path}`, {
+                    method: req.method,
+                    path: req.path,
+                    userAgent: req.get('User-Agent'),
+                    ip: req.ip,
+                    query: req.query,
+                    bodySize: req.body ? JSON.stringify(req.body).length : 0
+                }).catch(() => {}); // Don't block on logging errors
+            }
+        }
     }
     next();
 });
@@ -429,14 +443,38 @@ async function startServer() {
         await platformManager.initialize();
         console.log('[PLATFORM] Platform manager ready');
 
+        // Get logger instance for structured logging
+        const logger = platformManager.getLogger();
+
+        // Log successful platform initialization
+        if (logger) {
+            await logger.system(1, 'Platform manager initialized successfully', {
+                platform: platformManager.platform,
+                features: ['monitoring', 'launch-agents', 'system-preferences', 'notifications']
+            });
+        }
+
         // Start monitoring system
         console.log('[INFO] Starting monitoring system...');
         try {
             const monitoring = platformManager.getMonitoring();
             await monitoring.startMonitoring();
             console.log('📊 Monitoring system started');
+            
+            if (logger) {
+                await logger.monitoring(1, 'Monitoring system started successfully', {
+                    interval: monitoring.options?.interval || 30000
+                });
+            }
         } catch (error) {
             console.warn('Failed to start monitoring:', error.message);
+            
+            if (logger) {
+                await logger.monitoring(3, 'Failed to start monitoring system', {
+                    error: error.message,
+                    stack: error.stack
+                });
+            }
         }
 
         // Get platform info for startup message
@@ -456,6 +494,19 @@ async function startServer() {
             console.log(`📊 Mode: ${platformInfo.mode} (v${platformInfo.version})`);
             console.log(`🖥️  Platform: ${platformInfo.platform}`);
             console.log('🔧 Features:', Object.keys(platformInfo.features || {}).filter(k => platformInfo.features[k]).join(', '));
+            
+            // Structured logging for server startup
+            if (logger) {
+                logger.system(1, 'Server started successfully', {
+                    port: PORT,
+                    mode: platformInfo.mode,
+                    version: platformInfo.version,
+                    platform: platformInfo.platform,
+                    features: Object.keys(platformInfo.features || {}).filter(k => platformInfo.features[k]),
+                    frontendUrl: `http://localhost:${PORT}`,
+                    apiUrl: `http://localhost:${PORT}/api/*`
+                }).catch(() => {}); // Don't block on logging errors
+            }
             
             if (platformInfo.mode === 'platform') {
                 console.log('✨ Platform abstraction active - ready for cross-platform expansion');
