@@ -17,6 +17,14 @@ class MacOSProcessManager extends ProcessManagerInterface {
         super();
         this.platform = 'macos';
         this.launchAgentsDir = path.join(os.homedir(), 'Library', 'LaunchAgents');
+        this.logger = null;
+    }
+
+    /**
+     * Inject logger for structured logging
+     */
+    setLogger(logger) {
+        this.logger = logger;
     }
 
     /**
@@ -770,6 +778,14 @@ class MacOSProcessManager extends ProcessManagerInterface {
      * Remove/delete a launch agent
      */
     async removeLaunchAgent(label) {
+        // Log the launch agent removal attempt
+        if (this.logger) {
+            await this.logger.application(2, `Removing launch agent: ${label}`, {
+                label,
+                action: 'remove_launch_agent'
+            });
+        }
+
         try {
             const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
             
@@ -793,12 +809,30 @@ class MacOSProcessManager extends ProcessManagerInterface {
             // Delete the plist file
             await fs.unlink(plistPath);
             
+            // Log successful removal
+            if (this.logger) {
+                await this.logger.application(2, `Launch agent removed successfully: ${label}`, {
+                    label,
+                    plistPath,
+                    action: 'remove_launch_agent_success'
+                });
+            }
+            
             return {
                 success: true,
                 message: `Launch agent ${label} deleted successfully`,
                 data: { removedFile: plistPath }
             };
         } catch (error) {
+            // Log removal failure
+            if (this.logger) {
+                await this.logger.application(3, `Failed to remove launch agent: ${label}`, {
+                    label,
+                    error: error.message,
+                    action: 'remove_launch_agent_error'
+                });
+            }
+
             return {
                 success: false,
                 message: `Failed to delete launch agent: ${error.message}`
@@ -814,6 +848,17 @@ class MacOSProcessManager extends ProcessManagerInterface {
      * Create a web application launch agent
      */
     async createWebAppLaunchAgent(name, url, browserPath, options = {}) {
+        // Log the launch agent creation attempt
+        if (this.logger) {
+            await this.logger.application(1, `Creating web app launch agent: ${name}`, {
+                name,
+                url,
+                browserPath,
+                options,
+                action: 'create_web_app_launch_agent'
+            });
+        }
+
         try {
             // Validate URL
             try {
@@ -889,6 +934,19 @@ class MacOSProcessManager extends ProcessManagerInterface {
                 }
             }
 
+            // Log successful creation
+            if (this.logger) {
+                await this.logger.application(1, `Web app launch agent created successfully: ${name}`, {
+                    name,
+                    label,
+                    url,
+                    browserPath,
+                    plistPath,
+                    autoLoaded: options.runAtLoad,
+                    action: 'create_web_app_launch_agent_success'
+                });
+            }
+
             return {
                 success: true,
                 message: `Web application launch agent created: ${name}`,
@@ -901,6 +959,17 @@ class MacOSProcessManager extends ProcessManagerInterface {
             };
 
         } catch (error) {
+            // Log creation failure
+            if (this.logger) {
+                await this.logger.application(3, `Failed to create web app launch agent: ${name}`, {
+                    name,
+                    url,
+                    browserPath,
+                    error: error.message,
+                    action: 'create_web_app_launch_agent_error'
+                });
+            }
+
             return {
                 success: false,
                 message: `Failed to create web app launch agent: ${error.message}`
