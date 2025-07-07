@@ -3,9 +3,9 @@
 **Module:** Backend Service Management  
 **Files:** `frontend/js/modules/backend-service.js` (renamed from service-control.js), `frontend/index.html` (backend service section)  
 **Last Updated:** 2025-07-06  
-**Status:** ⚠️ Needs Investigation
+**Status:** 🔄 PM2 Integration Planned (v1.0.0-alpha.4)
 
-**Note:** *This tracker covers backend service management functionality after the sidebar reorganization (Phase 3) - renamed from "Service Control" to "Backend Service" for clarity*
+**Note:** *This tracker covers backend service management functionality. Will be enhanced to work with PM2 process management system during the PM2 migration.*
 
 ---
 
@@ -21,12 +21,17 @@
 
 ## Active Issues 🎯
 
-**Currently:** 
-- [ ] Backend Service showing inaccurate server state (from Phase 9 reports)
+**PM2 Integration Opportunities (v1.0.0-alpha.4):**
+- [ ] **PM2 Service Management**: Integrate backend service control with PM2
+- [ ] **Process Monitoring**: Display backend service health via PM2 metrics
+- [ ] **Service Status**: Use PM2 to accurately report server state
+- [ ] **Restart Management**: Leverage PM2's restart capabilities for backend service
+- [ ] **Clear Purpose**: Define distinct role from Process Management tab
+
+**Legacy Issues (To be addressed with PM2):**
+- [ ] Backend Service showing inaccurate server state 
 - [ ] Unclear distinction between Backend Service and Applications functionality
-- [ ] Tab may be redundant or need clearer purpose definition
-- [ ] Integration with monitoring system needs verification
-- [ ] Shows "Mode: Electron-managed" which is unclear, especially if it is running from npm
+- [ ] "Mode: Electron-managed" clarity needed
 
 ---
 

@@ -3,9 +3,9 @@
 **Module:** Application Launch Management  
 **Files:** `frontend/js/modules/applications.js` (renamed from launch-agents.js), `frontend/js/components/LaunchAgentCard.js`, `backend/src/platform/macos/process-manager.js`  
 **Last Updated:** 2025-07-06  
-**Status:** ✅ Fully Functional
+**Status:** 🔄 PM2 Migration in Progress (v1.0.0-alpha.4)
 
-**Note:** *This tracker covers application launch management functionality after the sidebar reorganization (Phase 3) - renamed from "Launch Agents" to "Applications" for clarity*
+**Note:** *This tracker covers application launch management functionality. Currently migrating from launchctl-based system to PM2 process management for better monitoring and cross-platform support.*
 
 ---
 
@@ -29,11 +29,17 @@
 
 ## Active Issues 🎯
 
-**Currently:** 
-- [x] Export Agent Button does result in exporting a plist file, but the plist file only has "undefined" inside of it and is not a proper plist (debugging added for investigation)
-- [ ] Web application plist seems like it may need a deeper look. When it is implemented, it just opens a new tab in Chrome with the URL every 10 seconds or so. We may need a different test scenario to try and make sure it is launching correctly. One issue might be because Chrome is already open, its not launching a new instance. I suspect the "keep alive" element is causing it to re-trigger because it maybe cant confirm how it is loading?
-- [ ] View and Edit modals for launch agent both show "undefined" in the text field areas when trying to look at an existing one
-- [ ] 
+**PM2 Migration (v1.0.0-alpha.4):**
+- [ ] **Phase 1**: Replace launchctl-based functions with PM2 JavaScript API
+- [ ] **Phase 2**: Remove plist generation and shell command dependencies  
+- [ ] **Phase 3**: Update UI to display PM2 monitoring data (CPU, memory, restarts)
+- [ ] **Phase 4**: Remove export/edit/view functionality (no longer applicable with PM2)
+- [ ] **Phase 5**: Rename from "Applications" to "Process Management" for clarity
+
+**Legacy Issues (Will be resolved by PM2 migration):**
+- [x] Export Agent Button - Will be removed (no plist files with PM2)
+- [x] Web application plist issues - Will use PM2 process management instead
+- [x] View and Edit modals showing "undefined" - Will be removed with PM2 
 
 **Recently Fixed (Latest Session):**
 - ✅ View plist button now working - Fixed missing 'show' CSS class for modal visibility
@@ -51,6 +57,28 @@
 - ✅ Agent filter buttons now functional (All/User/Apps/System filtering)
 - ✅ Tool-created agents have visual indicators (rocket badge + blue border)
 - ✅ Tool-created agents automatically appear in Dashboard Application Status
+
+---
+
+## PM2 Migration Benefits 🚀
+
+### **Enhanced Monitoring**
+- **Rich Process Data**: CPU usage, memory consumption, restart counts
+- **Real-time Metrics**: Live process monitoring instead of basic status checks
+- **Process Health**: Built-in process recovery and auto-restart capabilities
+- **Performance Tracking**: Historical process performance data
+
+### **Simplified Architecture**
+- **No More Plist Files**: Direct process management via PM2 JavaScript API
+- **Remove Shell Commands**: Eliminate complex launchctl shell scripting
+- **Unified Management**: Single PM2 interface for all process operations
+- **Cross-Platform Ready**: Foundation for Windows/Linux support
+
+### **Improved User Experience**
+- **Modern Interface**: Display CPU, memory, and restart metrics in UI
+- **Better Controls**: Start/stop/restart with immediate feedback
+- **Process Insights**: See which processes are consuming resources
+- **Simplified Workflow**: No need for export/import of plist files
 
 ---
 

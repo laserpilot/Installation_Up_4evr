@@ -8,6 +8,7 @@ const util = require('util');
 const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
+const pm2 = require('pm2');
 const { ProcessManagerInterface } = require('../../core/interfaces');
 
 const execAsync = util.promisify(exec);
@@ -18,6 +19,44 @@ class MacOSProcessManager extends ProcessManagerInterface {
         this.platform = 'macos';
         this.launchAgentsDir = path.join(os.homedir(), 'Library', 'LaunchAgents');
         this.logger = null;
+        this.pm2Connected = false;
+        
+        // Connect to PM2
+        this.initializePM2();
+    }
+
+    /**
+     * Initialize PM2 connection
+     */
+    async initializePM2() {
+        return new Promise((resolve, reject) => {
+            pm2.connect((err) => {
+                if (err) {
+                    console.error('[PM2] Connection Error:', err);
+                    this.pm2Connected = false;
+                    resolve(false); // Don't fail constructor, just log error
+                } else {
+                    console.log('[PM2] Connected successfully');
+                    this.pm2Connected = true;
+                    resolve(true);
+                }
+            });
+        });
+    }
+
+    /**
+     * Disconnect from PM2 (for graceful shutdown)
+     */
+    async shutdownPM2() {
+        if (this.pm2Connected) {
+            return new Promise((resolve) => {
+                pm2.disconnect(() => {
+                    console.log('[PM2] Disconnected');
+                    this.pm2Connected = false;
+                    resolve();
+                });
+            });
+        }
     }
 
     /**
@@ -206,46 +245,61 @@ class MacOSProcessManager extends ProcessManagerInterface {
         try {
             const {
                 name = path.basename(appPath, '.app'),
-                description = `Auto-start for ${path.basename(appPath)}`,
-                startInterval = null,
-                keepAlive = true,
-                runAtLoad = true
+                description = `PM2 managed process: ${path.basename(appPath)}`,
+                args = []
             } = options;
 
-            const launchAgentName = `com.installation-up-4evr.${name.toLowerCase().replace(/\s+/g, '-')}`;
-            const plistPath = path.join(this.launchAgentsDir, `${launchAgentName}.plist`);
+            if (!this.pm2Connected) {
+                return {
+                    success: false,
+                    message: 'PM2 not connected'
+                };
+            }
 
             // Get the correct executable path for .app bundles
             const executablePath = await this.getExecutablePath(appPath);
 
-            // Create launch agent plist
-            const plistContent = this.generateLaunchAgentPlist({
-                label: launchAgentName,
-                program: executablePath,
-                description,
-                startInterval,
-                keepAlive,
-                runAtLoad
+            return new Promise((resolve) => {
+                const pm2Config = {
+                    name: name,
+                    script: executablePath,
+                    args: args,
+                    autorestart: options.keepAlive !== false,
+                    watch: false,
+                    env: {
+                        ...process.env,
+                        PM2_MANAGED: 'true',
+                        INSTALLATION_UP_4EVR: 'true'
+                    }
+                };
+
+                pm2.start(pm2Config, (err, apps) => {
+                    if (err) {
+                        resolve({
+                            success: false,
+                            message: `Failed to create PM2 process: ${err.message}`,
+                            error: err.message
+                        });
+                    } else {
+                        // Save PM2 process list to disk
+                        pm2.save((saveErr) => {
+                            if (saveErr) {
+                                console.warn('[PM2] Failed to save process list:', saveErr);
+                            }
+                        });
+
+                        resolve({
+                            success: true,
+                            message: `Auto-start entry created for ${name}`,
+                            name: name,
+                            appPath,
+                            executablePath,
+                            pm2_id: apps.length > 0 ? apps[0].pm_id : null,
+                            loaded: true
+                        });
+                    }
+                });
             });
-
-            // Ensure LaunchAgents directory exists
-            await fs.mkdir(this.launchAgentsDir, { recursive: true });
-
-            // Write plist file
-            await fs.writeFile(plistPath, plistContent);
-
-            // Load the launch agent
-            await execAsync(`launchctl load "${plistPath}"`);
-
-            return {
-                success: true,
-                message: `Auto-start entry created for ${name}`,
-                launchAgentName,
-                plistPath,
-                appPath,
-                executablePath,
-                loaded: true
-            };
         } catch (error) {
             return {
                 success: false,
@@ -287,125 +341,48 @@ class MacOSProcessManager extends ProcessManagerInterface {
 
     async getAutoStartEntries() {
         try {
-            // Get all launch agents from multiple directories
-            const userAgentsDir = this.launchAgentsDir;
-            const systemAgentsDir = '/Library/LaunchAgents';
-            const systemDaemonsDir = '/Library/LaunchDaemons';
-            
-            const entries = [];
-            
-            // Check user launch agents
-            try {
-                const userFiles = await fs.readdir(userAgentsDir);
-                const userPlists = userFiles.filter(file => file.endsWith('.plist'));
-                
-                for (const file of userPlists) {
-                    try {
-                        const plistPath = path.join(userAgentsDir, file);
-                        const content = await fs.readFile(plistPath, 'utf8');
-                        
-                        // Parse basic info from plist
-                        const webAppInfo = this.extractWebAppInfo(content);
-                        const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
-                        const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
-                        const descriptionMatch = content.match(/<key>ServiceDescription<\/key>\s*<string>([^<]+)<\/string>/);
-                        
-                        const entry = {
-                            name: file.replace('.plist', ''),
-                            label: labelMatch ? labelMatch[1] : 'Unknown',
-                            program: programMatch ? programMatch[1] : 'Unknown',
-                            description: descriptionMatch ? descriptionMatch[1] : null,
-                            plistPath,
-                            type: 'User Agent',
-                            loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : ''),
-                            managedByTool: file.startsWith('com.installation-up-4evr.')
-                        };
-                        
-                        // Add web app information if this is a web app launch agent
-                        if (webAppInfo) {
-                            entry.webApp = webAppInfo;
-                            entry.type = 'Web Application';
-                        }
-                        
-                        entries.push(entry);
-                    } catch (parseError) {
-                        console.warn(`Failed to parse user launch agent ${file}:`, parseError.message);
-                    }
+            // Get all processes from PM2
+            return new Promise((resolve, reject) => {
+                if (!this.pm2Connected) {
+                    console.warn('[PM2] Not connected, returning empty list');
+                    resolve([]);
+                    return;
                 }
-            } catch (userError) {
-                console.warn('Could not read user launch agents:', userError.message);
-            }
-            
-            // Check system launch agents (read-only)
-            try {
-                const systemFiles = await fs.readdir(systemAgentsDir);
-                const systemPlists = systemFiles.filter(file => file.endsWith('.plist'));
-                
-                for (const file of systemPlists.slice(0, 10)) { // Limit to first 10 to avoid overwhelming
-                    try {
-                        const plistPath = path.join(systemAgentsDir, file);
-                        const content = await fs.readFile(plistPath, 'utf8');
-                        
-                        // Parse basic info from plist
-                        const labelMatch = content.match(/<key>Label<\/key>\s*<string>([^<]+)<\/string>/);
-                        const programMatch = content.match(/<key>Program<\/key>\s*<string>([^<]+)<\/string>/);
-                        const descriptionMatch = content.match(/<key>ServiceDescription<\/key>\s*<string>([^<]+)<\/string>/);
-                        
-                        entries.push({
-                            name: file.replace('.plist', ''),
-                            label: labelMatch ? labelMatch[1] : 'Unknown',
-                            program: programMatch ? programMatch[1] : 'Unknown',
-                            description: descriptionMatch ? descriptionMatch[1] : null,
-                            plistPath,
-                            type: 'System Agent',
-                            loaded: await this.isLaunchAgentLoaded(labelMatch ? labelMatch[1] : ''),
-                            managedByTool: false
-                        });
-                    } catch (parseError) {
-                        console.warn(`Failed to parse system launch agent ${file}:`, parseError.message);
-                    }
-                }
-            } catch (systemError) {
-                console.warn('Could not read system launch agents:', systemError.message);
-            }
-            
-            // Also get running launch agents from launchctl list
-            try {
-                const { stdout } = await execAsync('launchctl list');
-                const lines = stdout.split('\n').slice(1); // Skip header
-                
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    
-                    const parts = line.trim().split(/\s+/);
-                    if (parts.length >= 3) {
-                        const pid = parts[0];
-                        const status = parts[1];
-                        const label = parts[2];
-                        
-                        // Only add if not already in our list
-                        if (!entries.find(e => e.label === label)) {
-                            entries.push({
-                                name: label,
-                                label: label,
-                                program: 'Unknown',
-                                plistPath: 'System managed',
-                                type: 'Running Service',
-                                loaded: pid !== '-',
-                                pid: pid !== '-' ? parseInt(pid) : null,
-                                status: parseInt(status),
-                                managedByTool: false
-                            });
-                        }
-                    }
-                }
-            } catch (launchctlError) {
-                console.warn('Could not get launchctl list:', launchctlError.message);
-            }
 
-            return entries;
+                pm2.list((err, list) => {
+                    if (err) {
+                        console.error('[PM2] Failed to list processes:', err);
+                        resolve([]);
+                        return;
+                    }
+                    
+                    // Transform PM2 data to match expected format
+                    const transformedList = list.map(proc => ({
+                        name: proc.name,
+                        label: proc.name, // Use name for label for consistency
+                        program: proc.pm2_env.pm_exec_path,
+                        description: proc.pm2_env.description || `PM2 managed process: ${proc.name}`,
+                        plistPath: 'Managed by PM2', // This is no longer a .plist
+                        type: proc.pm2_env.exec_mode === 'fork_mode' ? 'GUI Application' : 'Background Process',
+                        loaded: proc.pm2_env.status === 'online',
+                        isRunning: proc.pm2_env.status === 'online',
+                        pid: proc.pid,
+                        cpu: proc.monit.cpu,
+                        memory: proc.monit.memory,
+                        restarts: proc.pm2_env.restart_time,
+                        managedByTool: true,
+                        // Additional PM2-specific data
+                        pm2_id: proc.pm_id,
+                        status: proc.pm2_env.status,
+                        uptime: proc.pm2_env.pm_uptime,
+                        mode: proc.pm2_env.exec_mode
+                    }));
+                    
+                    resolve(transformedList);
+                });
+            });
         } catch (error) {
-            console.error('Failed to get auto-start entries:', error);
+            console.error('[PM2] Failed to get auto-start entries:', error);
             return [];
         }
     }
@@ -423,421 +400,291 @@ class MacOSProcessManager extends ProcessManagerInterface {
         return path.basename(parts[0]);
     }
 
-    generateLaunchAgentPlist(config) {
-        const {
-            label,
-            program,
-            description,
-            startInterval,
-            keepAlive,
-            runAtLoad
-        } = config;
+    // Legacy plist generation removed - replaced with PM2 management
 
-        let plist = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>${label}</string>
-    <key>Program</key>
-    <string>${program}</string>`;
-
-        if (description) {
-            plist += `
-    <key>ServiceDescription</key>
-    <string>${description}</string>`;
-        }
-
-        if (runAtLoad) {
-            plist += `
-    <key>RunAtLoad</key>
-    <true/>`;
-        }
-
-        if (keepAlive) {
-            plist += `
-    <key>KeepAlive</key>
-    <true/>`;
-        }
-
-        if (startInterval) {
-            plist += `
-    <key>StartInterval</key>
-    <integer>${startInterval}</integer>`;
-        }
-
-        plist += `
-    <key>StandardOutPath</key>
-    <string>/tmp/${label}.out</string>
-    <key>StandardErrorPath</key>
-    <string>/tmp/${label}.err</string>
-</dict>
-</plist>`;
-
-        return plist;
-    }
-
-    async isLaunchAgentLoaded(label) {
-        try {
-            const { stdout } = await execAsync('launchctl list');
-            return stdout.includes(label);
-        } catch (error) {
-            return false;
-        }
-    }
+    // Legacy isLaunchAgentLoaded removed - replaced with PM2 status checking
 
     /**
      * Test a launch agent to verify it works correctly
      */
     async testLaunchAgent(label) {
-        try {
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
-            
-            // Check if plist file exists
-            try {
-                await fs.access(plistPath);
-            } catch (error) {
-                return {
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
                     success: false,
-                    message: `Launch agent plist not found: ${plistPath}`,
-                    data: { warnings: ['Plist file does not exist'] }
-                };
+                    message: 'PM2 not connected',
+                    data: { warnings: ['PM2 service is not available'] }
+                });
+                return;
             }
 
-            // Check if agent is loaded
-            const isLoaded = await this.isLaunchAgentLoaded(label);
-            
-            // Test loading the plist syntax
-            try {
-                const { stdout, stderr } = await execAsync(`plutil -lint "${plistPath}"`);
-                const warnings = [];
-                
-                if (!isLoaded) {
-                    warnings.push('Launch agent is not currently loaded');
+            pm2.describe(label, (err, processDescription) => {
+                if (err) {
+                    resolve({
+                        success: false,
+                        message: `Process not found: ${label}`,
+                        data: { warnings: ['Process is not managed by PM2'] }
+                    });
+                } else if (processDescription.length === 0) {
+                    resolve({
+                        success: false,
+                        message: `Process not found: ${label}`,
+                        data: { warnings: ['Process does not exist in PM2'] }
+                    });
+                } else {
+                    const proc = processDescription[0];
+                    const warnings = [];
+                    
+                    if (proc.pm2_env.status !== 'online') {
+                        warnings.push(`Process is ${proc.pm2_env.status}, not running`);
+                    }
+                    
+                    resolve({
+                        success: true,
+                        message: 'PM2 process test completed',
+                        data: {
+                            output: `Process name: ${proc.name}\nStatus: ${proc.pm2_env.status}\nPID: ${proc.pid || 'N/A'}\nCPU: ${proc.monit.cpu}%\nMemory: ${Math.round(proc.monit.memory / 1024 / 1024)}MB`,
+                            warnings: warnings.length > 0 ? warnings : undefined,
+                            processLoaded: proc.pm2_env.status === 'online',
+                            processStatus: proc.pm2_env.status,
+                            pm2_id: proc.pm_id,
+                            cpu: proc.monit.cpu,
+                            memory: proc.monit.memory
+                        }
+                    });
                 }
-                
-                // Try to get agent status
-                let agentStatus = 'unknown';
-                try {
-                    const { stdout: statusOutput } = await execAsync(`launchctl list | grep "${label}"`);
-                    if (statusOutput.trim()) {
-                        agentStatus = 'running';
-                    }
-                } catch (error) {
-                    agentStatus = 'stopped';
-                }
-
-                return {
-                    success: true,
-                    message: 'Launch agent test completed',
-                    data: {
-                        output: `Plist syntax: Valid\nAgent loaded: ${isLoaded ? 'Yes' : 'No'}\nAgent status: ${agentStatus}`,
-                        warnings: warnings.length > 0 ? warnings : undefined,
-                        agentLoaded: isLoaded,
-                        agentStatus
-                    }
-                };
-            } catch (error) {
-                return {
-                    success: false,
-                    message: 'Plist file has syntax errors',
-                    data: { 
-                        output: error.message,
-                        warnings: ['Plist file is malformed']
-                    }
-                };
-            }
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to test launch agent: ${error.message}`,
-                data: { output: error.message }
-            };
-        }
+            });
+        });
     }
 
     /**
-     * Export a launch agent plist file for download
-     */
-    async exportLaunchAgent(label) {
-        try {
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
-            
-            try {
-                const content = await fs.readFile(plistPath, 'utf8');
-                return {
-                    success: true,
-                    message: 'Launch agent exported successfully',
-                    data: {
-                        content,
-                        filename: `${label}.plist`,
-                        plistContent: content
-                    }
-                };
-            } catch (error) {
-                return {
-                    success: false,
-                    message: `Failed to read plist file: ${error.message}`
-                };
-            }
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to export launch agent: ${error.message}`
-            };
-        }
-    }
-
-    /**
-     * View a launch agent plist content
+     * PM2 process description (replaces view/export functionality)
      */
     async viewLaunchAgent(label) {
-        try {
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
-            
-            try {
-                const content = await fs.readFile(plistPath, 'utf8');
-                return {
-                    success: true,
-                    data: {
-                        content,
-                        path: plistPath
-                    }
-                };
-            } catch (error) {
-                return {
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
                     success: false,
-                    message: `Failed to read plist file: ${error.message}`
-                };
+                    message: 'PM2 not connected'
+                });
+                return;
             }
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to view launch agent: ${error.message}`
-            };
-        }
+
+            pm2.describe(label, (err, processDescription) => {
+                if (err || processDescription.length === 0) {
+                    resolve({
+                        success: false,
+                        message: `Process not found: ${label}`
+                    });
+                } else {
+                    const proc = processDescription[0];
+                    resolve({
+                        success: true,
+                        data: {
+                            content: JSON.stringify(proc, null, 2),
+                            path: `PM2 Process: ${label}`,
+                            processInfo: {
+                                name: proc.name,
+                                script: proc.pm2_env.pm_exec_path,
+                                status: proc.pm2_env.status,
+                                pid: proc.pid,
+                                cpu: proc.monit.cpu,
+                                memory: proc.monit.memory,
+                                restarts: proc.pm2_env.restart_time,
+                                uptime: proc.pm2_env.pm_uptime
+                            }
+                        }
+                    });
+                }
+            });
+        });
     }
 
     /**
-     * Update a launch agent plist content
+     * Export PM2 process config (replaces plist export)
      */
-    async updateLaunchAgent(label, content) {
-        try {
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
-            
-            // Validate plist content by trying to parse it
-            try {
-                // Create a temporary file to test the content
-                const tempPath = path.join(os.tmpdir(), `test-${Date.now()}.plist`);
-                await fs.writeFile(tempPath, content);
-                
-                // Test the plist syntax
-                await execAsync(`plutil -lint "${tempPath}"`);
-                
-                // Clean up temp file
-                await fs.unlink(tempPath);
-            } catch (error) {
-                return {
+    async exportLaunchAgent(label) {
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
                     success: false,
-                    message: `Invalid plist content: ${error.message}`
-                };
+                    message: 'PM2 not connected'
+                });
+                return;
             }
 
-            // Check if agent is currently loaded
-            const wasLoaded = await this.isLaunchAgentLoaded(label);
-            
-            // If loaded, unload it first
-            if (wasLoaded) {
-                try {
-                    await execAsync(`launchctl unload "${plistPath}"`);
-                } catch (error) {
-                    console.warn(`Warning: Could not unload agent before update: ${error.message}`);
-                }
-            }
-            
-            // Write the new content
-            await fs.writeFile(plistPath, content);
-            
-            // Reload if it was previously loaded
-            if (wasLoaded) {
-                try {
-                    await execAsync(`launchctl load "${plistPath}"`);
-                } catch (error) {
-                    return {
+            pm2.describe(label, (err, processDescription) => {
+                if (err || processDescription.length === 0) {
+                    resolve({
                         success: false,
-                        message: `Plist updated but failed to reload: ${error.message}`
+                        message: `Process not found: ${label}`
+                    });
+                } else {
+                    const proc = processDescription[0];
+                    const exportData = {
+                        name: proc.name,
+                        script: proc.pm2_env.pm_exec_path,
+                        args: proc.pm2_env.args || [],
+                        autorestart: proc.pm2_env.autorestart,
+                        watch: proc.pm2_env.watch,
+                        env: proc.pm2_env.env || {}
                     };
+                    
+                    resolve({
+                        success: true,
+                        message: 'PM2 process config exported successfully',
+                        data: {
+                            content: JSON.stringify(exportData, null, 2),
+                            filename: `${label}-pm2-config.json`,
+                            plistContent: JSON.stringify(exportData, null, 2)
+                        }
+                    });
                 }
-            }
-            
-            return {
-                success: true,
-                message: 'Launch agent updated successfully',
-                data: { reloaded: wasLoaded }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to update launch agent: ${error.message}`
-            };
-        }
+            });
+        });
+    }
+
+    /**
+     * Update PM2 process (replaces plist update)
+     */
+    async updateLaunchAgent(label, content) {
+        return {
+            success: false,
+            message: 'PM2 process configuration update not supported via content editing. Use PM2 CLI or restart process.'
+        };
     }
 
     /**
      * Start a launch agent
      */
     async startLaunchAgent(label) {
-        try {
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
-            
-            // Check if plist exists
-            try {
-                await fs.access(plistPath);
-            } catch (error) {
-                return {
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
                     success: false,
-                    message: `Launch agent plist not found: ${plistPath}`
-                };
+                    message: 'PM2 not connected'
+                });
+                return;
             }
-            
-            // Load the launch agent
-            const { stdout, stderr } = await execAsync(`launchctl load "${plistPath}"`);
-            
-            return {
-                success: true,
-                message: `Launch agent ${label} started successfully`,
-                data: { output: stdout }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to start launch agent: ${error.message}`
-            };
-        }
+
+            pm2.start(label, (err, proc) => {
+                if (err) {
+                    resolve({
+                        success: false,
+                        message: `Failed to start process: ${err.message}`
+                    });
+                } else {
+                    resolve({
+                        success: true,
+                        message: `Process ${label} started successfully`,
+                        data: { pm2_id: proc.length > 0 ? proc[0].pm_id : null }
+                    });
+                }
+            });
+        });
     }
 
     /**
      * Stop a launch agent
      */
     async stopLaunchAgent(label) {
-        try {
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
-            
-            // Unload the launch agent
-            const { stdout, stderr } = await execAsync(`launchctl unload "${plistPath}"`);
-            
-            return {
-                success: true,
-                message: `Launch agent ${label} stopped successfully`,
-                data: { output: stdout }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to stop launch agent: ${error.message}`
-            };
-        }
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
+                    success: false,
+                    message: 'PM2 not connected'
+                });
+                return;
+            }
+
+            pm2.stop(label, (err) => {
+                if (err) {
+                    resolve({
+                        success: false,
+                        message: `Failed to stop process: ${err.message}`
+                    });
+                } else {
+                    resolve({
+                        success: true,
+                        message: `Process ${label} stopped successfully`
+                    });
+                }
+            });
+        });
     }
 
     /**
      * Restart a launch agent
      */
     async restartLaunchAgent(label) {
-        try {
-            // Stop first
-            const stopResult = await this.stopLaunchAgent(label);
-            if (!stopResult.success) {
-                console.warn(`Warning during stop: ${stopResult.message}`);
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
+                    success: false,
+                    message: 'PM2 not connected'
+                });
+                return;
             }
-            
-            // Wait a moment
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Start again
-            const startResult = await this.startLaunchAgent(label);
-            
-            return {
-                success: startResult.success,
-                message: startResult.success ? 
-                    `Launch agent ${label} restarted successfully` : 
-                    startResult.message,
-                data: { 
-                    stopOutput: stopResult.data?.output,
-                    startOutput: startResult.data?.output 
+
+            pm2.restart(label, (err) => {
+                if (err) {
+                    resolve({
+                        success: false,
+                        message: `Failed to restart process: ${err.message}`
+                    });
+                } else {
+                    resolve({
+                        success: true,
+                        message: `Process ${label} restarted successfully`
+                    });
                 }
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to restart launch agent: ${error.message}`
-            };
-        }
+            });
+        });
     }
 
     /**
      * Remove/delete a launch agent
      */
     async removeLaunchAgent(label) {
-        // Log the launch agent removal attempt
+        // Log the process removal attempt
         if (this.logger) {
-            await this.logger.application(2, `Removing launch agent: ${label}`, {
+            await this.logger.application(2, `Removing PM2 process: ${label}`, {
                 label,
-                action: 'remove_launch_agent'
+                action: 'remove_pm2_process'
             });
         }
 
-        try {
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
-            
-            // Check if plist exists
-            try {
-                await fs.access(plistPath);
-            } catch (error) {
-                return {
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
                     success: false,
-                    message: `Launch agent plist not found: ${plistPath}`
-                };
-            }
-            
-            // Stop the agent first if it's running
-            try {
-                await this.stopLaunchAgent(label);
-            } catch (error) {
-                console.warn(`Warning: Could not stop agent before removal: ${error.message}`);
-            }
-            
-            // Delete the plist file
-            await fs.unlink(plistPath);
-            
-            // Log successful removal
-            if (this.logger) {
-                await this.logger.application(2, `Launch agent removed successfully: ${label}`, {
-                    label,
-                    plistPath,
-                    action: 'remove_launch_agent_success'
+                    message: 'PM2 not connected'
                 });
-            }
-            
-            return {
-                success: true,
-                message: `Launch agent ${label} deleted successfully`,
-                data: { removedFile: plistPath }
-            };
-        } catch (error) {
-            // Log removal failure
-            if (this.logger) {
-                await this.logger.application(3, `Failed to remove launch agent: ${label}`, {
-                    label,
-                    error: error.message,
-                    action: 'remove_launch_agent_error'
-                });
+                return;
             }
 
-            return {
-                success: false,
-                message: `Failed to delete launch agent: ${error.message}`
-            };
-        }
+            pm2.delete(label, (err) => {
+                if (err) {
+                    resolve({
+                        success: false,
+                        message: `Failed to delete process: ${err.message}`
+                    });
+                } else {
+                    // Log successful removal
+                    if (this.logger) {
+                        this.logger.application(2, `PM2 process removed successfully: ${label}`, {
+                            label,
+                            action: 'remove_pm2_process_success'
+                        });
+                    }
+                    
+                    resolve({
+                        success: true,
+                        message: `Process ${label} deleted successfully`
+                    });
+                }
+            });
+        });
     }
 
     /**

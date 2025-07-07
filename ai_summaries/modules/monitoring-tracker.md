@@ -3,9 +3,9 @@
 **Module:** Real-time System Monitoring & Configuration  
 **Files:** `frontend/js/modules/monitoring.js`, `frontend/js/modules/monitoring-config.js`, `frontend/js/utils/monitoring-display.js`, `backend/src/core/monitoring-manager.js`  
 **Last Updated:** 2025-07-06  
-**Status:** ✅ Fully Functional
+**Status:** ✅ Fully Functional - PM2 Integration Planned (v1.0.0-alpha.4)
 
-**Note:** *This consolidated tracker covers both System Monitoring and Monitoring Configuration functionality after the sidebar reorganization (Phase 1)*
+**Note:** *This consolidated tracker covers both System Monitoring and Monitoring Configuration functionality. Will be enhanced with rich PM2 process monitoring data during the migration.*
 
 ---
 
@@ -30,6 +30,13 @@
 ---
 
 ## Active Issues 🎯
+
+**PM2 Integration Enhancements (v1.0.0-alpha.4):**
+- [ ] **Enhanced Process Monitoring**: Integrate PM2 process metrics into monitoring dashboard
+- [ ] **Rich Application Data**: Display CPU, memory, restart counts for PM2-managed processes
+- [ ] **Process Health Scoring**: Include PM2 process health in overall system health calculation
+- [ ] **Real-time Process Updates**: Live updates of PM2 process status and metrics
+- [ ] **Process Performance Tracking**: Historical data for PM2-managed applications
 
 **Currently:** No active issues ✅
 
