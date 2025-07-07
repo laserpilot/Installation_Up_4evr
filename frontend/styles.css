@@ -2790,6 +2790,20 @@ input:checked+.toggle-slider:before {
     font-size: 0.8rem;
     color: var(--text-tertiary);
     font-family: monospace;
+    flex-wrap: wrap;
+}
+
+.agent-info span {
+    min-width: 60px;
+    padding: 2px 6px;
+    background: rgba(var(--text-tertiary-rgb), 0.1);
+    border-radius: 4px;
+}
+
+.pm2-id {
+    background: rgba(0, 122, 255, 0.1) !important;
+    color: var(--primary-color) !important;
+    font-weight: 600;
 }
 
 .agent-actions {
