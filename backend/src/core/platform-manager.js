@@ -70,6 +70,11 @@ class PlatformManager {
 
             // Initialize monitoring
             this.monitoring = new MonitoringCore();
+            
+            // Inject logger into monitoring
+            if (this.monitoring.setLogger) {
+                this.monitoring.setLogger(this.logger);
+            }
 
             // Initialize validation workflow
             this.validation = new ValidationWorkflow(this.config, this.monitoring, this.systemManager);
@@ -124,7 +129,32 @@ class PlatformManager {
             if (!Array.isArray(settings)) {
                 throw new Error('Settings must be an array');
             }
+
+            // Log security-relevant system settings application
+            if (this.logger) {
+                await this.logger.security(2, 'System settings application requested', {
+                    settingKeys: settings,
+                    settingCount: settings.length,
+                    action: 'system_settings_apply_request'
+                });
+            }
+
             const result = await this.systemManager.applySettings(settings);
+            
+            // Log the results with security implications
+            if (this.logger) {
+                const failedSettings = result.results?.filter(r => !r.success) || [];
+                await this.logger.security(result.success ? 1 : 3, 
+                    `System settings application ${result.success ? 'completed successfully' : 'completed with failures'}`, {
+                    settingKeys: settings,
+                    successCount: (result.results?.length || 0) - failedSettings.length,
+                    failedCount: failedSettings.length,
+                    failedSettings: failedSettings.map(f => f.setting),
+                    overallSuccess: result.success,
+                    action: result.success ? 'system_settings_apply_success' : 'system_settings_apply_partial_failure'
+                });
+            }
+
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.partial(result, { message: 'Some settings failed to apply' });
@@ -973,6 +1003,19 @@ class PlatformManager {
                 throw new Error('Notification configuration is required');
             }
             
+            // Log notification configuration change
+            if (this.logger) {
+                await this.logger.security(1, 'Notification configuration updated', {
+                    hasSlackConfig: !!config.slack?.webhookUrl,
+                    hasDiscordConfig: !!config.discord?.webhookUrl,
+                    hasWebhookConfig: !!config.webhook?.url,
+                    slackEnabled: config.slack?.enabled || false,
+                    discordEnabled: config.discord?.enabled || false,
+                    webhookEnabled: config.webhook?.enabled || false,
+                    action: 'notification_config_update'
+                });
+            }
+            
             await this.saveNotificationConfig(config);
             return APIResponse.success({ 
                 message: 'Notification configuration saved successfully',
@@ -981,17 +1024,78 @@ class PlatformManager {
         });
 
         this.api.registerRoute('/notifications/test/slack', 'POST', async (data) => {
+            // Log notification test attempt
+            if (this.logger) {
+                await this.logger.integration(1, 'Slack notification test initiated', {
+                    hasWebhookUrl: !!data.webhookUrl,
+                    hasMessage: !!data.message,
+                    action: 'notification_test_slack'
+                });
+            }
+
             const result = await this.testSlackNotification(data);
+            
+            // Log test result
+            if (this.logger) {
+                await this.logger.integration(result.success ? 1 : 3, 
+                    `Slack notification test ${result.success ? 'succeeded' : 'failed'}`, {
+                    success: result.success,
+                    message: result.message,
+                    action: result.success ? 'notification_test_slack_success' : 'notification_test_slack_failure'
+                });
+            }
+
             return APIResponse.success(result);
         });
 
         this.api.registerRoute('/notifications/test/discord', 'POST', async (data) => {
+            // Log notification test attempt
+            if (this.logger) {
+                await this.logger.integration(1, 'Discord notification test initiated', {
+                    hasWebhookUrl: !!data.webhookUrl,
+                    hasMessage: !!data.message,
+                    action: 'notification_test_discord'
+                });
+            }
+
             const result = await this.testDiscordNotification(data);
+            
+            // Log test result
+            if (this.logger) {
+                await this.logger.integration(result.success ? 1 : 3, 
+                    `Discord notification test ${result.success ? 'succeeded' : 'failed'}`, {
+                    success: result.success,
+                    message: result.message,
+                    action: result.success ? 'notification_test_discord_success' : 'notification_test_discord_failure'
+                });
+            }
+
             return APIResponse.success(result);
         });
 
         this.api.registerRoute('/notifications/test/webhook', 'POST', async (data) => {
+            // Log notification test attempt
+            if (this.logger) {
+                await this.logger.integration(1, 'Webhook notification test initiated', {
+                    hasUrl: !!data.url,
+                    hasMessage: !!data.message,
+                    method: data.method || 'POST',
+                    action: 'notification_test_webhook'
+                });
+            }
+
             const result = await this.testWebhookNotification(data);
+            
+            // Log test result
+            if (this.logger) {
+                await this.logger.integration(result.success ? 1 : 3, 
+                    `Webhook notification test ${result.success ? 'succeeded' : 'failed'}`, {
+                    success: result.success,
+                    message: result.message,
+                    action: result.success ? 'notification_test_webhook_success' : 'notification_test_webhook_failure'
+                });
+            }
+
             return APIResponse.success(result);
         });
 
@@ -1249,6 +1353,38 @@ class PlatformManager {
 
         this.api.registerRoute('/logs/levels', 'GET', async () => {
             return APIResponse.success(Object.keys(LOG_LEVELS));
+        });
+
+        // User action logging endpoint
+        this.api.registerRoute('/user-actions/log', 'POST', async (data) => {
+            if (!this.logger) {
+                return APIResponse.success({ logged: false, message: 'Logger not available' });
+            }
+
+            const {
+                method,
+                endpoint,
+                statusCode,
+                duration,
+                userAgent,
+                url,
+                hasBody,
+                bodySize
+            } = data;
+
+            await this.logger.userAction(1, `User action: ${method} ${endpoint}`, {
+                method,
+                endpoint,
+                statusCode,
+                duration,
+                userAgent,
+                url,
+                hasBody,
+                bodySize,
+                action: 'user_api_request'
+            });
+
+            return APIResponse.success({ logged: true });
         });
     }
 
