@@ -40,6 +40,11 @@
 - [x] **Drag and Drop Broken**: ✅ Fixed - Dragging and dropping an application now properly creates PM2 processes
    - [x] ✅ Fixed loading spinner getting stuck on "Processing..." - Added proper loading state management
 - [x] ✅ Drag and drop desktop app now auto-fills the "Custom Label (optional)" field with "AppName_up4evr" format and auto-populates the Program File Path
+- [x] ✅ Creating launch agent at first can be a bit jarring because they open immediately. we should add a checkbox for like "Run on next reboot" so that it doesn't just immediately start while you're in the middle of setup
+- [x] ✅ There are still several vestigial launch agent things in the code like the loadLaunchAgents function in several spots. these should be cleansed to only show information about pm2 specific terminology - if it has to be loadPm2Processes that is fine too.
+- [x] ✅ Export and view buttons still reference a "plist" which is inaccurate for pm2
+- [x] ✅ Export and View show you a json file with a LOT of information, a lot of which feels like it could be unnecessary
+   - Note: Added TODO comment in frontend code - this requires backend filtering to remove npm_package_json, PATH, npm_execpath and other irrelevant environment data from PM2 export/view"
 
 **Legacy Issues (Resolved by PM2 migration):**
 - [x] Export Agent Button - ✅ Removed (no plist files with PM2)
