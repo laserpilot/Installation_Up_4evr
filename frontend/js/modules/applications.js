@@ -7,43 +7,43 @@ import { apiCall, MasterConfigAPI } from '../utils/api.js';
 import { showToast, showLoading, hideLoading } from '../utils/ui.js';
 import { createAgentCard } from '../components/LaunchAgentCard.js';
 
-let allAgents = [];
-let agentStatusList = [];
+let allProcesses = [];
+let processStatusList = [];
 let currentAppPath = null;
 let statusUpdateInterval = null;
 let currentMode = 'app'; // 'app' or 'web'
 
-async function loadLaunchAgents() {
+async function loadProcesses() {
     try {
         const [agentsResponse, statusResponse] = await Promise.all([
             apiCall('/api/launch-agents/list'),
             apiCall('/api/launch-agents/status')
         ]);
 
-        allAgents = agentsResponse?.data || agentsResponse || [];
-        agentStatusList = statusResponse?.data || statusResponse || [];
+        allProcesses = agentsResponse?.data || agentsResponse || [];
+        processStatusList = statusResponse?.data || statusResponse || [];
 
-        renderLaunchAgents();
+        renderProcesses();
     } catch (error) {
         console.error('Failed to load processes:', error);
         showToast('Failed to load processes', 'error');
     }
 }
 
-function renderLaunchAgents(filterType = 'all') {
+function renderProcesses(filterType = 'all') {
     const container = document.getElementById('launch-agents-list');
     // Show PM2-managed processes and any legacy launch agents
-    let agents = allAgents.filter(agent => 
-        agent.managedByTool === true || 
-        (agent.plistPath && 
-         (agent.plistPath.includes('/Users/') && agent.plistPath.includes('/Library/LaunchAgents/')))
+    let processes = allProcesses.filter(process => 
+        process.managedByTool === true || 
+        (process.plistPath && 
+         (process.plistPath.includes('/Users/') && process.plistPath.includes('/Library/LaunchAgents/')))
     );
     
     // Apply filter
-    agents = applyAgentFilter(agents, filterType);
+    processes = applyProcessFilter(processes, filterType);
     
-    // Sort agents: tool-created first, then alphabetical
-    agents.sort((a, b) => {
+    // Sort processes: tool-created first, then alphabetical
+    processes.sort((a, b) => {
         const aIsToolCreated = a.label.includes('installation-up-4evr') || 
                               a.plistPath.includes('installation-up-4evr') ||
                               (a.webAppInfo && a.webAppInfo.isWebApp);
@@ -57,84 +57,84 @@ function renderLaunchAgents(filterType = 'all') {
     });
 
     // Debug logging reduced - only show when there are issues
-    if (agents.length === 0 && allAgents.length > 0) {
-        console.warn('[PROCESSES] No managed processes found despite backend data:', allAgents.length);
+    if (processes.length === 0 && allProcesses.length > 0) {
+        console.warn('[PROCESSES] No managed processes found despite backend data:', allProcesses.length);
     }
 
-    if (agents.length === 0) {
+    if (processes.length === 0) {
         container.innerHTML = `
             <div class="no-agents-message">
                 <p>No managed processes found</p>
                 <p><small>Create your first application by dragging and dropping a .app file above, or use the Web Applications tab to launch browser-based apps.</small></p>
-                <button onclick="loadLaunchAgents()" class="btn btn-primary">Refresh List</button>
+                <button onclick="loadProcesses()" class="btn btn-primary">Refresh List</button>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = agents.map(agent => {
-        const statusData = agentStatusList.find(s => s.label === agent.label || s.name === agent.label) || {};
+    container.innerHTML = processes.map(process => {
+        const statusData = processStatusList.find(s => s.label === process.label || s.name === process.label) || {};
         // Convert status format to match frontend expectations
         const status = {
             isRunning: statusData.status === 'running' && statusData.loaded,
             pid: statusData.pid || 'N/A',
             lastExitStatus: statusData.lastExitStatus || 'N/A'
         };
-        return createAgentCard(agent, status);
+        return createAgentCard(process, status);
     }).join('');
 
-    addLaunchAgentActionListeners();
+    addProcessActionListeners();
 }
 
-function applyAgentFilter(agents, filterType) {
+function applyProcessFilter(processes, filterType) {
     switch (filterType) {
         case 'user':
-            return agents.filter(agent => 
-                agent.plistPath.includes('/Users/') && 
-                !agent.label.toLowerCase().includes('apple') &&
-                !agent.label.toLowerCase().includes('com.apple')
+            return processes.filter(process => 
+                process.plistPath.includes('/Users/') && 
+                !process.label.toLowerCase().includes('apple') &&
+                !process.label.toLowerCase().includes('com.apple')
             );
         case 'apps':
-            return agents.filter(agent => 
-                agent.label.includes('app') || 
-                agent.plistPath.includes('.app') ||
-                agent.label.toLowerCase().includes('chrome') ||
-                agent.label.toLowerCase().includes('browser')
+            return processes.filter(process => 
+                process.label.includes('app') || 
+                process.plistPath.includes('.app') ||
+                process.label.toLowerCase().includes('chrome') ||
+                process.label.toLowerCase().includes('browser')
             );
         case 'system':
-            return agents.filter(agent => 
-                agent.label.toLowerCase().includes('apple') ||
-                agent.label.toLowerCase().includes('com.apple') ||
-                agent.label.toLowerCase().includes('system')
+            return processes.filter(process => 
+                process.label.toLowerCase().includes('apple') ||
+                process.label.toLowerCase().includes('com.apple') ||
+                process.label.toLowerCase().includes('system')
             );
         case 'all':
         default:
-            return agents;
+            return processes;
     }
 }
 
-function filterLaunchAgents(filterType) {
-    renderLaunchAgents(filterType);
+function filterProcesses(filterType) {
+    renderProcesses(filterType);
 }
 
-async function updateAgentStatus() {
+async function updateProcessStatus() {
     try {
         const statusResponse = await apiCall('/api/launch-agents/status');
-        agentStatusList = statusResponse?.data || statusResponse || [];
+        processStatusList = statusResponse?.data || statusResponse || [];
         
         // Update existing cards without full re-render
-        updateExistingAgentCards();
+        updateExistingProcessCards();
     } catch (error) {
-        console.error('Failed to update agent status:', error);
+        console.error('Failed to update process status:', error);
     }
 }
 
-function updateExistingAgentCards() {
-    const agentCards = document.querySelectorAll('.agent-card');
+function updateExistingProcessCards() {
+    const processCards = document.querySelectorAll('.agent-card');
     
-    agentCards.forEach(card => {
+    processCards.forEach(card => {
         const label = card.dataset.label;
-        const statusData = agentStatusList.find(s => s.label === label || s.name === label) || {};
+        const statusData = processStatusList.find(s => s.label === label || s.name === label) || {};
         const isRunning = statusData.status === 'running' && statusData.loaded;
         
         // Update status class
@@ -165,7 +165,7 @@ function startRealtimeStatusUpdates() {
     stopRealtimeStatusUpdates();
     
     // Update status every 5 seconds
-    statusUpdateInterval = setInterval(updateAgentStatus, 5000);
+    statusUpdateInterval = setInterval(updateProcessStatus, 5000);
     console.log('[LAUNCH-AGENTS] Started real-time status updates');
 }
 
@@ -177,18 +177,18 @@ function stopRealtimeStatusUpdates() {
     }
 }
 
-function addLaunchAgentActionListeners() {
+function addProcessActionListeners() {
     document.querySelectorAll('.agent-card .btn-action').forEach(button => {
         button.addEventListener('click', (e) => {
             const card = e.currentTarget.closest('.agent-card');
             const label = card.dataset.label;
             const action = e.currentTarget.dataset.action;
-            handleLaunchAgentAction(label, action);
+            handleProcessAction(label, action);
         });
     });
 }
 
-async function handleLaunchAgentAction(label, action) {
+async function handleProcessAction(label, action) {
     try {
         let result;
         switch (action) {
@@ -219,13 +219,13 @@ async function handleLaunchAgentAction(label, action) {
             case 'view':
                 result = await apiCall(`/api/launch-agents/view`, { method: 'POST', body: JSON.stringify({ label }) });
                 if (!result.success) {
-                    console.error('[LAUNCH-AGENTS] View plist failed for:', label, result);
+                    console.error('[PROCESSES] View PM2 config failed for:', label, result);
                 }
-                showPlistContent(label, result);
+                showProcessContent(label, result);
                 return;
             case 'edit':
                 result = await apiCall(`/api/launch-agents/view`, { method: 'POST', body: JSON.stringify({ label }) });
-                showPlistEditor(label, result);
+                showProcessEditor(label, result);
                 return;
             case 'delete':
                 if (confirm(`Are you sure you want to delete ${label}? This cannot be undone.`)) {
@@ -238,7 +238,7 @@ async function handleLaunchAgentAction(label, action) {
                 return;
         }
         showToast(`${action} successful for ${label}`, 'success');
-        loadLaunchAgents();
+        loadProcesses();
     } catch (error) {
         showToast(`Failed to ${action} ${label}: ${error.message}`, 'error');
     } finally {
@@ -251,6 +251,7 @@ function getLaunchAgentOptions() {
         keepAlive: document.getElementById('keep-alive').checked,
         successfulExit: document.getElementById('successful-exit').checked,
         runAtLoad: document.getElementById('run-at-load').checked,
+        runOnReboot: document.getElementById('run-on-reboot').checked,
         label: document.getElementById('custom-label').value || undefined,
         programPath: document.getElementById('program-filepath').value || undefined
     };
@@ -264,9 +265,13 @@ async function createProcess() {
 
     const options = getLaunchAgentOptions();
     
-    showLoading('Creating application process...');
+    // Choose endpoint based on "run on reboot" option
+    const endpoint = options.runOnReboot ? '/api/launch-agents/create' : '/api/launch-agents/install';
+    const actionText = options.runOnReboot ? 'Creating process (will start on reboot)...' : 'Creating and starting process...';
+    
+    showLoading(actionText);
     try {
-        const result = await apiCall('/api/launch-agents/create', {
+        const result = await apiCall(endpoint, {
             method: 'POST',
             body: JSON.stringify({ appPath: currentAppPath, options })
         });
@@ -288,8 +293,11 @@ async function createProcess() {
             await addToMonitoring(processInfo);
         }
         
-        showToast('Application process created successfully!', 'success');
-        loadLaunchAgents();
+        const successMessage = options.runOnReboot 
+            ? 'Process created successfully! Will start on next reboot.' 
+            : 'Process created and started successfully!';
+        showToast(successMessage, 'success');
+        loadProcesses();
     } catch (error) {
         showToast('Failed to create application process', 'error');
     } finally {
@@ -305,7 +313,12 @@ async function installProcess() {
 
     const options = getLaunchAgentOptions();
     
-    showLoading('Installing process...');
+    // Show warning if "run on reboot" is checked for Install & Start
+    if (options.runOnReboot) {
+        showToast('Note: "Install & Start" will start the process immediately, ignoring "Run on reboot" setting.', 'warning');
+    }
+    
+    showLoading('Installing and starting process...');
     try {
         const result = await apiCall('/api/launch-agents/install', {
             method: 'POST',
@@ -331,7 +344,7 @@ async function installProcess() {
         }
         
         showToast('Process installed and started!', 'success');
-        loadLaunchAgents();
+        loadProcesses();
     } catch (error) {
         showToast('Failed to install process', 'error');
     } finally {
@@ -350,14 +363,6 @@ async function updateMasterConfigWithAgent(agentInfo) {
     }
 }
 
-async function removeMasterConfigAgent(agentId) {
-    try {
-        await MasterConfigAPI.removeLaunchAgent(agentId);
-        console.log('[LAUNCH-AGENTS] Removed agent from master configuration:', agentId);
-    } catch (error) {
-        console.warn('[LAUNCH-AGENTS] Failed to remove from master configuration:', error);
-    }
-}
 
 async function addToMonitoring(agentInfo) {
     try {
@@ -543,7 +548,7 @@ async function createWebLaunchAgent() {
             document.getElementById('web-incognito-mode').checked = false;
             
             // Reload agents list
-            loadLaunchAgents();
+            loadProcesses();
         } else {
             showToast(`Failed to create web app launch agent: ${response.message}`, 'error');
         }
@@ -822,11 +827,11 @@ export function initApplications() {
             e.target.classList.add('active');
             
             const filter = e.target.dataset.filter;
-            filterLaunchAgents(filter);
+            filterProcesses(filter);
         });
     });
 
-    loadLaunchAgents();
+    loadProcesses();
     
     // Load master configuration state after initial load
     setTimeout(() => {
@@ -958,8 +963,12 @@ function downloadAgentFile(label, result) {
     
     // Handle double-wrapped API response structure
     const dataObj = result.data.data || result.data;
-    const content = dataObj.content || dataObj.plistContent;
-    const filename = dataObj.filename || `${label}.plist`;
+    let content = dataObj.content || dataObj.processConfig;
+    const filename = dataObj.filename || `${label}.json`;
+    
+    // TODO: Backend should filter PM2 data to remove unnecessary environment info
+    // Currently includes npm_package_json, PATH, npm_execpath which are not relevant
+    // for process configuration export/view
     
     // Debug content only if it appears to be invalid
     console.log('[LAUNCH-AGENTS] Export content analysis for', label, ':');
@@ -979,11 +988,11 @@ function downloadAgentFile(label, result) {
             'result.data.plistContent': result.data?.plistContent,
             'result.content': result.content
         });
-        showToast('Failed to export launch agent - invalid content', 'error');
+        showToast('Failed to export process config - invalid content', 'error');
         return;
     }
     
-    const blob = new Blob([content], { type: 'application/xml' });
+    const blob = new Blob([content], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     
@@ -996,22 +1005,22 @@ function downloadAgentFile(label, result) {
     document.body.removeChild(link);
     
     URL.revokeObjectURL(url);
-    showToast(`Launch agent exported as ${filename}`, 'success');
+    showToast(`Process config exported as ${filename}`, 'success');
 }
 
-function showPlistContent(label, result) {
+function showProcessContent(label, result) {
     console.log('[LAUNCH-AGENTS] showPlistContent called for:', label);
     console.log('[LAUNCH-AGENTS] Result data structure:', result);
     
     if (!result.success || !result.data) {
-        console.error('[LAUNCH-AGENTS] View plist failed for', label, ':', result);
-        showToast('Failed to load plist content', 'error');
+        console.error('[PROCESSES] View process config failed for', label, ':', result);
+        showToast('Failed to load process config', 'error');
         return;
     }
     
     // Handle nested API response structure - same fix as export bug
     const dataObj = result.data.data || result.data;
-    const content = dataObj.content || dataObj.plistContent || result.content;
+    const content = dataObj.content || dataObj.processConfig || result.content;
     
     if (!content || content === 'undefined') {
         console.error('[LAUNCH-AGENTS] No valid content found in result:', {
@@ -1019,7 +1028,7 @@ function showPlistContent(label, result) {
             dataObj,
             content
         });
-        showToast('Failed to load plist content - no valid content found', 'error');
+        showToast('Failed to load process config - no valid content found', 'error');
         return;
     }
     
@@ -1030,13 +1039,13 @@ function showPlistContent(label, result) {
     modal.innerHTML = `
         <div class="modal-content script-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-eye"></i> View Plist: ${label}</h3>
+                <h3><i class="fas fa-eye"></i> View Process Config: ${label}</h3>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <pre class="code-block">${content}</pre>
                 <div class="modal-actions">
-                    <button class="btn btn-primary" id="copy-plist-content">
+                    <button class="btn btn-primary" id="copy-process-content">
                         <i class="fas fa-copy"></i> Copy to Clipboard
                     </button>
                 </div>
@@ -1054,9 +1063,9 @@ function showPlistContent(label, result) {
         document.body.removeChild(modal);
     });
     
-    modal.querySelector('#copy-plist-content').addEventListener('click', () => {
+    modal.querySelector('#copy-process-content').addEventListener('click', () => {
         navigator.clipboard.writeText(content).then(() => {
-            showToast('Plist content copied to clipboard!', 'success');
+            showToast('Process config copied to clipboard!', 'success');
         });
     });
     
@@ -1067,15 +1076,15 @@ function showPlistContent(label, result) {
     });
 }
 
-function showPlistEditor(label, result) {
+function showProcessEditor(label, result) {
     if (!result.success || !result.data) {
-        showToast('Failed to load plist content', 'error');
+        showToast('Failed to load process config', 'error');
         return;
     }
     
     // Handle nested API response structure - same fix as export bug
     const dataObj = result.data.data || result.data;
-    const content = dataObj.content || dataObj.plistContent || result.content;
+    const content = dataObj.content || dataObj.processConfig || result.content;
     
     if (!content || content === 'undefined') {
         console.error('[LAUNCH-AGENTS] No valid content found in result for edit:', {
@@ -1083,7 +1092,7 @@ function showPlistEditor(label, result) {
             dataObj,
             content
         });
-        showToast('Failed to load plist content for editing - no valid content found', 'error');
+        showToast('Failed to load process config for editing - no valid content found', 'error');
         return;
     }
     
@@ -1092,18 +1101,18 @@ function showPlistEditor(label, result) {
     modal.innerHTML = `
         <div class="modal-content script-modal">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Plist: ${label}</h3>
+                <h3><i class="fas fa-edit"></i> Edit Process Config: ${label}</h3>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="warning-banner">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Warning:</strong> Editing plist files directly can break launch agents. Make sure you understand the format.
+                    <strong>Warning:</strong> Editing PM2 configs directly can break processes. Make sure you understand the JSON format.
                 </div>
-                <textarea class="code-editor" id="plist-editor">${content}</textarea>
+                <textarea class="code-editor" id="process-editor">${content}</textarea>
                 <div class="modal-actions">
                     <button class="btn btn-secondary" id="cancel-edit">Cancel</button>
-                    <button class="btn btn-primary" id="save-plist">
+                    <button class="btn btn-primary" id="save-process">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>
@@ -1118,19 +1127,19 @@ function showPlistEditor(label, result) {
     modal.querySelector('.modal-close').addEventListener('click', closeModal);
     modal.querySelector('#cancel-edit').addEventListener('click', closeModal);
     
-    modal.querySelector('#save-plist').addEventListener('click', async () => {
-        const newContent = modal.querySelector('#plist-editor').value;
+    modal.querySelector('#save-process').addEventListener('click', async () => {
+        const newContent = modal.querySelector('#process-editor').value;
         try {
-            showLoading('Saving plist changes...');
+            showLoading('Saving process config changes...');
             await apiCall('/api/launch-agents/update', {
                 method: 'POST',
                 body: JSON.stringify({ label, content: newContent })
             });
-            showToast('Plist updated successfully!', 'success');
+            showToast('Process config updated successfully!', 'success');
             closeModal();
-            loadLaunchAgents();
+            loadProcesses();
         } catch (error) {
-            showToast('Failed to save plist changes', 'error');
+            showToast('Failed to save process config changes', 'error');
         } finally {
             hideLoading();
         }
