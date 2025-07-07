@@ -256,7 +256,7 @@ function getLaunchAgentOptions() {
     };
 }
 
-async function createLaunchAgent() {
+async function createProcess() {
     if (!currentAppPath) {
         showToast('Please select an app first', 'warning');
         return;
@@ -273,19 +273,19 @@ async function createLaunchAgent() {
         
         // Add to master configuration
         if (result.success) {
-            const agentInfo = {
-                id: options.label || `agent-${Date.now()}`,
+            const processInfo = {
+                id: options.label || `process-${Date.now()}`,
                 name: options.label || currentAppPath.split('/').pop(),
                 path: currentAppPath,
-                plistPath: result.data?.plistPath,
+                pm2Id: result.data?.pm2Id,
                 created: new Date().toISOString(),
                 type: 'app'
             };
             
-            await updateMasterConfigWithAgent(agentInfo);
+            await updateMasterConfigWithAgent(processInfo);
             
             // Add to monitoring system
-            await addToMonitoring(agentInfo);
+            await addToMonitoring(processInfo);
         }
         
         showToast('Application process created successfully!', 'success');
@@ -297,7 +297,7 @@ async function createLaunchAgent() {
     }
 }
 
-async function installLaunchAgent() {
+async function installProcess() {
     if (!currentAppPath) {
         showToast('Please select an app first', 'warning');
         return;
@@ -305,7 +305,7 @@ async function installLaunchAgent() {
 
     const options = getLaunchAgentOptions();
     
-    showLoading('Installing launch agent...');
+    showLoading('Installing process...');
     try {
         const result = await apiCall('/api/launch-agents/install', {
             method: 'POST',
@@ -314,26 +314,26 @@ async function installLaunchAgent() {
         
         // Add to master configuration
         if (result.success) {
-            const agentInfo = {
-                id: options.label || `agent-${Date.now()}`,
+            const processInfo = {
+                id: options.label || `process-${Date.now()}`,
                 name: options.label || currentAppPath.split('/').pop(),
                 path: currentAppPath,
-                plistPath: result.data?.plistPath,
+                pm2Id: result.data?.pm2Id,
                 created: new Date().toISOString(),
                 type: 'app',
                 installed: true
             };
             
-            await updateMasterConfigWithAgent(agentInfo);
+            await updateMasterConfigWithAgent(processInfo);
             
             // Add to monitoring system
-            await addToMonitoring(agentInfo);
+            await addToMonitoring(processInfo);
         }
         
-        showToast('Launch agent installed and started!', 'success');
+        showToast('Process installed and started!', 'success');
         loadLaunchAgents();
     } catch (error) {
-        showToast('Failed to install launch agent', 'error');
+        showToast('Failed to install process', 'error');
     } finally {
         hideLoading();
     }
@@ -672,6 +672,63 @@ function showCommandPreview(command, url, browserPath) {
     document.addEventListener('keydown', escapeHandler);
 }
 
+function handleAppSelection(file) {
+    // For .app files, we need to get the full path
+    // Since web browsers don't provide full file paths for security reasons,
+    // we need to work with the file name and make assumptions about common paths
+    
+    const fileName = file.name;
+    
+    // Check if it's a .app file
+    if (!fileName.endsWith('.app')) {
+        showToast('Please select a .app file', 'error');
+        return;
+    }
+    
+    // For dropped .app files, assume they're in /Applications unless told otherwise
+    // This is a limitation of web browsers - they don't provide full paths
+    const assumedPath = `/Applications/${fileName}`;
+    currentAppPath = assumedPath;
+    
+    // Show app info
+    document.getElementById('app-info').style.display = 'block';
+    document.getElementById('app-name').textContent = fileName.replace('.app', '');
+    document.getElementById('app-path').textContent = assumedPath;
+    
+    // Set some default values
+    document.getElementById('app-version').textContent = 'Unknown';
+    document.getElementById('app-bundle-id').textContent = 'Unknown';
+    
+    // Try to get app info from the backend
+    getAppInfo(assumedPath);
+    
+    showToast(`Selected: ${fileName}`, 'success');
+}
+
+async function getAppInfo(appPath) {
+    try {
+        const response = await apiCall('/api/launch-agents/app-info', {
+            method: 'POST',
+            body: JSON.stringify({ appPath })
+        });
+        
+        if (response.success && response.data) {
+            const info = response.data;
+            document.getElementById('app-version').textContent = info.version || 'Unknown';
+            document.getElementById('app-bundle-id').textContent = info.bundleId || 'Unknown';
+            
+            // Update path if backend provides a better one
+            if (info.actualPath) {
+                currentAppPath = info.actualPath;
+                document.getElementById('app-path').textContent = info.actualPath;
+            }
+        }
+    } catch (error) {
+        console.warn('Could not get app info:', error);
+        // Don't show error to user since this is optional
+    }
+}
+
 export function initApplications() {
     // Mode switching
     document.querySelectorAll('.mode-tab').forEach(tab => {
@@ -682,8 +739,8 @@ export function initApplications() {
     });
 
     // Desktop app mode
-    document.getElementById('create-launch-agent').addEventListener('click', createLaunchAgent);
-    document.getElementById('install-launch-agent').addEventListener('click', installLaunchAgent);
+    document.getElementById('create-launch-agent').addEventListener('click', createProcess);
+    document.getElementById('install-launch-agent').addEventListener('click', installProcess);
 
     // Drag and Drop
     const dropZone = document.getElementById('app-drop-zone');
@@ -694,19 +751,28 @@ export function initApplications() {
         const files = e.target.files;
         if (files.length > 0) {
             const file = files[0];
-            currentAppPath = file.webkitRelativePath || file.name;
-            document.getElementById('app-name').textContent = currentAppPath;
+            handleAppSelection(file);
         }
     });
     
-    dropZone.addEventListener('dragover', (e) => e.preventDefault());
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+    });
+    
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             const file = files[0];
-            currentAppPath = file.webkitRelativePath || file.name;
-            document.getElementById('app-name').textContent = currentAppPath;
+            handleAppSelection(file);
         }
     });
 
