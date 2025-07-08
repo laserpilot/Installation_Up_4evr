@@ -12,6 +12,7 @@ const ConfigurationProfiles = require('./config-profiles');
 const HealthScoringEngine = require('./health-scoring');
 const ValidationWorkflow = require('./validation-workflow');
 const { Logger, LOG_LEVELS, LOG_CATEGORIES } = require('./logger');
+const PM2ServiceManager = require('./pm2-service-manager');
 
 class PlatformManager {
     constructor() {
@@ -25,6 +26,7 @@ class PlatformManager {
         this.systemManager = null;
         this.processManager = null;
         this.logger = null;
+        this.pm2ServiceManager = new PM2ServiceManager();
         this.initialized = false;
     }
 
@@ -892,45 +894,81 @@ class PlatformManager {
             });
         });
 
-        // System Control routes (aliases for service routes for UI compatibility)
+        // System Control routes (PM2-enhanced for production use)
         this.api.registerRoute('/system/status', 'GET', async () => {
-            const status = this.getServiceStatus();
-            return APIResponse.success(status);
+            try {
+                const pm2Status = await this.pm2ServiceManager.getServiceStatus();
+                return APIResponse.success(pm2Status);
+            } catch (error) {
+                // Fallback to basic status if PM2 fails
+                const basicStatus = this.getServiceStatus();
+                basicStatus.pm2_error = error.message;
+                return APIResponse.success(basicStatus);
+            }
         });
 
         this.api.registerRoute('/system/start', 'POST', async () => {
-            // Note: This is mostly for UI feedback - service is already running if this endpoint is hit
-            return APIResponse.success({ 
-                message: 'Service is already running',
-                status: 'running',
-                pid: process.pid
-            });
+            try {
+                const result = await this.pm2ServiceManager.startService();
+                return APIResponse.success(result);
+            } catch (error) {
+                return APIResponse.error({ 
+                    message: 'Failed to start service with PM2',
+                    error: error.message,
+                    fallback: 'Service is already running directly'
+                });
+            }
         });
 
         this.api.registerRoute('/system/stop', 'POST', async () => {
-            // Graceful shutdown with delay to allow response
-            setTimeout(() => {
-                console.log('[SYSTEM] Graceful shutdown requested');
-                process.exit(0);
-            }, 1000);
-            
-            return APIResponse.success({ 
-                message: 'System shutdown initiated',
-                status: 'stopping' 
-            });
+            try {
+                const result = await this.pm2ServiceManager.stopService();
+                return APIResponse.success(result);
+            } catch (error) {
+                // Fallback to direct process exit
+                setTimeout(() => {
+                    console.log('[SYSTEM] Graceful shutdown requested (fallback)');
+                    process.exit(0);
+                }, 1000);
+                
+                return APIResponse.success({ 
+                    message: 'System shutdown initiated (direct)',
+                    status: 'stopping',
+                    pm2_error: error.message
+                });
+            }
         });
 
         this.api.registerRoute('/system/restart', 'POST', async () => {
-            // Note: In production, this would typically use PM2 or similar process manager
-            setTimeout(() => {
-                console.log('[SYSTEM] Restart requested');
-                process.exit(0); // Let process manager restart
-            }, 1000);
-            
-            return APIResponse.success({ 
-                message: 'System restart initiated',
-                status: 'restarting' 
-            });
+            try {
+                const result = await this.pm2ServiceManager.restartService();
+                return APIResponse.success(result);
+            } catch (error) {
+                // Fallback to process exit (let any process manager restart)
+                setTimeout(() => {
+                    console.log('[SYSTEM] Restart requested (fallback)');
+                    process.exit(0);
+                }, 1000);
+                
+                return APIResponse.success({ 
+                    message: 'System restart initiated (direct)',
+                    status: 'restarting',
+                    pm2_error: error.message
+                });
+            }
+        });
+
+        // PM2 Service Installation
+        this.api.registerRoute('/system/install-pm2', 'POST', async () => {
+            try {
+                const result = await this.pm2ServiceManager.installService();
+                return APIResponse.success(result);
+            } catch (error) {
+                return APIResponse.error({
+                    message: 'Failed to install service with PM2',
+                    error: error.message
+                });
+            }
         });
 
         this.api.registerRoute('/system/reboot', 'POST', async () => {
