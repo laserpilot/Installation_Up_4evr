@@ -1123,6 +1123,76 @@ body {
     font-style: italic;
 }
 
+/* PM2 Process Monitoring Styles */
+.pm2-processes {
+    margin-top: var(--spacing-sm);
+}
+
+.process-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+    border-left: 3px solid var(--success-color);
+}
+
+.process-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.process-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.process-status {
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.process-status.running {
+    color: var(--success-color);
+}
+
+.process-status.stopped {
+    color: var(--danger-color);
+}
+
+.process-metrics {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+.cpu-metric, .memory-metric, .restart-metric {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.restart-metric {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--warning-color);
+}
+
+.no-processes, .no-metrics {
+    color: var(--text-tertiary);
+    font-style: italic;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: var(--spacing-sm);
+}
+
 .health-status {
     display: flex;
     align-items: center;

@@ -140,8 +140,12 @@ function initMonitoringTab() {
         return;
     }
 
-    // Subscribe to monitoring updates
-    monitoringManager.subscribe(updateMonitoringDisplay);
+    // Subscribe to monitoring updates with async wrapper
+    monitoringManager.subscribe((data) => {
+        updateMonitoringDisplay(data).catch(error => {
+            console.error('[MONITORING] Failed to update display:', error);
+        });
+    });
     
     // Setup monitoring controls
     setupMonitoringControls(monitoringManager);
@@ -160,7 +164,9 @@ function initMonitoringTab() {
     // Force initial update
     const currentData = monitoringManager.getCurrentData();
     if (currentData.lastUpdate) {
-        updateMonitoringDisplay(currentData);
+        updateMonitoringDisplay(currentData).catch(error => {
+            console.error('[MONITORING] Failed initial display update:', error);
+        });
     }
 }
 
@@ -232,7 +238,7 @@ function exportMonitoringData(monitoringManager) {
     }
 }
 
-function updateMonitoringDisplay(data) {
+async function updateMonitoringDisplay(data) {
     console.log('[MONITORING] Updating display with data:', data);
     
     // Update system metrics using unified display manager
@@ -273,16 +279,34 @@ function updateMonitoringDisplay(data) {
         });
     }
     
-    // Update health status using monitoring data manager
+    // Update health status using monitoring data manager (now includes PM2 health)
     const monitoringManager = window.app?.monitoringData;
     const healthData = monitoringManager ? 
-        monitoringManager.getHealthStatus() : 
+        await monitoringManager.getHealthStatus() : 
         { status: 'unknown', issues: [] };
     
+    // Update health status with enhanced PM2 information
     monitoringDisplay.updateHealthStatus('health-status', healthData.status, healthData.issues);
+    
+    // Update health indicator element if it exists (for better PM2 visibility)
+    const healthIndicator = document.getElementById('health-indicator');
+    const healthText = document.getElementById('health-text');
+    if (healthIndicator && healthText) {
+        healthIndicator.textContent = monitoringDisplay.getHealthIndicator(healthData.status);
+        
+        // Enhanced health text that includes PM2 summary
+        let statusText = monitoringDisplay.getHealthText(healthData.status, healthData.issues);
+        if (healthData.pm2Health && healthData.pm2Health !== 'No PM2 processes') {
+            statusText += ` • PM2: ${healthData.pm2Health}`;
+        }
+        healthText.textContent = statusText;
+    }
     
     // Update alerts using unified display
     monitoringDisplay.updateAlertsSection('alerts-container', data.alerts || []);
+    
+    // Update PM2 process metrics
+    updatePM2Metrics();
     
     // Update system details
     updateSystemDetails(data);
@@ -344,6 +368,146 @@ function updateDetailCard(elementId, data) {
             updateApplicationsStatus(element, data);
             break;
     }
+}
+
+/**
+ * Update PM2 process metrics in both dashboard and monitoring sections
+ */
+async function updatePM2Metrics() {
+    try {
+        const response = await fetch('/api/monitoring/applications');
+        if (!response.ok) {
+            throw new Error('Failed to fetch PM2 data');
+        }
+
+        const data = await response.json();
+        const allApplications = data.data?.data || data.data || [];
+        const pm2Processes = allApplications.filter(app => app.type === 'pm2-process');
+
+        // Calculate PM2 metrics
+        const totalProcesses = pm2Processes.length;
+        const runningProcesses = pm2Processes.filter(proc => proc.isRunning).length;
+        const healthPercentage = totalProcesses > 0 ? Math.round((runningProcesses / totalProcesses) * 100) : 0;
+
+        // Calculate average CPU and memory usage
+        const activeCPU = pm2Processes
+            .filter(proc => proc.isRunning && proc.pm2Data?.cpu > 0)
+            .reduce((sum, proc) => sum + (proc.pm2Data?.cpu || 0), 0);
+        const activeMemory = pm2Processes
+            .filter(proc => proc.isRunning)
+            .reduce((sum, proc) => sum + (proc.pm2Data?.memory || 0), 0);
+
+        // Update dashboard PM2 card
+        const dashboardCard = document.getElementById('dashboard-pm2-value');
+        if (dashboardCard) {
+            dashboardCard.textContent = `${runningProcesses}/${totalProcesses}`;
+            
+            const dashboardBar = document.getElementById('dashboard-pm2-bar');
+            if (dashboardBar) {
+                dashboardBar.style.width = `${healthPercentage}%`;
+                dashboardBar.className = `metric-fill ${getMetricLevelClass(healthPercentage)}`;
+            }
+            
+            const dashboardStatus = document.getElementById('dashboard-pm2-status');
+            if (dashboardStatus) {
+                if (totalProcesses === 0) {
+                    dashboardStatus.textContent = 'No PM2 processes';
+                } else if (runningProcesses === totalProcesses) {
+                    dashboardStatus.textContent = 'All processes healthy';
+                } else {
+                    dashboardStatus.textContent = `${totalProcesses - runningProcesses} process(es) down`;
+                }
+            }
+            
+            const dashboardProcesses = document.getElementById('dashboard-pm2-processes');
+            if (dashboardProcesses) {
+                updatePM2ProcessList(dashboardProcesses, pm2Processes.slice(0, 3));
+            }
+        }
+
+        // Update monitoring PM2 card
+        const monitoringCard = document.getElementById('pm2-usage-value');
+        if (monitoringCard) {
+            monitoringCard.textContent = `${runningProcesses}/${totalProcesses}`;
+            
+            const monitoringBar = document.getElementById('pm2-usage-bar');
+            if (monitoringBar) {
+                monitoringBar.style.width = `${healthPercentage}%`;
+                monitoringBar.className = `metric-fill ${getMetricLevelClass(healthPercentage)}`;
+            }
+            
+            const monitoringStatus = document.getElementById('pm2-usage-status');
+            if (monitoringStatus) {
+                if (totalProcesses === 0) {
+                    monitoringStatus.textContent = 'No PM2 processes found';
+                } else {
+                    const cpuAvg = activeCPU > 0 ? (activeCPU / pm2Processes.filter(p => p.isRunning).length) : 0;
+                    const memoryMB = Math.round(activeMemory / 1024 / 1024);
+                    monitoringStatus.textContent = `${cpuAvg.toFixed(1)}% CPU avg, ${memoryMB}MB total`;
+                }
+            }
+            
+            const monitoringProcesses = document.getElementById('pm2-usage-processes');
+            if (monitoringProcesses) {
+                updatePM2ProcessList(monitoringProcesses, pm2Processes);
+            }
+        }
+
+    } catch (error) {
+        console.error('[PM2] Failed to update PM2 metrics:', error);
+        
+        // Set error states for both cards
+        const dashboardValue = document.getElementById('dashboard-pm2-value');
+        const monitoringValue = document.getElementById('pm2-usage-value');
+        
+        if (dashboardValue) dashboardValue.textContent = 'Error';
+        if (monitoringValue) monitoringValue.textContent = 'Error';
+        
+        const dashboardStatus = document.getElementById('dashboard-pm2-status');
+        const monitoringStatus = document.getElementById('pm2-usage-status');
+        
+        if (dashboardStatus) dashboardStatus.textContent = 'PM2 unavailable';
+        if (monitoringStatus) monitoringStatus.textContent = 'PM2 connection failed';
+    }
+}
+
+/**
+ * Update PM2 process list display
+ */
+function updatePM2ProcessList(container, processes) {
+    if (!container || !Array.isArray(processes)) return;
+
+    if (processes.length === 0) {
+        container.innerHTML = '<div class="no-processes">No PM2 processes running</div>';
+        return;
+    }
+
+    container.innerHTML = processes.map(proc => `
+        <div class="process-item">
+            <div class="process-info">
+                <span class="process-name">${proc.name}</span>
+                <span class="process-status ${proc.isRunning ? 'running' : 'stopped'}">
+                    ${proc.isRunning ? '🟢' : '🔴'} ${proc.status || 'unknown'}
+                </span>
+            </div>
+            <div class="process-metrics">
+                ${proc.pm2Data ? `
+                    <span class="cpu-metric">CPU: ${proc.pm2Data.cpu}%</span>
+                    <span class="memory-metric">RAM: ${Math.round(proc.pm2Data.memory / 1024 / 1024)}MB</span>
+                    ${proc.pm2Data.restartTime > 0 ? `<span class="restart-metric">↻${proc.pm2Data.restartTime}</span>` : ''}
+                ` : '<span class="no-metrics">No metrics</span>'}
+            </div>
+        </div>
+    `).join('');
+}
+
+/**
+ * Get metric level CSS class based on percentage
+ */
+function getMetricLevelClass(percentage) {
+    if (percentage >= 80) return 'good';
+    if (percentage >= 60) return 'warning';
+    return 'critical';
 }
 
 /**
