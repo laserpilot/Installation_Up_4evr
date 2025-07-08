@@ -21,6 +21,9 @@
 - [ ] Tool-created applications should also appear in Dashboard Application Status section  
 - [ ] Backend Service tab needs investigation - unclear purpose vs Applications, shows "Mode: Electron-managed"
 - [ ] Global tab needs assessment - scope and functionality unclear
+- [ ] **[Monitoring]** Clicking "Save configuration" gives a notification "Failed to save configuration" 
+- [ ] **[Monitoring]** Unclear what a configuration actually is and what is being saved - needs information below buttons
+- [ ] **[Monitoring]** Would save/load and import/export configuration buttons essentially be the same thing or no?
 
 ---
 
@@ -49,6 +52,8 @@
 ## Recently Completed ✅
 *Recently resolved issues for reference*
 
+- [x] **[Monitoring]** Slider controls not updating input fields - Enhanced setupThresholdControls with proper event listeners and removed excessive toast notifications *(2025-07-08)*
+- [x] **[Monitoring]** Ping monitor button not working - Fixed PingMonitorManager instantiation, global exposure, and API routes *(2025-07-08)*
 - [x] **[Applications]** "No user launch agents found" error - Fixed missing `extractWebAppInfo` method in backend *(2025-07-05)*
 - [x] **[System]** Settings showing "unknown" status - Fixed API data structure mismatch in statusLookup *(2025-07-05)*
 - [x] **[Notifications]** Toggle functionality broken - Fixed duplicate event listeners and initialization order *(2025-07-05)*
