@@ -18,17 +18,141 @@ const MONITORING_THRESHOLDS = {
 
 async function loadMonitoringConfig() {
     try {
+        console.log('[MONITORING-CONFIG] Loading monitoring configuration...');
         const response = await apiCall('/api/monitoring/config');
-        document.getElementById('monitoring-config-editor').value = JSON.stringify(response.config, null, 2);
-        showToast('Monitoring configuration loaded', 'success');
+        const config = response.config || response.data || {};
+        
+        console.log('[MONITORING-CONFIG] Loaded config:', config);
+        
+        // Load threshold values into UI elements
+        if (config.thresholds) {
+            const thresholds = config.thresholds;
+            
+            // CPU thresholds
+            if (thresholds.cpu) {
+                const cpuWarningSlider = document.getElementById('cpu-warning-slider');
+                const cpuWarningInput = document.getElementById('cpu-warning-input');
+                const cpuCriticalSlider = document.getElementById('cpu-critical-slider');
+                const cpuCriticalInput = document.getElementById('cpu-critical-input');
+                
+                if (cpuWarningSlider && cpuWarningInput) {
+                    cpuWarningSlider.value = thresholds.cpu.warning || 70;
+                    cpuWarningInput.value = thresholds.cpu.warning || 70;
+                }
+                if (cpuCriticalSlider && cpuCriticalInput) {
+                    cpuCriticalSlider.value = thresholds.cpu.critical || 85;
+                    cpuCriticalInput.value = thresholds.cpu.critical || 85;
+                }
+            }
+            
+            // Memory thresholds
+            if (thresholds.memory) {
+                const memWarningSlider = document.getElementById('memory-warning-slider');
+                const memWarningInput = document.getElementById('memory-warning-input');
+                const memCriticalSlider = document.getElementById('memory-critical-slider');
+                const memCriticalInput = document.getElementById('memory-critical-input');
+                
+                if (memWarningSlider && memWarningInput) {
+                    memWarningSlider.value = thresholds.memory.warning || 75;
+                    memWarningInput.value = thresholds.memory.warning || 75;
+                }
+                if (memCriticalSlider && memCriticalInput) {
+                    memCriticalSlider.value = thresholds.memory.critical || 90;
+                    memCriticalInput.value = thresholds.memory.critical || 90;
+                }
+            }
+            
+            // Disk thresholds
+            if (thresholds.disk) {
+                const diskWarningSlider = document.getElementById('disk-warning-slider');
+                const diskWarningInput = document.getElementById('disk-warning-input');
+                const diskCriticalSlider = document.getElementById('disk-critical-slider');
+                const diskCriticalInput = document.getElementById('disk-critical-input');
+                
+                if (diskWarningSlider && diskWarningInput) {
+                    diskWarningSlider.value = thresholds.disk.warning || 80;
+                    diskWarningInput.value = thresholds.disk.warning || 80;
+                }
+                if (diskCriticalSlider && diskCriticalInput) {
+                    diskCriticalSlider.value = thresholds.disk.critical || 95;
+                    diskCriticalInput.value = thresholds.disk.critical || 95;
+                }
+            }
+            
+            // Temperature thresholds
+            if (thresholds.temperature) {
+                const tempWarningSlider = document.getElementById('temperature-warning-slider');
+                const tempWarningInput = document.getElementById('temperature-warning-input');
+                const tempCriticalSlider = document.getElementById('temperature-critical-slider');
+                const tempCriticalInput = document.getElementById('temperature-critical-input');
+                
+                if (tempWarningSlider && tempWarningInput) {
+                    tempWarningSlider.value = thresholds.temperature.warning || 75;
+                    tempWarningInput.value = thresholds.temperature.warning || 75;
+                }
+                if (tempCriticalSlider && tempCriticalInput) {
+                    tempCriticalSlider.value = thresholds.temperature.critical || 85;
+                    tempCriticalInput.value = thresholds.temperature.critical || 85;
+                }
+            }
+        }
+        
+        // Load monitoring settings
+        if (config.monitoring) {
+            const intervalInput = document.getElementById('monitoring-interval-config');
+            const cooldownInput = document.getElementById('alert-cooldown');
+            const escalationInput = document.getElementById('escalation-time');
+            const autoRecoveryCheck = document.getElementById('auto-recovery-check');
+            
+            if (intervalInput) intervalInput.value = config.monitoring.interval || 30;
+            if (cooldownInput) cooldownInput.value = config.monitoring.alertCooldown || 5;
+            if (escalationInput) escalationInput.value = config.monitoring.escalationTime || 15;
+            if (autoRecoveryCheck) autoRecoveryCheck.checked = config.monitoring.autoRecovery !== false;
+        }
+        
+        showToast('Monitoring configuration loaded successfully', 'success');
     } catch (error) {
+        console.error('[MONITORING-CONFIG] Load failed:', error);
         showToast('Failed to load monitoring configuration', 'error');
     }
 }
 
 async function saveMonitoringConfig() {
     try {
-        const config = JSON.parse(document.getElementById('monitoring-config-editor').value);
+        console.log('[MONITORING-CONFIG] Saving monitoring configuration...');
+        
+        // Collect threshold values from sliders and inputs
+        const config = {
+            thresholds: {
+                cpu: {
+                    warning: parseInt(document.getElementById('cpu-warning-input')?.value || 70),
+                    critical: parseInt(document.getElementById('cpu-critical-input')?.value || 85)
+                },
+                memory: {
+                    warning: parseInt(document.getElementById('memory-warning-input')?.value || 75),
+                    critical: parseInt(document.getElementById('memory-critical-input')?.value || 90)
+                },
+                disk: {
+                    warning: parseInt(document.getElementById('disk-warning-input')?.value || 80),
+                    critical: parseInt(document.getElementById('disk-critical-input')?.value || 95)
+                },
+                temperature: {
+                    warning: parseInt(document.getElementById('temperature-warning-input')?.value || 75),
+                    critical: parseInt(document.getElementById('temperature-critical-input')?.value || 85)
+                }
+            },
+            monitoring: {
+                interval: parseInt(document.getElementById('monitoring-interval-config')?.value || 30),
+                alertCooldown: parseInt(document.getElementById('alert-cooldown')?.value || 5),
+                escalationTime: parseInt(document.getElementById('escalation-time')?.value || 15),
+                autoRecovery: document.getElementById('auto-recovery-check')?.checked || true
+            },
+            pingMonitors: window.pingMonitorManager?.pingMonitors || [],
+            lastUpdated: new Date().toISOString()
+        };
+        
+        console.log('[MONITORING-CONFIG] Configuration to save:', config);
+        
         await apiCall('/api/monitoring/config', {
             method: 'POST',
             body: JSON.stringify({ config })
@@ -37,9 +161,10 @@ async function saveMonitoringConfig() {
         // Update master configuration
         await updateMasterConfigWithMonitoring(config);
         
-        showToast('Monitoring configuration saved', 'success');
+        showToast('Monitoring configuration saved successfully', 'success');
     } catch (error) {
-        showToast('Failed to save monitoring configuration', 'error');
+        console.error('[MONITORING-CONFIG] Save failed:', error);
+        showToast(`Failed to save monitoring configuration: ${error.message}`, 'error');
     }
 }
 
@@ -333,8 +458,8 @@ function setupMonitoringConfigButtons() {
 }
 
 function setupRefreshButton() {
-    // Use unified refresh button setup
-    monitoringDisplay.setupRefreshButton('refresh-system-status', refreshSystemStatus);
+    // Refresh button setup removed - now using unified monitoring-grid display
+    console.log('[MONITORING-CONFIG] Using unified monitoring display - no separate refresh needed');
 }
 
 // Master Configuration Integration and Launch Agent Suggestions
@@ -445,58 +570,7 @@ function setupStatusDisplay() {
     });
 }
 
-async function refreshSystemStatus() {
-    try {
-        const response = await apiCall('/api/monitoring/status');
-        updateStatusCards(response);
-    } catch (error) {
-        console.error('Failed to refresh system status:', error);
-        showToast('Failed to refresh system status', 'error');
-    }
-}
-
-function updateStatusCards(data) {
-    // Update simple status cards directly (not using complex metric cards)
-    const system = data.system || {};
-    
-    // Update CPU status
-    if (system.cpu) {
-        updateStatusCard('current-cpu', 'cpu-indicator', system.cpu.usage || 0, '%', 'cpu');
-    }
-    
-    // Update Memory status  
-    if (system.memory) {
-        updateStatusCard('current-memory', 'memory-indicator', system.memory.usage || 0, '%', 'memory');
-    }
-    
-    // Update Disk status
-    if (system.disk) {
-        updateStatusCard('current-disk', 'disk-indicator', system.disk.usage || 0, '%', 'disk');
-    }
-    
-    // Update Temperature status (temperature data not available in current API)
-    updateStatusCard('current-temperature', 'temperature-indicator', 'N/A', '', 'temperature');
-}
-
-function updateStatusCard(valueId, indicatorId, value, unit, type) {
-    // Update the value display
-    const valueElement = document.getElementById(valueId);
-    if (valueElement) {
-        const displayValue = typeof value === 'number' ? 
-            `${value.toFixed(1)}${unit}` : value;
-        valueElement.textContent = displayValue;
-    }
-    
-    // Update the status indicator
-    const indicatorElement = document.getElementById(indicatorId);
-    if (indicatorElement && typeof value === 'number') {
-        const level = monitoringDisplay.getMetricLevel(type, value);
-        const icon = monitoringDisplay.getStatusIcon(level);
-        indicatorElement.textContent = icon;
-    }
-}
-
-// Old updateStatusCard function replaced by unified MonitoringDisplayManager
+// Redundant status update functions removed - now using unified monitoring-grid display
 
 function setupThresholdControls() {
     // Setup synchronization between sliders and number inputs

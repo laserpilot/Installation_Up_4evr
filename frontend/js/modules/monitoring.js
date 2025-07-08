@@ -298,16 +298,23 @@ export class PingMonitorManager {
     }
 
     setupEventListeners() {
+        console.log('[PING] Setting up event listeners...');
         const addButton = document.getElementById('add-ping-monitor');
+        console.log('[PING] Add button found:', !!addButton);
         if (addButton) {
             addButton.addEventListener('click', (e) => this.handleAddPingMonitor(e));
+            console.log('[PING] Event listener attached to add-ping-monitor button');
+        } else {
+            console.error('[PING] add-ping-monitor button not found in DOM');
         }
     }
 
     async handleAddPingMonitor(e) {
         e.preventDefault();
+        console.log('[PING] Add ping monitor button clicked');
         
         const ipAddress = document.getElementById('ping-ip-address').value.trim();
+        console.log('[PING] IP address input value:', ipAddress);
         const description = document.getElementById('ping-description').value.trim();
         const interval = parseInt(document.getElementById('ping-interval').value) || 30;
         const timeout = parseInt(document.getElementById('ping-timeout').value) || 5;
