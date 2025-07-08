@@ -1022,6 +1022,107 @@ body {
     margin-top: 2px;
 }
 
+/* Enhanced Application Monitoring with PM2 Integration */
+.apps-summary {
+    margin-bottom: var(--spacing-md);
+}
+
+.apps-count {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.running-count {
+    color: var(--success-color);
+}
+
+.total-count {
+    color: var(--text-secondary);
+}
+
+.apps-breakdown {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+}
+
+.pm2-badge, .launch-agent-badge {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.pm2-badge {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.launch-agent-badge {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--primary-color);
+    border: 1px solid rgba(0, 122, 255, 0.2);
+}
+
+.app-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+}
+
+.app-item.pm2-app {
+    border-left-color: var(--success-color);
+}
+
+.app-item.launch-agent-app {
+    border-left-color: var(--primary-color);
+}
+
+.app-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-weight: 500;
+}
+
+.app-status.running {
+    color: var(--success-color);
+}
+
+.app-status.stopped {
+    color: var(--danger-color);
+}
+
+.app-metrics {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    font-family: monospace;
+}
+
+.more-apps {
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 0.85rem;
+    font-style: italic;
+    padding: var(--spacing-xs);
+}
+
+.no-apps {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
 .health-status {
     display: flex;
     align-items: center;
@@ -1360,6 +1461,127 @@ body {
 .service-detail span {
     font-family: monospace;
     color: var(--text-primary);
+}
+
+/* PM2 Management Mode Styling */
+.management-mode {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.management-mode.pm2-managed {
+    background: #10b981;
+    color: white;
+}
+
+.management-mode.direct-managed {
+    background: #f59e0b;
+    color: white;
+}
+
+/* Service Metrics Section */
+.service-metrics {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.service-metrics h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: var(--background-secondary);
+    border-radius: 4px;
+}
+
+.metric-item label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* CPU and Memory Usage Indicators */
+.cpu-usage,
+.memory-usage {
+    font-family: monospace;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.cpu-usage.low-usage,
+.memory-usage.low-usage {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.cpu-usage.medium-usage,
+.memory-usage.medium-usage {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.cpu-usage.high-usage,
+.memory-usage.high-usage {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* PM2 Error Display */
+.pm2-error {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--border-radius);
+    color: #991b1b;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.pm2-error i {
+    color: #dc2626;
+}
+
+/* Status Indicators */
+.service-status-indicator.status-stopped .service-status-icon {
+    color: #dc2626;
+}
+
+.service-status-indicator.status-running .service-status-icon {
+    color: #059669;
+}
+
+.service-status-indicator.status-error .service-status-icon {
+    color: #dc2626;
+}
+
+.service-status-indicator.status-unknown .service-status-icon {
+    color: #d97706;
 }
 
 .service-controls-section {
@@ -1967,12 +2189,6 @@ input:checked+.toggle-slider:before {
     margin-bottom: var(--spacing-xl);
 }
 
-.status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: var(--spacing-lg);
-    margin-top: var(--spacing-lg);
-}
 
 .status-card {
     display: flex;
@@ -2275,9 +2491,6 @@ input:checked+.toggle-slider:before {
 
 /* Responsive adjustments for monitoring config */
 @media (max-width: 768px) {
-    .status-grid {
-        grid-template-columns: 1fr;
-    }
 
     .threshold-controls {
         grid-template-columns: 1fr;
@@ -3452,7 +3665,8 @@ input:checked+.toggle-slider:before {
     border-radius: 8px;
     margin-bottom: var(--spacing-md);
     border: 1px solid #e1bee7;
-    grid-column: 1 / -1; /* Span all columns in grid layout */
+    grid-column: 1 / -1;
+    /* Span all columns in grid layout */
 }
 
 .help-toggle {
@@ -3462,7 +3676,8 @@ input:checked+.toggle-slider:before {
     padding: var(--spacing-md);
     cursor: pointer;
     transition: background-color 0.2s ease;
-    grid-column: 1 / -1; /* Span all columns in grid layout */
+    grid-column: 1 / -1;
+    /* Span all columns in grid layout */
 }
 
 .help-toggle:hover {
@@ -5243,7 +5458,8 @@ input:checked+.toggle-slider:before {
 }
 
 /* Position tooltips to avoid covering buttons */
-.button-group, .action-buttons {
+.button-group,
+.action-buttons {
     position: relative;
 }
 
@@ -5260,6 +5476,7 @@ input:checked+.toggle-slider:before {
 
 /* Fallback positioning for narrow screens */
 @media (max-width: 768px) {
+
     .button-group .educational-tooltip,
     .action-buttons .educational-tooltip {
         position: static;
@@ -6276,5 +6493,222 @@ select:focus {
 
     .setting-status {
         align-self: flex-start;
+    }
+}
+
+/* Ping Monitor Styles */
+.ping-monitor-list {
+    margin-bottom: var(--spacing-lg);
+}
+
+.ping-monitor-empty {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: var(--background-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.ping-monitor-empty i {
+    font-size: 1.2rem;
+    margin-right: var(--spacing-sm);
+    color: var(--primary-color);
+}
+
+.ping-monitor-item {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    transition: border-color 0.2s ease;
+}
+
+.ping-monitor-item:hover {
+    border-color: var(--primary-color);
+}
+
+.ping-monitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.ping-monitor-info {
+    flex: 1;
+}
+
+.ping-monitor-title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.ping-monitor-title strong {
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.ping-monitor-address {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    background: var(--background-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.ping-monitor-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xs);
+}
+
+.ping-monitor-status .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.ping-monitor-status .status-indicator.online {
+    color: #28a745;
+}
+
+.ping-monitor-status .status-indicator.offline {
+    color: #dc3545;
+}
+
+.ping-monitor-status .status-indicator.pending {
+    color: #ffc107;
+}
+
+.ping-monitor-status .response-time {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    background: var(--background-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.ping-monitor-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.ping-monitor-details {
+    display: flex;
+    gap: var(--spacing-lg);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-color);
+}
+
+.ping-monitor-details span {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.ping-monitor-add-section {
+    background: var(--background-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+}
+
+.ping-monitor-add-section h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.ping-monitor-add-section .config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.ping-monitor-add-section .config-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.ping-monitor-add-section .config-item label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.ping-monitor-add-section .config-item input,
+.ping-monitor-add-section .config-item select {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    background: var(--background-color);
+}
+
+.ping-monitor-add-section .config-item small {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+}
+
+/* Action buttons for ping monitors */
+.btn-action {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: var(--spacing-xs);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+}
+
+.btn-action:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.btn-action i {
+    font-size: 0.9rem;
+}
+
+/* Mobile responsiveness for ping monitors */
+@media (max-width: 768px) {
+    .ping-monitor-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .ping-monitor-actions {
+        align-self: flex-end;
+    }
+
+    .ping-monitor-details {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .ping-monitor-add-section .config-grid {
+        grid-template-columns: 1fr;
     }
 }

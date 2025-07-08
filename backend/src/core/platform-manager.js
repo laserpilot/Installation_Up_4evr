@@ -539,8 +539,35 @@ class PlatformManager {
                     console.error('[APPS] Failed to fetch tool-created launch agents:', error);
                 }
             }
+
+            // Include PM2 processes
+            try {
+                const pm2Processes = await this.pm2ServiceManager.getProcessList();
+                const pm2Applications = pm2Processes.map(proc => ({
+                    name: proc.name,
+                    isRunning: proc.status === 'online',
+                    status: proc.status,
+                    pid: proc.pid,
+                    type: 'pm2-process',
+                    source: 'pm2',
+                    pm2Data: {
+                        cpu: proc.cpu,
+                        memory: proc.memory,
+                        uptime: proc.uptime,
+                        restartTime: proc.restart_time
+                    }
+                }));
+
+                applications = [...applications, ...pm2Applications];
+            } catch (error) {
+                console.error('[APPS] Failed to fetch PM2 processes:', error);
+            }
             
-            return APIResponse.success(applications);
+            return APIResponse.success({ 
+                data: applications,
+                pm2Available: true,
+                timestamp: new Date().toISOString()
+            });
         });
 
         this.api.registerRoute('/monitoring/applications/add', 'POST', async (data) => {
@@ -674,6 +701,116 @@ class PlatformManager {
             return APIResponse.success({ 
                 message: 'Monitoring configuration applied successfully',
                 restartRequired 
+            });
+        });
+
+        // Ping Monitor routes
+        this.api.registerRoute('/monitoring/ping-monitors', 'GET', async () => {
+            const pingMonitors = this.config.get('monitoring.pingMonitors') || [];
+            return APIResponse.success(pingMonitors);
+        });
+
+        this.api.registerRoute('/monitoring/ping-monitors', 'POST', async (data) => {
+            const { ipAddress, description, interval, timeout } = data;
+            if (!ipAddress) {
+                throw new Error('IP address is required');
+            }
+
+            const pingMonitor = {
+                id: Date.now().toString(),
+                ipAddress,
+                description: description || ipAddress,
+                interval: parseInt(interval) || 30,
+                timeout: parseInt(timeout) || 5,
+                status: 'pending',
+                lastCheck: null,
+                responseTime: null,
+                enabled: true,
+                createdAt: new Date().toISOString()
+            };
+
+            const currentMonitors = this.config.get('monitoring.pingMonitors') || [];
+            currentMonitors.push(pingMonitor);
+            await this.config.update('monitoring.pingMonitors', currentMonitors);
+
+            // Start monitoring this new ping target
+            if (this.monitoring && this.monitoring.addPingMonitor) {
+                this.monitoring.addPingMonitor(pingMonitor);
+            }
+
+            return APIResponse.success({ 
+                message: 'Ping monitor added successfully',
+                monitor: pingMonitor 
+            });
+        });
+
+        this.api.registerRoute('/monitoring/ping-monitors/:id', 'PUT', async (data, context) => {
+            const monitorId = context?.params?.id || data.id;
+            if (!monitorId) throw new Error('Monitor ID is required');
+
+            const currentMonitors = this.config.get('monitoring.pingMonitors') || [];
+            const monitorIndex = currentMonitors.findIndex(m => m.id === monitorId);
+            
+            if (monitorIndex === -1) {
+                throw new Error('Ping monitor not found');
+            }
+
+            const updatedMonitor = { ...currentMonitors[monitorIndex], ...data };
+            updatedMonitor.updatedAt = new Date().toISOString();
+            currentMonitors[monitorIndex] = updatedMonitor;
+            
+            await this.config.update('monitoring.pingMonitors', currentMonitors);
+
+            // Update monitoring
+            if (this.monitoring && this.monitoring.updatePingMonitor) {
+                this.monitoring.updatePingMonitor(updatedMonitor);
+            }
+
+            return APIResponse.success({ 
+                message: 'Ping monitor updated successfully',
+                monitor: updatedMonitor 
+            });
+        });
+
+        this.api.registerRoute('/monitoring/ping-monitors/:id', 'DELETE', async (data, context) => {
+            const monitorId = context?.params?.id || data.id;
+            if (!monitorId) throw new Error('Monitor ID is required');
+
+            const currentMonitors = this.config.get('monitoring.pingMonitors') || [];
+            const updatedMonitors = currentMonitors.filter(m => m.id !== monitorId);
+            
+            if (currentMonitors.length === updatedMonitors.length) {
+                throw new Error('Ping monitor not found');
+            }
+
+            await this.config.update('monitoring.pingMonitors', updatedMonitors);
+
+            // Remove from monitoring
+            if (this.monitoring && this.monitoring.removePingMonitor) {
+                this.monitoring.removePingMonitor(monitorId);
+            }
+
+            return APIResponse.success({ message: 'Ping monitor removed successfully' });
+        });
+
+        this.api.registerRoute('/monitoring/ping-monitors/:id/test', 'POST', async (data, context) => {
+            const monitorId = context?.params?.id || data.id;
+            if (!monitorId) throw new Error('Monitor ID is required');
+
+            const currentMonitors = this.config.get('monitoring.pingMonitors') || [];
+            const monitor = currentMonitors.find(m => m.id === monitorId);
+            
+            if (!monitor) {
+                throw new Error('Ping monitor not found');
+            }
+
+            // Test ping connectivity
+            const testResult = await this.testPingConnectivity(monitor.ipAddress, monitor.timeout);
+            
+            return APIResponse.success({ 
+                message: 'Ping test completed',
+                monitor: monitor,
+                result: testResult 
             });
         });
 
@@ -1987,6 +2124,39 @@ class PlatformManager {
      */
     getLogger() {
         return this.logger;
+    }
+
+    async testPingConnectivity(ipAddress, timeout = 5) {
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+        
+        try {
+            const startTime = Date.now();
+            
+            // Use ping command with timeout
+            const timeoutMs = timeout * 1000;
+            await execAsync(`ping -c 1 -W ${timeoutMs} ${ipAddress}`);
+            
+            const responseTime = Date.now() - startTime;
+            
+            return {
+                success: true,
+                status: 'online',
+                responseTime: responseTime,
+                timestamp: new Date().toISOString(),
+                ipAddress: ipAddress
+            };
+        } catch (error) {
+            return {
+                success: false,
+                status: 'offline',
+                responseTime: null,
+                timestamp: new Date().toISOString(),
+                ipAddress: ipAddress,
+                error: error.message
+            };
+        }
     }
 
     async shutdown() {
