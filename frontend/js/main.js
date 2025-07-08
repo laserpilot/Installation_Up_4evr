@@ -341,18 +341,100 @@ function updateDetailCard(elementId, data) {
             break;
             
         case 'apps-status':
-            if (Array.isArray(data) && data.length > 0) {
-                const running = data.filter(app => app.isRunning).length;
-                element.innerHTML = `
-                    <div>${running}/${data.length} apps running</div>
-                    <div class="apps-list">${data.slice(0, 3).map(app => 
-                        `<span class="app-status ${app.isRunning ? 'running' : 'stopped'}">${app.name}</span>`
-                    ).join('')}</div>
-                `;
-            } else {
-                element.textContent = 'No monitored applications';
-            }
+            updateApplicationsStatus(element, data);
             break;
+    }
+}
+
+/**
+ * Enhanced application status display with PM2 integration
+ */
+async function updateApplicationsStatus(element, launchAgentData) {
+    try {
+        // Fetch enhanced applications data (includes PM2 processes)
+        const appsResponse = await fetch('/api/monitoring/applications');
+        let allApplications = [];
+        let pm2Processes = [];
+        let launchAgents = [];
+        
+        if (appsResponse.ok) {
+            const appsData = await appsResponse.json();
+            allApplications = appsData.data?.data || appsData.data || [];
+            
+            // Separate PM2 processes and launch agents
+            pm2Processes = allApplications.filter(app => app.type === 'pm2-process');
+            launchAgents = allApplications.filter(app => app.type === 'launch-agent' || !app.type);
+        } else {
+            // Fallback to passed launchAgentData if API fails
+            launchAgents = Array.isArray(launchAgentData) ? launchAgentData : [];
+        }
+
+        const totalApps = pm2Processes.length + launchAgents.length;
+        
+        if (totalApps === 0) {
+            element.innerHTML = `
+                <div class="no-apps">
+                    <i class="fas fa-info-circle"></i>
+                    <span>No managed applications</span>
+                </div>
+            `;
+            return;
+        }
+
+        // Count running applications
+        const runningLaunchAgents = launchAgents.filter(app => app.isRunning || app.status === 'running').length;
+        const runningPM2 = pm2Processes.filter(proc => proc.status === 'online').length;
+        const totalRunning = runningLaunchAgents + runningPM2;
+
+        // Create enhanced status display
+        element.innerHTML = `
+            <div class="apps-summary">
+                <div class="apps-count">
+                    <span class="running-count">${totalRunning}</span>/<span class="total-count">${totalApps}</span> apps running
+                </div>
+                <div class="apps-breakdown">
+                    ${pm2Processes.length > 0 ? `<span class="pm2-badge">PM2: ${runningPM2}/${pm2Processes.length}</span>` : ''}
+                    ${launchAgents.length > 0 ? `<span class="launch-agent-badge">Agents: ${runningLaunchAgents}/${launchAgents.length}</span>` : ''}
+                </div>
+            </div>
+            <div class="apps-list">
+                ${pm2Processes.slice(0, 2).map(proc => `
+                    <div class="app-item pm2-app">
+                        <span class="app-status ${proc.isRunning ? 'running' : 'stopped'}">
+                            <i class="fas fa-server"></i>
+                            ${proc.name}
+                        </span>
+                        <small class="app-metrics">CPU: ${proc.pm2Data?.cpu || 0}% | RAM: ${Math.round((proc.pm2Data?.memory || 0) / 1024 / 1024)}MB</small>
+                    </div>
+                `).join('')}
+                ${launchAgents.slice(0, 2).map(app => `
+                    <div class="app-item launch-agent-app">
+                        <span class="app-status ${app.isRunning || app.status === 'running' ? 'running' : 'stopped'}">
+                            <i class="fas fa-rocket"></i>
+                            ${app.name}
+                        </span>
+                        <small class="app-type">Launch Agent</small>
+                    </div>
+                `).join('')}
+                ${totalApps > 4 ? `<div class="more-apps">+${totalApps - 4} more...</div>` : ''}
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('[APPS] Failed to update applications status:', error);
+        // Fallback to basic display
+        const launchAgents = Array.isArray(launchAgentData) ? launchAgentData : [];
+        if (launchAgents.length > 0) {
+            const running = launchAgents.filter(app => app.isRunning || app.status === 'running').length;
+            element.innerHTML = `
+                <div>${running}/${launchAgents.length} launch agents running</div>
+                <div class="apps-list">${launchAgents.slice(0, 3).map(app => 
+                    `<span class="app-status ${app.isRunning || app.status === 'running' ? 'running' : 'stopped'}">${app.name}</span>`
+                ).join('')}</div>
+            `;
+        } else {
+            element.textContent = 'No monitored applications';
+        }
     }
 }
 
