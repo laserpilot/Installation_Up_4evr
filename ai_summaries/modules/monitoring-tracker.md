@@ -30,6 +30,12 @@
 ---
 
 ## Active Issues 🎯
+**✅ All Active Issues Completed (v1.0.0-alpha.4):**
+- [x] **Sliders synchronization fixed**: CPU/memory/disk/temperature sliders now properly update number inputs and vice versa
+- [x] **Ping monitor button functionality restored**: Added proper debugging and event listener setup for add-ping-monitor button
+- [x] **Configuration save/load functionality implemented**: Replaced broken JSON editor approach with proper threshold collection from UI elements
+- [x] **Configuration documentation added**: Added comprehensive help section explaining what data is saved (thresholds, ping monitors, behavior settings)
+- [x] **Save/Load vs Export/Import clarification**: Added clear distinction - Save/Load for persistent storage, Export/Import for file backup/sharing
 
 **✅ Recently Completed (v1.0.0-alpha.4):**
 - [x] **Ping Monitor Functionality**: Complete list management with add/edit/delete and logging integration
