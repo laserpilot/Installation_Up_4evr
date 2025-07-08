@@ -6,7 +6,7 @@
 console.log("main.js loaded and executing!"); // Added for debugging
 
 import { AuthSessionManager } from './modules/auth.js';
-import { MonitoringDataManager } from './modules/monitoring.js';
+import { MonitoringDataManager, PingMonitorManager } from './modules/monitoring.js';
 import { UIManager } from './modules/UIManager.js';
 import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
@@ -148,6 +148,14 @@ function initMonitoringTab() {
     
     // Initialize monitoring configuration functionality
     initMonitoringConfig();
+    
+    // Initialize ping monitor manager
+    if (!window.pingMonitorManager) {
+        window.pingMonitorManager = new PingMonitorManager();
+        window.pingMonitorManager.initialize().catch(error => {
+            console.error('[PING] Failed to initialize ping monitor manager:', error);
+        });
+    }
     
     // Force initial update
     const currentData = monitoringManager.getCurrentData();
@@ -323,7 +331,7 @@ function updateDetailCard(elementId, data) {
             break;
             
         case 'uptime-status':
-            if (data) {
+            if (data && typeof data === 'number' && !isNaN(data) && data > 0) {
                 const hours = Math.floor(data / 3600);
                 const days = Math.floor(hours / 24);
                 element.textContent = days > 0 ? `${days} days, ${hours % 24} hours` : `${hours} hours`;

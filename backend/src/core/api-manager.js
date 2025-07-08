@@ -353,10 +353,10 @@ class DataTransformer {
                 cpu: this.sanitizeMetric(data.system?.cpu),
                 memory: this.sanitizeMetric(data.system?.memory),
                 disk: this.sanitizeMetric(data.system?.disk),
-                uptime: data.system?.uptime || 0
+                uptime: this.sanitizeUptime(data.system?.uptime)
             },
             applications: Array.isArray(data.applications) ? data.applications : [],
-            network: data.network || {},
+            network: this.sanitizeNetworkData(data.network),
             displays: data.displays || {},
             timestamp: data.timestamp || new Date().toISOString()
         };
@@ -397,6 +397,29 @@ class DataTransformer {
         if (metric.mainVolume !== undefined) sanitized.mainVolume = metric.mainVolume;
         
         return sanitized;
+    }
+
+    static sanitizeUptime(uptime) {
+        if (typeof uptime === 'number') {
+            return uptime;
+        }
+        if (uptime && typeof uptime === 'object' && typeof uptime.seconds === 'number') {
+            return uptime.seconds;
+        }
+        return 0;
+    }
+
+    static sanitizeNetworkData(network) {
+        if (!network || typeof network !== 'object') {
+            return { connected: false, ip: 'Unknown' };
+        }
+
+        return {
+            connected: network.connectivity || false,
+            ip: network.primaryIP || 'Unknown',
+            interfaces: network.interfaces || [],
+            primaryInterface: network.primaryInterface || null
+        };
     }
 
     static sanitizeApplicationList(apps) {
