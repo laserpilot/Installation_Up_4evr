@@ -83,14 +83,14 @@ class PM2ServiceManager {
                         return;
                     }
 
-                    const process = list[0];
-                    const pm2_env = process.pm2_env;
-                    const monit = process.monit;
+                    const pm2Process = list[0];
+                    const pm2_env = pm2Process.pm2_env;
+                    const monit = pm2Process.monit;
 
                     resolve({
                         status: pm2_env.status,
                         message: `Service is ${pm2_env.status} under PM2 management`,
-                        pid: process.pid,
+                        pid: pm2Process.pid,
                         uptime: Math.floor((Date.now() - pm2_env.pm_uptime) / 1000),
                         pm2_managed: true,
                         management_mode: 'PM2',
