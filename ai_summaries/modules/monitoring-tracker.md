@@ -31,15 +31,34 @@
 
 ## Active Issues 🎯
 
-**PM2 Integration Enhancements (v1.0.0-alpha.4):**
-- [ ] **Enhanced Process Monitoring**: Integrate PM2 process metrics into monitoring dashboard
-- [ ] **Rich Application Data**: Display CPU, memory, restart counts for PM2-managed processes
-- [ ] **Process Health Scoring**: Include PM2 process health in overall system health calculation
-- [ ] **Real-time Process Updates**: Live updates of PM2 process status and metrics
-- [ ] **Process Performance Tracking**: Historical data for PM2-managed applications
+**✅ Recently Completed (v1.0.0-alpha.4):**
+- [x] **Ping Monitor Functionality**: Complete list management with add/edit/delete and logging integration
+- [x] **Redundant UI Cleanup**: Eliminated duplicate status-grid, kept unified monitoring-grid
+- [x] **Network Status Fix**: Shows actual IP address instead of "Disconnected" when connected
+- [x] **Uptime Display Fix**: Fixed "NaN hours" calculation with proper data validation
+- [x] **PM2 Applications Integration**: Enhanced Monitored Applications section with PM2 process data
+  - Enhanced `/api/monitoring/applications` to include PM2 processes with metrics
+  - Added PM2 process display with CPU/memory usage and visual distinction
+  - Unified PM2 and launch agent management in single interface
 
-**Currently:**
-- [ ] Ping monitor does not work. it should show a list of things that are added, and allow for editing of their information like name, IP, interval and timeout, as well as allowing user to delete them from the list
+**✅ PM2 Integration Complete (v1.0.0-alpha.4):**
+- [x] **Enhanced Process Monitoring**: Integrated PM2 process metrics into dashboard and monitoring tabs
+- [x] **Rich Application Data**: Display CPU, memory, restart counts for PM2-managed processes
+- [x] **Process Health Scoring**: PM2 process health integrated into overall system health calculation
+- [x] **Real-time Process Updates**: Live updates of PM2 process status and metrics with 30s refresh
+- [x] **Advanced Health Algorithm**: Multi-factor health scoring with PM2 + system metrics
+- [x] **Professional UI Integration**: Dedicated PM2 metric cards with process lists and health bars
+
+**PM2 Integration Technical Details:**
+- **Dashboard Integration**: Added PM2 metric cards to both dashboard and monitoring tabs
+- **Health Algorithm**: Comprehensive scoring considers process status, CPU usage, restart frequency
+- **Real-time Metrics**: Live CPU/memory display with color-coded health indicators
+- **Smart Escalation**: Critical PM2 issues elevate overall system health to critical status
+- **Error Handling**: Graceful fallbacks when PM2 is unavailable or connection fails
+- **UI Enhancement**: Professional process lists with status indicators and performance metrics
+
+**✅ All Issues Completed (v1.0.0-alpha.4):**
+- [x] Remove redundant Application Monitoring section (div.app-monitoring-section) - duplicate of PM2 functionality
 
 ---
 
