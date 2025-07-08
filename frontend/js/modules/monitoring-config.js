@@ -5,16 +5,7 @@
 
 import { apiCall, MasterConfigAPI } from '../utils/api.js';
 import { showToast } from '../utils/ui.js';
-import { ConfigSection } from '../components/ConfigSection.js';
 import { monitoringDisplay } from '../utils/monitoring-display.js';
-
-// Monitoring thresholds - consistent across all monitoring modules
-const MONITORING_THRESHOLDS = {
-    cpu: { warning: 70, critical: 85 },
-    memory: { warning: 75, critical: 90 },
-    disk: { warning: 80, critical: 95 },
-    temperature: { warning: 70, critical: 85 }
-};
 
 async function loadMonitoringConfig() {
     try {
@@ -159,7 +150,7 @@ async function saveMonitoringConfig() {
         });
         
         // Update master configuration
-        await updateMasterConfigWithMonitoring(config);
+        await updateMasterConfigWithMonitoring();
         
         showToast('Monitoring configuration saved successfully', 'success');
     } catch (error) {
@@ -175,11 +166,17 @@ async function resetMonitoringConfig() {
                 method: 'POST'
             });
             
-            // Update the editor with the reset configuration
-            document.getElementById('monitoring-config-editor').value = JSON.stringify(response.config, null, 2);
+            // Load the reset configuration into UI elements
+            const config = response.config || {};
+            console.log('[MONITORING-CONFIG] Reset config received:', config);
             
-            // Refresh the status display to show reset values
-            refreshSystemStatus();
+            // Reload the configuration into the UI
+            await loadMonitoringConfig();
+            
+            // Refresh the monitoring display to show reset values
+            if (window.app?.monitoringData) {
+                window.app.monitoringData.refreshData();
+            }
             
             showToast('Monitoring configuration reset to defaults', 'success');
         } catch (error) {
@@ -191,15 +188,34 @@ async function resetMonitoringConfig() {
 
 async function applyMonitoringConfig() {
     try {
-        const configText = document.getElementById('monitoring-config-editor').value;
-        let config;
-        
-        try {
-            config = JSON.parse(configText);
-        } catch (parseError) {
-            showToast('Invalid JSON configuration format', 'error');
-            return;
-        }
+        // Collect current configuration from UI elements (same as save)
+        const config = {
+            thresholds: {
+                cpu: {
+                    warning: parseInt(document.getElementById('cpu-warning-input')?.value || 70),
+                    critical: parseInt(document.getElementById('cpu-critical-input')?.value || 85)
+                },
+                memory: {
+                    warning: parseInt(document.getElementById('memory-warning-input')?.value || 75),
+                    critical: parseInt(document.getElementById('memory-critical-input')?.value || 90)
+                },
+                disk: {
+                    warning: parseInt(document.getElementById('disk-warning-input')?.value || 80),
+                    critical: parseInt(document.getElementById('disk-critical-input')?.value || 95)
+                },
+                temperature: {
+                    warning: parseInt(document.getElementById('temperature-warning-input')?.value || 75),
+                    critical: parseInt(document.getElementById('temperature-critical-input')?.value || 85)
+                }
+            },
+            monitoring: {
+                interval: parseInt(document.getElementById('monitoring-interval-config')?.value || 30),
+                alertCooldown: parseInt(document.getElementById('alert-cooldown')?.value || 5),
+                escalationTime: parseInt(document.getElementById('escalation-time')?.value || 15),
+                autoRecovery: document.getElementById('auto-recovery-check')?.checked || true
+            },
+            pingMonitors: window.pingMonitorManager?.pingMonitors || []
+        };
         
         const response = await apiCall('/api/monitoring/config/apply', {
             method: 'POST',
@@ -212,8 +228,10 @@ async function applyMonitoringConfig() {
             showToast('Monitoring configuration applied successfully', 'success');
         }
         
-        // Refresh status to show the applied changes
-        refreshSystemStatus();
+        // Refresh monitoring display to show the applied changes
+        if (window.app?.monitoringData) {
+            window.app.monitoringData.refreshData();
+        }
         
     } catch (error) {
         console.error('Apply failed:', error);
@@ -224,18 +242,19 @@ async function applyMonitoringConfig() {
 export function initMonitoringConfig() {
     console.log('[INIT] Initializing Monitoring Config tab...');
     
-    // Setup direct button listeners instead of using ConfigSection
+    // Setup direct button listeners and interactions
     setupMonitoringConfigButtons();
-    
-    // Setup additional interactions
-    setupRefreshButton();
     setupStatusDisplay();
     setupThresholdControls();
     setupLaunchAgentSuggestions();
     
     // Initialize with current config and status
     loadMonitoringConfig();
-    refreshSystemStatus();
+    
+    // Refresh monitoring display
+    if (window.app?.monitoringData) {
+        window.app.monitoringData.refreshData();
+    }
     
     // Load launch agent suggestions after initial load
     setTimeout(() => {
@@ -457,13 +476,9 @@ function setupMonitoringConfigButtons() {
     }
 }
 
-function setupRefreshButton() {
-    // Refresh button setup removed - now using unified monitoring-grid display
-    console.log('[MONITORING-CONFIG] Using unified monitoring display - no separate refresh needed');
-}
 
 // Master Configuration Integration and Launch Agent Suggestions
-async function updateMasterConfigWithMonitoring(config) {
+async function updateMasterConfigWithMonitoring() {
     try {
         // Update monitoring configuration in master config
         const masterProfile = await MasterConfigAPI.getMasterProfile();
@@ -480,92 +495,18 @@ async function updateMasterConfigWithMonitoring(config) {
 }
 
 
-function addLaunchAgentSuggestionsUI(agents) {
-    const configEditor = document.getElementById('monitoring-config-editor');
-    if (!configEditor) return;
-    
-    // Add suggestions section if it doesn't exist
-    let suggestionsSection = document.getElementById('launch-agent-suggestions');
-    if (!suggestionsSection) {
-        suggestionsSection = document.createElement('div');
-        suggestionsSection.id = 'launch-agent-suggestions';
-        suggestionsSection.className = 'launch-agent-suggestions';
-        suggestionsSection.innerHTML = `
-            <h4><i class="fas fa-lightbulb"></i> Suggested Applications to Monitor</h4>
-            <p>Based on your launch agents, consider monitoring these applications:</p>
-            <div class="suggestions-grid" id="suggestions-grid"></div>
-        `;
-        
-        // Insert before the config editor
-        configEditor.parentNode.insertBefore(suggestionsSection, configEditor);
-    }
-    
-    const suggestionsGrid = document.getElementById('suggestions-grid');
-    suggestionsGrid.innerHTML = agents.map(agent => `
-        <div class="suggestion-card" data-agent-id="${agent.id}">
-            <div class="suggestion-info">
-                <span class="suggestion-name">${agent.name}</span>
-                <small class="suggestion-path">${agent.path}</small>
-            </div>
-            <button class="btn btn-small btn-primary" onclick="addAgentToMonitoring('${agent.id}', '${agent.name}', '${agent.path}')">
-                <i class="fas fa-plus"></i> Add to Monitoring
-            </button>
-        </div>
-    `).join('');
-    
-    console.log('[MONITORING-CONFIG] Added suggestions for', agents.length, 'launch agents');
-}
 
-// Global function for adding agents to monitoring (called from suggestion buttons)
-window.addAgentToMonitoring = function(agentId, agentName, agentPath) {
-    try {
-        const configEditor = document.getElementById('monitoring-config-editor');
-        const currentConfig = JSON.parse(configEditor.value);
-        
-        // Add to applications array
-        if (!currentConfig.applications) {
-            currentConfig.applications = [];
-        }
-        
-        // Check if already exists
-        const exists = currentConfig.applications.find(app => app.name === agentName);
-        if (exists) {
-            showToast(`${agentName} is already being monitored`, 'warning');
-            return;
-        }
-        
-        currentConfig.applications.push({
-            name: agentName,
-            path: agentPath,
-            type: 'launch-agent',
-            enabled: true,
-            thresholds: {
-                cpu: { warning: 50, critical: 80 },
-                memory: { warning: 500, critical: 1000 }
-            },
-            autoGenerated: true,
-            source: 'launch-agent-suggestion'
-        });
-        
-        // Update editor
-        configEditor.value = JSON.stringify(currentConfig, null, 2);
-        
-        // Hide the suggestion
-        const suggestionCard = document.querySelector(`[data-agent-id="${agentId}"]`);
-        if (suggestionCard) {
-            suggestionCard.style.display = 'none';
-        }
-        
-        showToast(`Added ${agentName} to monitoring configuration`, 'success');
-    } catch (error) {
-        console.error('Failed to add agent to monitoring:', error);
-        showToast('Failed to add agent to monitoring', 'error');
-    }
-};
 
 function setupStatusDisplay() {
     // Use unified auto-refresh with 10-second interval for monitoring config
-    monitoringDisplay.setupAutoRefresh(refreshSystemStatus, {
+    const refreshFunction = () => {
+        // Refresh monitoring data through the global monitoring manager
+        if (window.app?.monitoringData) {
+            window.app.monitoringData.refreshData();
+        }
+    };
+    
+    monitoringDisplay.setupAutoRefresh(refreshFunction, {
         refreshInterval: 10000
     });
 }
@@ -623,13 +564,13 @@ function onThresholdChange(type, level, value) {
     console.log(`[THRESHOLD] ${type} ${level} threshold changed to ${value}%`);
     
     // Update visual indicators
-    updateThresholdIndicator(type, level, value);
+    updateThresholdIndicator(type, level);
     
     // Save threshold to configuration (could be enhanced to auto-save)
     saveThresholdValue(type, level, value);
 }
 
-function updateThresholdIndicator(type, level, value) {
+function updateThresholdIndicator(type, level) {
     // Add visual feedback for threshold changes
     const slider = document.getElementById(`${type}-${level}-slider`);
     if (slider) {
