@@ -31,9 +31,10 @@
 *Nice-to-have improvements and optimizations*
 
 **Currently:** 
+*None*
 
-- [ ] Future feature - optional toggle for the user to get screenshots of the screen on a regular interval and save them on a cycle with a timestamp. We don't want to keep too many, so it might be better to keep them on a cycle of like every X minutes but only keep the last 100 or something, and older ones get deleted.
-- [ ] We don't need to show SIP status checks in the console so often since this will likely never change, these can be silenced
+**Future:**
+- [ ] Optional toggle for the user to get screenshots of the screen on a regular interval and save them on a cycle with a timestamp. We don't want to keep too many, so it might be better to keep them on a cycle of like every X minutes but only keep the last 100 or something, and older ones get deleted.
 
 ---
 
@@ -52,6 +53,7 @@
 ## Recently Completed ✅
 *Recently resolved issues for reference*
 
+- [x] **[UI/UX]** Header status indicators fixes - Removed unnecessary SIP status indicator and fixed server status to show green when running *(2025-07-08)*
 - [x] **[Monitoring]** Slider controls not updating input fields - Enhanced setupThresholdControls with proper event listeners and removed excessive toast notifications *(2025-07-08)*
 - [x] **[Monitoring]** Ping monitor button not working - Fixed PingMonitorManager instantiation, global exposure, and API routes *(2025-07-08)*
 - [x] **[Applications]** "No user launch agents found" error - Fixed missing `extractWebAppInfo` method in backend *(2025-07-05)*

@@ -22,15 +22,9 @@ import { apiCall } from './utils/api.js';
 
 // Header status indicator management
 let headerStatusInterval = null;
-let sipStatusCache = null;
-let sipStatusLastChecked = 0;
-const SIP_STATUS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 async function updateHeaderStatusIndicators() {
-    await Promise.all([
-        updateServerStatus(),
-        updateSipStatusCached()
-    ]);
+    await updateServerStatus();
 }
 
 async function updateServerStatus() {
@@ -39,78 +33,21 @@ async function updateServerStatus() {
     
     try {
         const response = await apiCall('/api/system/status');
-        const status = response.data || response;
         
+        // If we get a response, the server is running
         // Clear existing status classes
-        serverStatusElement.className = 'status-indicator';
+        serverStatusElement.className = 'status-indicator online';
+        serverStatusElement.querySelector('i').style.color = '#28a745'; // Green
+        serverStatusElement.title = 'Server Online';
         
-        if (status.status === 'running') {
-            serverStatusElement.classList.add('online');
-            serverStatusElement.querySelector('i').style.color = '#28a745'; // Green
-        } else {
-            serverStatusElement.classList.add('offline');
-            serverStatusElement.querySelector('i').style.color = '#dc3545'; // Red
-        }
     } catch (error) {
         // Server is not responding
         serverStatusElement.className = 'status-indicator offline';
         serverStatusElement.querySelector('i').style.color = '#dc3545'; // Red
+        serverStatusElement.title = 'Server Offline';
     }
 }
 
-async function updateSipStatusCached() {
-    const now = Date.now();
-    
-    // Check if we have a valid cache
-    if (sipStatusCache && (now - sipStatusLastChecked) < SIP_STATUS_CACHE_DURATION) {
-        // Use cached data, no API call needed
-        updateSipStatusDisplay(sipStatusCache);
-        return;
-    }
-    
-    // Cache expired or doesn't exist, fetch new data
-    try {
-        const response = await apiCall('/api/system/sip-status');
-        const sipData = response.data || response;
-        
-        // Update cache
-        sipStatusCache = sipData;
-        sipStatusLastChecked = now;
-        
-        updateSipStatusDisplay(sipData);
-    } catch (error) {
-        console.error('Failed to get SIP status:', error);
-        // Don't update cache on error
-        updateSipStatusDisplay(null);
-    }
-}
-
-function updateSipStatusDisplay(sipData) {
-    const sipStatusElement = document.getElementById('sip-status');
-    if (!sipStatusElement) return;
-    
-    // Clear existing status classes
-    sipStatusElement.className = 'status-indicator';
-    
-    if (!sipData) {
-        // Error state
-        sipStatusElement.querySelector('i').style.color = '#6c757d'; // Gray
-        sipStatusElement.title = 'SIP Status Unknown';
-        return;
-    }
-    
-    if (sipData.enabled === false) {
-        // SIP disabled (good for our use case)
-        sipStatusElement.classList.add('online');
-        sipStatusElement.querySelector('i').style.color = '#28a745'; // Green
-        sipStatusElement.title = 'SIP Disabled';
-    } else {
-        // SIP enabled (might restrict functionality)
-        sipStatusElement.classList.add('warning');
-        sipStatusElement.querySelector('i').style.color = '#ffc107'; // Yellow
-        sipStatusElement.title = 'SIP Enabled - May restrict functionality';
-    }
-}
 
 function startHeaderStatusUpdates() {
     // Update immediately
