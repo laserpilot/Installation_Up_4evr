@@ -153,14 +153,6 @@ function initMonitoringTab() {
     // Initialize monitoring configuration functionality
     initMonitoringConfig();
     
-    // Initialize ping monitor manager
-    if (!window.pingMonitorManager) {
-        window.pingMonitorManager = new PingMonitorManager();
-        window.pingMonitorManager.initialize().catch(error => {
-            console.error('[PING] Failed to initialize ping monitor manager:', error);
-        });
-    }
-    
     // Force initial update
     const currentData = monitoringManager.getCurrentData();
     if (currentData.lastUpdate) {
@@ -614,8 +606,15 @@ class InstallationUp4evr {
             this.monitoringData = new MonitoringDataManager();
             console.log('[INIT] ✅ MonitoringDataManager created');
             
+            this.pingMonitorManager = new PingMonitorManager();
+            console.log('[INIT] ✅ PingMonitorManager created');
+            
             this.uiManager = new UIManager();
             console.log('[INIT] ✅ UIManager created');
+            
+            // Attach PingMonitorManager to global window object
+            window.pingMonitorManager = this.pingMonitorManager;
+            console.log('[INIT] ✅ PingMonitorManager attached to window');
             
             // Use async initialization properly
             this.init().catch(error => {
@@ -757,7 +756,13 @@ InstallationUp4evr.prototype.moduleInitializers = {
     'setup-wizard': initSetupWizard,
     'system': initSystem,
     'applications': initApplications,
-    'monitoring': () => { initMonitoringTab(); },
+    'monitoring': () => { 
+        initMonitoringTab();
+        // Initialize ping monitor manager when monitoring tab is opened
+        if (window.app && window.app.pingMonitorManager) {
+            window.app.pingMonitorManager.initialize();
+        }
+    },
     'backend-service': initBackendService,
     'global': initGlobalSettings,
     'notifications': initNotifications

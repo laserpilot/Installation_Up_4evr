@@ -452,6 +452,20 @@ export class PingMonitorManager {
                     ? `Ping successful! Response time: ${result.responseTime}ms`
                     : `Ping failed: ${result.error}`;
                 
+                // Update the local ping monitor data with test results
+                const monitorIndex = this.pingMonitors.findIndex(m => m.id === monitorId);
+                if (monitorIndex !== -1) {
+                    this.pingMonitors[monitorIndex] = {
+                        ...this.pingMonitors[monitorIndex],
+                        status: result.status,
+                        responseTime: result.responseTime,
+                        lastCheck: result.timestamp
+                    };
+                    
+                    // Re-render the list to show updated status
+                    this.renderPingMonitorList();
+                }
+                
                 this.showSuccess(message);
             }
         } catch (error) {

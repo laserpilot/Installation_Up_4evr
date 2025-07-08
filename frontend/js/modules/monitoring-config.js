@@ -514,9 +514,12 @@ function setupStatusDisplay() {
 // Redundant status update functions removed - now using unified monitoring-grid display
 
 function setupThresholdControls() {
+    console.log('[THRESHOLD] Setting up threshold controls...');
     // Setup synchronization between sliders and number inputs
     const thresholdTypes = ['cpu', 'memory', 'disk', 'temperature'];
     const thresholdLevels = ['warning', 'critical'];
+    
+    let setupCount = 0;
     
     thresholdTypes.forEach(type => {
         thresholdLevels.forEach(level => {
@@ -526,15 +529,22 @@ function setupThresholdControls() {
             const slider = document.getElementById(sliderId);
             const input = document.getElementById(inputId);
             
+            console.log(`[THRESHOLD] Checking ${sliderId} and ${inputId}:`, !!slider, !!input);
+            
             if (slider && input) {
+                setupCount++;
+                console.log(`[THRESHOLD] Setting up event listeners for ${type} ${level}`);
+                
                 // Sync slider to input
                 slider.addEventListener('input', () => {
+                    console.log(`[THRESHOLD] Slider ${sliderId} changed to ${slider.value}`);
                     input.value = slider.value;
                     onThresholdChange(type, level, slider.value);
                 });
                 
                 // Sync input to slider
                 input.addEventListener('input', () => {
+                    console.log(`[THRESHOLD] Input ${inputId} changed to ${input.value}`);
                     slider.value = input.value;
                     onThresholdChange(type, level, input.value);
                 });
@@ -555,9 +565,13 @@ function setupThresholdControls() {
                     slider.value = value;
                     onThresholdChange(type, level, value);
                 });
+            } else {
+                console.warn(`[THRESHOLD] Missing elements for ${type} ${level}: slider=${!!slider}, input=${!!input}`);
             }
         });
     });
+    
+    console.log(`[THRESHOLD] Successfully set up ${setupCount} threshold control pairs`);
 }
 
 function onThresholdChange(type, level, value) {
@@ -594,6 +608,6 @@ function saveThresholdValue(type, level, value) {
     
     window.thresholdSettings[type][level] = parseInt(value);
     
-    // Could implement auto-save or show "unsaved changes" indicator
-    showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} ${level} threshold set to ${value}%`, 'info');
+    // Visual feedback is provided by the slider/input sync and highlight effect
+    // No toast needed for real-time threshold adjustments
 }

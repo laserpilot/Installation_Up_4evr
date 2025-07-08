@@ -138,5 +138,97 @@ module.exports = (platformManager) => {
         }
     });
 
+    // Ping Monitor Routes
+    
+    /**
+     * @swagger
+     * /api/monitoring/ping-monitors:
+     *   get:
+     *     summary: Get all ping monitors
+     *     responses:
+     *       200:
+     *         description: List of configured ping monitors.
+     */
+    router.get('/ping-monitors', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/ping-monitors', 'GET');
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/ping-monitors:
+     *   post:
+     *     summary: Create a new ping monitor
+     *     responses:
+     *       200:
+     *         description: Ping monitor created successfully.
+     */
+    router.post('/ping-monitors', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/monitoring/ping-monitors', 'POST', req.body);
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/ping-monitors/{id}:
+     *   put:
+     *     summary: Update an existing ping monitor
+     *     responses:
+     *       200:
+     *         description: Ping monitor updated successfully.
+     */
+    router.put('/ping-monitors/:id', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest(`/monitoring/ping-monitors/${req.params.id}`, 'PUT', req.body, { params: req.params });
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/ping-monitors/{id}:
+     *   delete:
+     *     summary: Delete a ping monitor
+     *     responses:
+     *       200:
+     *         description: Ping monitor deleted successfully.
+     */
+    router.delete('/ping-monitors/:id', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest(`/monitoring/ping-monitors/${req.params.id}`, 'DELETE', null, { params: req.params });
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
+     * @swagger
+     * /api/monitoring/ping-monitors/{id}/test:
+     *   post:
+     *     summary: Test a ping monitor
+     *     responses:
+     *       200:
+     *         description: Ping test result.
+     */
+    router.post('/ping-monitors/:id/test', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest(`/monitoring/ping-monitors/${req.params.id}/test`, 'POST', req.body, { params: req.params });
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     return router;
 };

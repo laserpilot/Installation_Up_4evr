@@ -83,7 +83,9 @@ class APIManager {
         // If no exact match, try pattern matching for parameterized routes
         if (!route) {
             for (const [routeKey, routeConfig] of this.routes) {
-                const [routeMethod, routePath] = routeKey.split(':', 2);
+                const colonIndex = routeKey.indexOf(':');
+                const routeMethod = routeKey.substring(0, colonIndex);
+                const routePath = routeKey.substring(colonIndex + 1);
                 
                 if (routeMethod === upperMethod) {
                     const match = this.matchRoute(routePath, path);
