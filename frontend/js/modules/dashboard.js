@@ -126,8 +126,8 @@ async function refreshDashboardData() {
         // Update system metrics
         updateSystemMetrics(systemStatus.system || {});
         
-        // Update applications
-        updateApplications(applications.applications || []);
+        // Update applications - fix data structure mismatch
+        updateApplications(applications.data || []);
         
         // Update alerts/activity
         updateRecentActivity(systemStatus.alerts || []);
@@ -206,7 +206,7 @@ function updateApplications(applications) {
             <div class="no-apps-message">
                 <i class="fas fa-info-circle"></i>
                 <p>No applications are currently being monitored.</p>
-                <button class="btn btn-link" onclick="navigateToTab('launch-agents')">
+                <button class="btn btn-link" onclick="navigateToTab('applications')">
                     <i class="fas fa-rocket"></i> Set up Applications
                 </button>
             </div>
