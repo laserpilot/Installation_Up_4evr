@@ -234,8 +234,8 @@ async function updateMonitoringDisplay(data) {
     // Update alerts using unified display
     monitoringDisplay.updateAlertsSection('alerts-container', data.alerts || []);
     
-    // Update PM2 process metrics
-    updatePM2Metrics();
+    // Update PM2 process metrics with already-fetched data
+    updatePM2Metrics(data.applications || []);
     
     // Update system details
     updateSystemDetails(data);
@@ -302,21 +302,22 @@ function updateDetailCard(elementId, data) {
 /**
  * Update PM2 process metrics in both dashboard and monitoring sections
  */
-async function updatePM2Metrics() {
+function updatePM2Metrics(applications = []) {
     try {
-        const response = await fetch('/api/monitoring/applications');
-        if (!response.ok) {
-            throw new Error('Failed to fetch PM2 data');
-        }
-
-        const data = await response.json();
-        const allApplications = data.data?.data || data.data || [];
+        // Use passed application data instead of making API call
+        const allApplications = applications || [];
         const pm2Processes = allApplications.filter(app => app.type === 'pm2-process');
 
         // Calculate PM2 metrics
         const totalProcesses = pm2Processes.length;
         const runningProcesses = pm2Processes.filter(proc => proc.isRunning).length;
         const healthPercentage = totalProcesses > 0 ? Math.round((runningProcesses / totalProcesses) * 100) : 0;
+        
+        console.log('[PM2] Updating metrics:', {
+            total: totalProcesses,
+            running: runningProcesses,
+            health: healthPercentage
+        });
 
         // Calculate average CPU and memory usage
         const activeCPU = pm2Processes
