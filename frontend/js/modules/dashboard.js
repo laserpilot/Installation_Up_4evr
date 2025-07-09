@@ -145,24 +145,22 @@ async function refreshDashboardData() {
 }
 
 function updateSystemMetrics(systemData) {
-    // CPU Usage with top processes
+    // CPU Usage (processes display removed)
     monitoringDisplay.updateMetricCard({
         metricId: 'dashboard-cpu',
         value: systemData.cpu?.usage || 0,
         unit: '%',
         type: 'cpu',
-        showProcesses: true,
-        processes: systemData.cpu?.topProcesses || []
+        showProcesses: false
     });
     
-    // Memory Usage with top processes
+    // Memory Usage (processes display removed)
     monitoringDisplay.updateMetricCard({
         metricId: 'dashboard-memory',
         value: systemData.memory?.usage || 0,
         unit: '%',
         type: 'memory',
-        showProcesses: true,
-        processes: systemData.memory?.topProcesses || []
+        showProcesses: false
     });
     
     // Disk Usage with details
@@ -178,9 +176,16 @@ function updateSystemMetrics(systemData) {
         }
     });
     
-    // System Uptime
-    const uptimeValue = systemData.uptime?.seconds || 0;
+    // System Uptime - handle both object and number formats
+    const uptimeValue = systemData.uptime?.seconds || systemData.uptime || 0;
     const uptimeFormatted = systemData.uptime?.formatted || formatDashboardUptime(uptimeValue);
+    
+    console.log('[DASHBOARD] Uptime update:', {
+        raw: systemData.uptime,
+        value: uptimeValue,
+        formatted: uptimeFormatted
+    });
+    
     monitoringDisplay.updateMetricCard({
         metricId: 'dashboard-uptime',
         value: uptimeFormatted,
@@ -202,7 +207,7 @@ function updateApplications(applications) {
                 <i class="fas fa-info-circle"></i>
                 <p>No applications are currently being monitored.</p>
                 <button class="btn btn-link" onclick="navigateToTab('launch-agents')">
-                    <i class="fas fa-rocket"></i> Set up Launch Agents
+                    <i class="fas fa-rocket"></i> Set up Applications
                 </button>
             </div>
         `;

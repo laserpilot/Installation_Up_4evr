@@ -114,9 +114,6 @@
                                             <div class="metric-fill" id="dashboard-cpu-bar"></div>
                                         </div>
                                         <div class="metric-status" id="dashboard-cpu-status">Checking...</div>
-                                        <div class="top-processes" id="dashboard-cpu-processes">
-                                            <!-- Top CPU processes will be populated here -->
-                                        </div>
                                     </div>
 
                                     <div class="metric-card" id="dashboard-memory">
@@ -129,9 +126,6 @@
                                             <div class="metric-fill" id="dashboard-memory-bar"></div>
                                         </div>
                                         <div class="metric-status" id="dashboard-memory-status">Checking...</div>
-                                        <div class="top-processes" id="dashboard-memory-processes">
-                                            <!-- Top memory processes will be populated here -->
-                                        </div>
                                     </div>
 
                                     <div class="metric-card" id="dashboard-disk">
@@ -1389,7 +1383,7 @@
                     <div id="backend-service-tab" class="tab-pane">
                         <section class="card">
                             <h2><i class="fas fa-server"></i> Backend Service Control</h2>
-                            <p>Manage the Installation Up 4evr backend service</p>
+                            <p>Manage the Up4Evr application server itself. Use these controls to see its health, manage its logs, and install it as a system service so this tool launches automatically on boot.</p>
 
                             <!-- Service Status -->
                             <div class="service-status-section">
@@ -1464,11 +1458,8 @@
                                     <button id="start-backend" class="btn btn-success" style="display: none;">
                                         <i class="fas fa-play"></i> Start Backend
                                     </button>
-                                    <button id="install-service" class="btn btn-primary">
-                                        <i class="fas fa-download"></i> Install as System Service
-                                    </button>
                                     <button id="install-pm2-service" class="btn btn-primary">
-                                        <i class="fas fa-plus-circle"></i> Install with PM2
+                                        <i class="fas fa-download"></i> Install Backend to Run on Boot
                                     </button>
                                 </div>
 
@@ -1479,36 +1470,22 @@
                                             direct process</li>
                                         <li><strong>Stop/Start Backend:</strong> Control the backend service manually
                                         </li>
-                                        <li><strong>Install as System Service:</strong> Set up backend to auto-start on
-                                            boot</li>
-                                        <li><strong>Install with PM2:</strong> Set up enhanced process management with
-                                            monitoring, auto-restart, and logging</li>
+                                        <li><strong>Install Backend to Run on Boot:</strong> Set up enhanced process management with
+                                            monitoring, auto-restart, and logging via PM2</li>
                                     </ul>
                                 </div>
                             </div>
 
                             <!-- Service Logs -->
                             <div class="service-logs-section">
-                                <h3><i class="fas fa-file-alt"></i> Service Logs</h3>
-                                <div class="logs-controls">
-                                    <button id="refresh-logs" class="btn btn-secondary">
-                                        <i class="fas fa-sync"></i> Refresh
+                                <h3><i class="fas fa-file-alt"></i> Viewing Service Logs</h3>
+                                <div class="info-banner">
+                                    <p>For detailed diagnostics, you can view the live logs for the backend service directly from your terminal.</p>
+                                    <h4>To view logs:</h4>
+                                    <pre class="code-block" id="log-command-display">pm2 logs Up4Evr-Backend</pre>
+                                    <button class="btn btn-small" id="copy-log-command">
+                                        <i class="fas fa-copy"></i> Copy Command
                                     </button>
-                                    <button id="clear-logs" class="btn btn-secondary">
-                                        <i class="fas fa-trash"></i> Clear
-                                    </button>
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="auto-refresh-logs" checked>
-                                        <span class="checkbox-custom"></span>
-                                        Auto-refresh logs
-                                    </label>
-                                </div>
-                                <div class="logs-container" id="service-logs">
-                                    <div class="log-entry">
-                                        <span class="log-timestamp">[Loading...]</span>
-                                        <span class="log-level">INFO</span>
-                                        <span class="log-message">Fetching service logs...</span>
-                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -1970,20 +1947,26 @@
                                 <h3><i class="fas fa-cogs"></i> Notification Settings</h3>
                                 <div class="config-grid">
                                     <div class="config-item">
+                                        <label for="alert-triggers">Send Notifications For</label>
+                                        <div class="checkbox-group vertical">
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-app-crash" data-event="app_crash" checked><span class="checkbox-custom"></span> Application Crash/Restart</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-high-cpu" data-event="high_cpu" checked><span class="checkbox-custom"></span> High CPU Usage</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-high-memory" data-event="high_memory"><span class="checkbox-custom"></span> High Memory Usage</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-low-disk" data-event="low_disk"><span class="checkbox-custom"></span> Low Disk Space</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-daily-status" data-event="daily_status"><span class="checkbox-custom"></span> Daily Status Summary</label>
+                                        </div>
+                                        <small>Choose which events trigger a notification.</small>
+                                    </div>
+                                    <div class="config-item">
                                         <label for="notification-levels">Alert Levels</label>
                                         <div class="checkbox-group">
-                                            <label class="checkbox-label">
-                                                <input type="checkbox" value="info" checked> Info
-                                            </label>
-                                            <label class="checkbox-label">
-                                                <input type="checkbox" value="warning" checked> Warning
-                                            </label>
-                                            <label class="checkbox-label">
-                                                <input type="checkbox" value="critical" checked> Critical
-                                            </label>
+                                            <label class="checkbox-label"><input type="checkbox" value="info" checked><span class="checkbox-custom"></span> Info</label>
+                                            <label class="checkbox-label"><input type="checkbox" value="warning" checked><span class="checkbox-custom"></span> Warning</label>
+                                            <label class="checkbox-label"><input type="checkbox" value="critical" checked><span class="checkbox-custom"></span> Critical</label>
                                         </div>
                                         <small>Which alert levels to send notifications for</small>
                                     </div>
+                                    
                                     <div class="config-item">
                                         <label for="rate-limit">Rate Limiting (minutes)</label>
                                         <input type="number" id="rate-limit" value="5" min="1" max="60">
@@ -2009,22 +1992,19 @@
                                 </div>
                             </div>
 
+                            <div class="info-banner">
+                                <i class="fas fa-info-circle"></i>
+                                Configure your notification channels below. Changes are not active until you click "Save and Apply".
+                            </div>
+
                             <!-- Notification Actions -->
                             <div class="config-actions">
                                 <div class="config-actions-left">
                                     <button id="load-notification-config" class="btn btn-secondary">
-                                        <i class="fas fa-folder-open"></i> Load Config
+                                        <i class="fas fa-undo"></i> Revert Changes
                                     </button>
-                                    <button id="save-notification-config" class="btn btn-secondary">
-                                        <i class="fas fa-save"></i> Save Config
-                                    </button>
-                                </div>
-                                <div class="config-actions-right">
-                                    <button id="reset-notification-config" class="btn btn-danger">
-                                        <i class="fas fa-undo"></i> Reset to Defaults
-                                    </button>
-                                    <button id="apply-notification-config" class="btn btn-success">
-                                        <i class="fas fa-check"></i> Apply Configuration
+                                    <button id="save-notification-config" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save and Apply
                                     </button>
                                 </div>
                             </div>
