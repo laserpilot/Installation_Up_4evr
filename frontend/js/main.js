@@ -327,33 +327,6 @@ function updatePM2Metrics(applications = []) {
             .filter(proc => proc.isRunning)
             .reduce((sum, proc) => sum + (proc.pm2Data?.memory || 0), 0);
 
-        // Update dashboard PM2 card
-        const dashboardCard = document.getElementById('dashboard-pm2-value');
-        if (dashboardCard) {
-            dashboardCard.textContent = `${runningProcesses}/${totalProcesses}`;
-            
-            const dashboardBar = document.getElementById('dashboard-pm2-bar');
-            if (dashboardBar) {
-                dashboardBar.style.width = `${healthPercentage}%`;
-                dashboardBar.className = `metric-fill ${getMetricLevelClass(healthPercentage)}`;
-            }
-            
-            const dashboardStatus = document.getElementById('dashboard-pm2-status');
-            if (dashboardStatus) {
-                if (totalProcesses === 0) {
-                    dashboardStatus.textContent = 'No PM2 processes';
-                } else if (runningProcesses === totalProcesses) {
-                    dashboardStatus.textContent = 'All processes healthy';
-                } else {
-                    dashboardStatus.textContent = `${totalProcesses - runningProcesses} process(es) down`;
-                }
-            }
-            
-            const dashboardProcesses = document.getElementById('dashboard-pm2-processes');
-            if (dashboardProcesses) {
-                updatePM2ProcessList(dashboardProcesses, pm2Processes.slice(0, 3));
-            }
-        }
 
         // Update monitoring PM2 card
         const monitoringCard = document.getElementById('pm2-usage-value');
@@ -386,17 +359,11 @@ function updatePM2Metrics(applications = []) {
     } catch (error) {
         console.error('[PM2] Failed to update PM2 metrics:', error);
         
-        // Set error states for both cards
-        const dashboardValue = document.getElementById('dashboard-pm2-value');
+        // Set error states for monitoring card
         const monitoringValue = document.getElementById('pm2-usage-value');
-        
-        if (dashboardValue) dashboardValue.textContent = 'Error';
         if (monitoringValue) monitoringValue.textContent = 'Error';
         
-        const dashboardStatus = document.getElementById('dashboard-pm2-status');
         const monitoringStatus = document.getElementById('pm2-usage-status');
-        
-        if (dashboardStatus) dashboardStatus.textContent = 'PM2 unavailable';
         if (monitoringStatus) monitoringStatus.textContent = 'PM2 connection failed';
     }
 }
