@@ -389,11 +389,7 @@ window.togglePM2Process = async function(processName) {
 window.viewPM2Process = function(processName) {
     // Navigate to applications tab where PM2 processes can be managed
     if (window.navigateToTab) {
-        navigateToTab('launch-agents');
-        // Set a small delay to allow tab to load, then show process info
-        setTimeout(() => {
-            showToast(`View ${processName} in Applications tab for detailed management`, 'info');
-        }, 500);
+        navigateToTab('applications');
     }
 };
 
