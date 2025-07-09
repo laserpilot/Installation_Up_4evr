@@ -211,34 +211,48 @@ function updateApplications(applications) {
     
     container.innerHTML = applications.map(app => {
         const isLaunchAgent = app.type === 'launch-agent';
+        const isPM2Process = app.type === 'pm2-process';
         const isToolCreated = app.source === 'tool-created';
         const toolBadge = isToolCreated ? '<span class="tool-created-badge"><i class="fas fa-rocket"></i> Up4Evr</span>' : '';
+        
+        // Handle different running status property names
+        const isRunning = app.isRunning !== undefined ? app.isRunning : app.running;
         
         return `
             <div class="app-status-card ${isToolCreated ? 'tool-created-app' : ''}">
                 <div class="app-icon">
-                    <i class="fas ${app.running ? 'fa-play-circle text-green' : 'fa-stop-circle text-red'}"></i>
+                    <i class="fas ${isRunning ? 'fa-play-circle text-green' : 'fa-stop-circle text-red'}"></i>
                 </div>
                 <div class="app-info">
                     <h4>${app.name} ${toolBadge}</h4>
-                    <p>${app.running ? 'Running' : 'Stopped'}</p>
+                    <p>${isRunning ? 'Running' : 'Stopped'}</p>
                     ${app.pid ? `<small>PID: ${app.pid}</small>` : ''}
                     ${isLaunchAgent ? '<small class="app-type">Launch Agent</small>' : ''}
+                    ${isPM2Process ? '<small class="app-type">PM2 Process</small>' : ''}
                 </div>
                 <div class="app-actions">
                     ${isLaunchAgent ? `
-                        <button class="btn btn-sm ${app.running ? 'btn-danger' : 'btn-success'}" 
+                        <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
                                 onclick="toggleLaunchAgent('${app.agentData.label}')">
-                            ${app.running ? 'Stop' : 'Start'}
+                            ${isRunning ? 'Stop' : 'Start'}
                         </button>
                         <button class="btn btn-sm btn-outline" 
                                 onclick="viewLaunchAgent('${app.agentData.label}')">
                             <i class="fas fa-eye"></i>
                         </button>
+                    ` : isPM2Process ? `
+                        <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
+                                onclick="togglePM2Process('${app.name}')">
+                            ${isRunning ? 'Stop' : 'Start'}
+                        </button>
+                        <button class="btn btn-sm btn-outline" 
+                                onclick="viewPM2Process('${app.name}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     ` : `
-                        <button class="btn btn-sm ${app.running ? 'btn-danger' : 'btn-success'}" 
+                        <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
                                 onclick="toggleApplication('${app.name}')">
-                            ${app.running ? 'Stop' : 'Start'}
+                            ${isRunning ? 'Stop' : 'Start'}
                         </button>
                     `}
                 </div>
@@ -332,6 +346,49 @@ window.toggleLaunchAgent = async function(agentLabel) {
     } catch (error) {
         console.error('Launch agent toggle failed:', error);
         showToast(`Failed to toggle launch agent`, 'error');
+    }
+};
+
+// Global function for PM2 process toggle (called from HTML)
+window.togglePM2Process = async function(processName) {
+    try {
+        // Get current process status from monitoring API
+        const appsResponse = await apiCall('/api/monitoring/applications');
+        const pm2Process = appsResponse.data.find(app => app.type === 'pm2-process' && app.name === processName);
+        
+        if (!pm2Process) {
+            showToast(`PM2 process ${processName} not found`, 'error');
+            return;
+        }
+        
+        // Toggle the process using PM2 API
+        const action = pm2Process.isRunning ? 'stop' : 'start';
+        const response = await apiCall(`/api/pm2/${action}`, {
+            method: 'POST',
+            body: JSON.stringify({ name: processName })
+        });
+        
+        if (response.success) {
+            showToast(`PM2 process ${action}ed successfully`, 'success');
+            refreshDashboardData(); // Refresh to show updated status
+        } else {
+            showToast(`Failed to ${action} PM2 process`, 'error');
+        }
+    } catch (error) {
+        console.error('PM2 process toggle failed:', error);
+        showToast(`Failed to toggle PM2 process`, 'error');
+    }
+};
+
+// Global function for viewing PM2 process (called from HTML)
+window.viewPM2Process = function(processName) {
+    // Navigate to applications tab where PM2 processes can be managed
+    if (window.navigateToTab) {
+        navigateToTab('launch-agents');
+        // Set a small delay to allow tab to load, then show process info
+        setTimeout(() => {
+            showToast(`View ${processName} in Applications tab for detailed management`, 'info');
+        }, 500);
     }
 };
 
