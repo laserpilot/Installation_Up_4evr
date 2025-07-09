@@ -51,7 +51,10 @@
                             <i class="fas fa-magic"></i> Setup Wizard
                         </button>
                         <button class="sidebar-button" data-tab="system">
-                            <i class="fas fa-cog"></i> System
+                            <i class="fas fa-cog"></i> System Preferences
+                        </button>
+                        <button class="sidebar-button" data-tab="installation-settings">
+                            <i class="fas fa-microchip"></i> Installation Settings
                         </button>
                         <button class="sidebar-button macos-only" data-tab="applications">
                             <i class="fas fa-rocket"></i> Applications
@@ -486,237 +489,357 @@
                                 </button>
                             </div>
 
-                            <!-- Installation Settings Section -->
-                            <section class="card">
-                                <h2><i class="fas fa-microchip"></i> Installation Settings</h2>
-                                <p>Configure installation-specific parameters and thresholds for your creative
-                                    technology
-                                    setup</p>
-                                <div class="info-banner">
-                                    <i class="fas fa-info-circle"></i>
-                                    <strong>Demo Mode:</strong> These settings demonstrate API capabilities for real
-                                    installations with cameras, sensors, and audio equipment. Values can be configured
-                                    and
-                                    saved but won't control actual hardware in this demo.
-                                </div>
+                        </section>
+                    </div>
 
-                                <!-- Camera Settings Section -->
-                                <div class="installation-section">
-                                    <h3><i class="fas fa-camera"></i> Camera Settings <span
-                                            class="example-label">(Example)</span></h3>
-                                    <div class="settings-grid">
-                                        <div class="setting-item">
-                                            <label for="camera-threshold">Motion Detection Threshold</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="camera-threshold-slider" min="0" max="100"
-                                                    value="30">
-                                                <input type="number" id="camera-threshold-input" min="0" max="100"
-                                                    value="30">
-                                                <span class="threshold-unit">%</span>
-                                            </div>
-                                            <small>Sensitivity level for motion detection (0% = most sensitive, 100% =
-                                                least
-                                                sensitive)</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="camera-fps">Camera Frame Rate</label>
-                                            <select id="camera-fps">
-                                                <option value="15">15 FPS</option>
-                                                <option value="24">24 FPS</option>
-                                                <option value="30" selected>30 FPS</option>
-                                                <option value="60">60 FPS</option>
-                                            </select>
-                                            <small>Higher frame rates provide smoother video but require more processing
-                                                power</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="camera-resolution">Video Resolution</label>
-                                            <select id="camera-resolution">
-                                                <option value="720p">720p (1280x720)</option>
-                                                <option value="1080p" selected>1080p (1920x1080)</option>
-                                                <option value="4k">4K (3840x2160)</option>
-                                            </select>
-                                            <small>Higher resolutions provide better quality but require more storage
-                                                and
-                                                bandwidth</small>
-                                        </div>
-                                    </div>
-                                </div>
+                    <!-- Installation Settings Tab -->
+                    <div id="installation-settings-tab" class="tab-pane">
+                        <section class="card">
+                            <h2><i class="fas fa-microchip"></i> Installation Settings</h2>
+                            <p>Configure installation-specific parameters and thresholds for your creative technology setup</p>
+                            
+                            <div class="info-banner">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Demo Mode:</strong> These settings demonstrate API capabilities for real installations with cameras, sensors, and audio equipment. Values can be configured and saved but won't control actual hardware in this demo.
+                            </div>
 
-                                <!-- Audio Settings Section -->
-                                <div class="installation-section">
-                                    <h3><i class="fas fa-volume-up"></i> Audio Settings <span
-                                            class="example-label">(Example)</span></h3>
-                                    <div class="settings-grid">
-                                        <div class="setting-item">
-                                            <label for="audio-threshold">Audio Trigger Level</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="audio-threshold-slider" min="0" max="100"
-                                                    value="25">
-                                                <input type="number" id="audio-threshold-input" min="0" max="100"
-                                                    value="25">
-                                                <span class="threshold-unit">dB</span>
-                                            </div>
-                                            <small>Minimum audio level to trigger installation responses</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="audio-sample-rate">Sample Rate</label>
-                                            <select id="audio-sample-rate">
-                                                <option value="22050">22.05 kHz</option>
-                                                <option value="44100" selected>44.1 kHz</option>
-                                                <option value="48000">48 kHz</option>
-                                                <option value="96000">96 kHz</option>
-                                            </select>
-                                            <small>Audio quality setting - higher rates improve fidelity but require
-                                                more
-                                                processing</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="audio-channels">Audio Channels</label>
-                                            <select id="audio-channels">
-                                                <option value="1">Mono</option>
-                                                <option value="2" selected>Stereo</option>
-                                                <option value="8">7.1 Surround</option>
-                                            </select>
-                                            <small>Number of audio channels for recording and playback</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Sensor Settings Section -->
-                                <div class="installation-section">
-                                    <h3><i class="fas fa-broadcast-tower"></i> Sensor Settings <span
-                                            class="example-label">(Example)</span></h3>
-                                    <div class="settings-grid">
-                                        <div class="setting-item">
-                                            <label for="sensor-polling">Sensor Polling Rate</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="sensor-polling-slider" min="100" max="5000"
-                                                    value="500">
-                                                <input type="number" id="sensor-polling-input" min="100" max="5000"
-                                                    value="500">
-                                                <span class="threshold-unit">ms</span>
-                                            </div>
-                                            <small>How often to check sensor values (lower = more responsive, higher =
-                                                less CPU
-                                                usage)</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="sensor-timeout">Sensor Timeout</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="sensor-timeout-slider" min="1000" max="30000"
-                                                    value="5000">
-                                                <input type="number" id="sensor-timeout-input" min="1000" max="30000"
-                                                    value="5000">
-                                                <span class="threshold-unit">ms</span>
-                                            </div>
-                                            <small>Maximum time to wait for sensor response before considering it
-                                                offline</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="sensor-calibration">Auto-Calibration</label>
-                                            <div class="toggle-switch">
-                                                <input type="checkbox" id="sensor-calibration" checked>
-                                                <span class="toggle-slider"></span>
-                                            </div>
-                                            <small>Automatically calibrate sensors on startup</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Network Settings Section -->
-                                <div class="installation-section">
-                                    <h3><i class="fas fa-network-wired"></i> Network Settings <span
-                                            class="example-label">(Example)</span></h3>
-                                    <div class="settings-grid">
-                                        <div class="setting-item">
-                                            <label for="network-timeout">Network Timeout</label>
-                                            <div class="threshold-input-group">
-                                                <input type="range" id="network-timeout-slider" min="1000" max="15000"
-                                                    value="5000">
-                                                <input type="number" id="network-timeout-input" min="1000" max="15000"
-                                                    value="5000">
-                                                <span class="threshold-unit">ms</span>
-                                            </div>
-                                            <small>Maximum time to wait for network requests</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="network-retry">Retry Attempts</label>
-                                            <select id="network-retry">
-                                                <option value="1">1 Retry</option>
-                                                <option value="3" selected>3 Retries</option>
-                                                <option value="5">5 Retries</option>
-                                                <option value="10">10 Retries</option>
-                                            </select>
-                                            <small>Number of times to retry failed network operations</small>
-                                        </div>
-                                        <div class="setting-item">
-                                            <label for="network-protocol">Communication Protocol</label>
-                                            <select id="network-protocol">
-                                                <option value="http">HTTP</option>
-                                                <option value="https" selected>HTTPS</option>
-                                                <option value="websocket">WebSocket</option>
-                                                <option value="tcp">TCP Socket</option>
-                                            </select>
-                                            <small>Network protocol for external device communication</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Profile Management -->
-                                <div class="installation-section">
-                                    <h3><i class="fas fa-bookmark"></i> Installation Profiles</h3>
-                                    <p>Save and load different configuration sets for various installation types</p>
-
-                                    <div class="profile-management">
-                                        <div class="profile-load">
-                                            <select id="profile-selector">
-                                                <option value="">Select a profile...</option>
-                                                <option value="gallery">Gallery Installation</option>
-                                                <option value="museum">Museum Interactive</option>
-                                                <option value="performance">Live Performance</option>
-                                                <option value="audio-reactive">Audio Reactive Installation</option>
-                                                <option value="touch-interface">Touch Interface</option>
-                                                <option value="sensor-array">Sensor Array Setup</option>
-                                            </select>
-                                            <button id="load-profile" class="btn btn-secondary">
-                                                <i class="fas fa-download"></i> Load
-                                            </button>
-                                        </div>
-
-                                        <div class="profile-actions">
-                                            <input type="text" id="profile-name" placeholder="Profile name...">
-                                            <button id="save-profile" class="btn btn-success">
-                                                <i class="fas fa-save"></i> Save Profile
-                                            </button>
-                                            <button id="export-profile" class="btn btn-primary">
-                                                <i class="fas fa-download"></i> Export
-                                            </button>
-                                            <input type="file" id="import-profile" accept=".json"
-                                                style="display: none;">
-                                            <button id="import-profile-btn" class="btn btn-secondary">
-                                                <i class="fas fa-upload"></i> Import
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Apply Settings -->
-                                <div class="action-buttons">
-                                    <button id="test-installation-settings" class="btn btn-secondary"
-                                        title="Validate the current installation settings without applying them">
-                                        <i class="fas fa-play-circle"></i> Test Settings
+                            <!-- Camera Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-camera"></i> Camera Settings <span class="example-label">(Example)</span></h3>
+                                
+                                <!-- API Integration Guide -->
+                                <div class="api-integration-guide">
+                                    <button class="api-guide-toggle" type="button">
+                                        <i class="fas fa-code"></i> API Integration Guide
+                                        <i class="fas fa-chevron-down"></i>
                                     </button>
-                                    <button id="reset-installation-settings" class="btn btn-warning"
-                                        title="Reset all installation settings to their default values">
-                                        <i class="fas fa-undo"></i> Reset to Defaults
-                                    </button>
-                                    <button id="apply-installation-settings" class="btn btn-success"
-                                        title="Save these installation settings to configuration files">
-                                        <i class="fas fa-check"></i> Apply Settings
-                                    </button>
+                                    <div class="api-guide-content">
+                                        <h4>Backend Endpoints</h4>
+                                        <div class="api-endpoint">
+                                            <code>GET /api/installation/settings/camera</code>
+                                            <p>Retrieve current camera settings</p>
+                                        </div>
+                                        <div class="api-endpoint">
+                                            <code>POST /api/installation/settings/camera/threshold</code>
+                                            <p>Update motion detection threshold</p>
+                                            <pre>{"value": 50}</pre>
+                                        </div>
+                                        <h4>Code Examples</h4>
+                                        <pre><code>// JavaScript fetch example
+fetch('/api/installation/settings/camera/threshold', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({value: 50})
+});
+
+// curl command
+curl -X POST /api/installation/settings/camera/threshold \\
+  -H "Content-Type: application/json" \\
+  -d '{"value": 50}'</code></pre>
+                                    </div>
                                 </div>
-                            </section>
+
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="camera-threshold">Motion Detection Threshold</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="camera-threshold-slider" min="0" max="100" value="30">
+                                            <input type="number" id="camera-threshold-input" min="0" max="100" value="30">
+                                            <span class="threshold-unit">%</span>
+                                        </div>
+                                        <small>Sensitivity level for motion detection (0% = most sensitive, 100% = least sensitive)</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="camera-fps">Camera Frame Rate</label>
+                                        <select id="camera-fps">
+                                            <option value="15">15 FPS</option>
+                                            <option value="24">24 FPS</option>
+                                            <option value="30" selected>30 FPS</option>
+                                            <option value="60">60 FPS</option>
+                                        </select>
+                                        <small>Higher frame rates provide smoother video but require more processing power</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="camera-resolution">Video Resolution</label>
+                                        <select id="camera-resolution">
+                                            <option value="720p">720p (1280x720)</option>
+                                            <option value="1080p" selected>1080p (1920x1080)</option>
+                                            <option value="4k">4K (3840x2160)</option>
+                                        </select>
+                                        <small>Higher resolutions provide better quality but require more storage and bandwidth</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Audio Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-volume-up"></i> Audio Settings <span class="example-label">(Example)</span></h3>
+                                
+                                <!-- API Integration Guide -->
+                                <div class="api-integration-guide">
+                                    <button class="api-guide-toggle" type="button">
+                                        <i class="fas fa-code"></i> API Integration Guide
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="api-guide-content">
+                                        <h4>Backend Endpoints</h4>
+                                        <div class="api-endpoint">
+                                            <code>GET /api/installation/settings/audio</code>
+                                            <p>Retrieve current audio settings</p>
+                                        </div>
+                                        <div class="api-endpoint">
+                                            <code>POST /api/installation/settings/audio/threshold</code>
+                                            <p>Update audio trigger level</p>
+                                            <pre>{"value": 25}</pre>
+                                        </div>
+                                        <h4>Code Examples</h4>
+                                        <pre><code>// JavaScript fetch example
+fetch('/api/installation/settings/audio/threshold', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({value: 25})
+});
+
+// curl command
+curl -X POST /api/installation/settings/audio/threshold \\
+  -H "Content-Type: application/json" \\
+  -d '{"value": 25}'</code></pre>
+                                    </div>
+                                </div>
+
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="audio-threshold">Audio Trigger Level</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="audio-threshold-slider" min="0" max="100" value="25">
+                                            <input type="number" id="audio-threshold-input" min="0" max="100" value="25">
+                                            <span class="threshold-unit">dB</span>
+                                        </div>
+                                        <small>Minimum audio level to trigger installation responses</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="audio-sample-rate">Sample Rate</label>
+                                        <select id="audio-sample-rate">
+                                            <option value="22050">22.05 kHz</option>
+                                            <option value="44100" selected>44.1 kHz</option>
+                                            <option value="48000">48 kHz</option>
+                                            <option value="96000">96 kHz</option>
+                                        </select>
+                                        <small>Audio quality setting - higher rates improve fidelity but require more processing</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="audio-channels">Audio Channels</label>
+                                        <select id="audio-channels">
+                                            <option value="1">Mono</option>
+                                            <option value="2" selected>Stereo</option>
+                                            <option value="8">7.1 Surround</option>
+                                        </select>
+                                        <small>Number of audio channels for recording and playback</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sensor Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-broadcast-tower"></i> Sensor Settings <span class="example-label">(Example)</span></h3>
+                                
+                                <!-- API Integration Guide -->
+                                <div class="api-integration-guide">
+                                    <button class="api-guide-toggle" type="button">
+                                        <i class="fas fa-code"></i> API Integration Guide
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="api-guide-content">
+                                        <h4>Backend Endpoints</h4>
+                                        <div class="api-endpoint">
+                                            <code>GET /api/installation/settings/sensor</code>
+                                            <p>Retrieve current sensor settings</p>
+                                        </div>
+                                        <div class="api-endpoint">
+                                            <code>POST /api/installation/settings/sensor/polling</code>
+                                            <p>Update sensor polling rate</p>
+                                            <pre>{"value": 500}</pre>
+                                        </div>
+                                        <h4>Code Examples</h4>
+                                        <pre><code>// JavaScript fetch example
+fetch('/api/installation/settings/sensor/polling', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({value: 500})
+});
+
+// curl command
+curl -X POST /api/installation/settings/sensor/polling \\
+  -H "Content-Type: application/json" \\
+  -d '{"value": 500}'</code></pre>
+                                    </div>
+                                </div>
+
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="sensor-polling">Sensor Polling Rate</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="sensor-polling-slider" min="100" max="5000" value="500">
+                                            <input type="number" id="sensor-polling-input" min="100" max="5000" value="500">
+                                            <span class="threshold-unit">ms</span>
+                                        </div>
+                                        <small>How often to check sensor values (lower = more responsive, higher = less CPU usage)</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="sensor-timeout">Sensor Timeout</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="sensor-timeout-slider" min="1000" max="30000" value="5000">
+                                            <input type="number" id="sensor-timeout-input" min="1000" max="30000" value="5000">
+                                            <span class="threshold-unit">ms</span>
+                                        </div>
+                                        <small>Maximum time to wait for sensor response before considering it offline</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="sensor-calibration">Auto-Calibration</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="sensor-calibration" checked>
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically calibrate sensors on startup</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Network Settings Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-network-wired"></i> Network Settings <span class="example-label">(Example)</span></h3>
+                                
+                                <!-- API Integration Guide -->
+                                <div class="api-integration-guide">
+                                    <button class="api-guide-toggle" type="button">
+                                        <i class="fas fa-code"></i> API Integration Guide
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="api-guide-content">
+                                        <h4>Backend Endpoints</h4>
+                                        <div class="api-endpoint">
+                                            <code>GET /api/installation/settings/network</code>
+                                            <p>Retrieve current network settings</p>
+                                        </div>
+                                        <div class="api-endpoint">
+                                            <code>POST /api/installation/settings/network/timeout</code>
+                                            <p>Update network timeout</p>
+                                            <pre>{"value": 5000}</pre>
+                                        </div>
+                                        <h4>Code Examples</h4>
+                                        <pre><code>// JavaScript fetch example
+fetch('/api/installation/settings/network/timeout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({value: 5000})
+});
+
+// curl command
+curl -X POST /api/installation/settings/network/timeout \\
+  -H "Content-Type: application/json" \\
+  -d '{"value": 5000}'</code></pre>
+                                    </div>
+                                </div>
+
+                                <div class="settings-grid">
+                                    <div class="setting-item">
+                                        <label for="network-timeout">Network Timeout</label>
+                                        <div class="threshold-input-group">
+                                            <input type="range" id="network-timeout-slider" min="1000" max="15000" value="5000">
+                                            <input type="number" id="network-timeout-input" min="1000" max="15000" value="5000">
+                                            <span class="threshold-unit">ms</span>
+                                        </div>
+                                        <small>Maximum time to wait for network requests</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="network-retry">Retry Attempts</label>
+                                        <select id="network-retry">
+                                            <option value="1">1 Retry</option>
+                                            <option value="3" selected>3 Retries</option>
+                                            <option value="5">5 Retries</option>
+                                            <option value="10">10 Retries</option>
+                                        </select>
+                                        <small>Number of times to retry failed network operations</small>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label for="network-protocol">Communication Protocol</label>
+                                        <select id="network-protocol">
+                                            <option value="http">HTTP</option>
+                                            <option value="https" selected>HTTPS</option>
+                                            <option value="websocket">WebSocket</option>
+                                            <option value="tcp">TCP Socket</option>
+                                        </select>
+                                        <small>Network protocol for external device communication</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Parameters Section -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-plus-circle"></i> Custom Parameters</h3>
+                                <p>Add custom parameters for your specific installation needs</p>
+                                
+                                <div id="custom-params-list">
+                                    <!-- Custom parameters will be added here dynamically -->
+                                </div>
+                                
+                                <button id="add-custom-param" class="btn btn-secondary">
+                                    <i class="fas fa-plus"></i> Add Custom Parameter
+                                </button>
+                            </div>
+
+                            <!-- Profile Management -->
+                            <div class="installation-section">
+                                <h3><i class="fas fa-bookmark"></i> Installation Profiles</h3>
+                                <p>Save and load different configuration sets for various installation types</p>
+
+                                <div class="profile-management">
+                                    <div class="profile-load">
+                                        <select id="profile-selector">
+                                            <option value="">Select a profile...</option>
+                                            <option value="gallery">Gallery Installation</option>
+                                            <option value="museum">Museum Interactive</option>
+                                            <option value="performance">Live Performance</option>
+                                            <option value="audio-reactive">Audio Reactive Installation</option>
+                                            <option value="touch-interface">Touch Interface</option>
+                                            <option value="sensor-array">Sensor Array Setup</option>
+                                        </select>
+                                        <button id="load-profile" class="btn btn-secondary">
+                                            <i class="fas fa-download"></i> Load
+                                        </button>
+                                    </div>
+
+                                    <div class="profile-actions">
+                                        <input type="text" id="profile-name" placeholder="Profile name...">
+                                        <button id="save-profile" class="btn btn-success">
+                                            <i class="fas fa-save"></i> Save Profile
+                                        </button>
+                                        <button id="export-profile" class="btn btn-primary">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                        <input type="file" id="import-profile" accept=".json" style="display: none;">
+                                        <button id="import-profile-btn" class="btn btn-secondary">
+                                            <i class="fas fa-upload"></i> Import
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Apply Settings -->
+                            <div class="action-buttons">
+                                <button id="test-installation-settings" class="btn btn-secondary"
+                                    title="Validate the current installation settings without applying them">
+                                    <i class="fas fa-play-circle"></i> Test Settings
+                                </button>
+                                <button id="reset-installation-settings" class="btn btn-warning"
+                                    title="Reset all installation settings to their default values">
+                                    <i class="fas fa-undo"></i> Reset to Defaults
+                                </button>
+                                <button id="apply-installation-settings" class="btn btn-success"
+                                    title="Save these installation settings to configuration files">
+                                    <i class="fas fa-check"></i> Apply Settings
+                                </button>
+                            </div>
                         </section>
                     </div>
 

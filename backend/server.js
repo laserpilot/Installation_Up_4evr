@@ -379,6 +379,79 @@ app.post('/api/installation/settings/reset', async (req, res) => {
     }
 });
 
+// Granular Installation Settings API Routes
+app.get('/api/installation/settings/camera', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/camera', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/settings/camera/threshold', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/camera/threshold', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/installation/settings/audio', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/audio', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/settings/audio/threshold', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/audio/threshold', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/installation/settings/sensor', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/sensor', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/settings/sensor/polling', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/sensor/polling', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/installation/settings/network', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/network', 'GET');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/installation/settings/network/timeout', async (req, res) => {
+    try {
+        const result = await platformManager.handleAPIRequest('/installation/settings/network/timeout', 'POST', req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Setup Wizard API endpoints
 app.get('/api/setup-wizard/system-check', async (req, res) => {
     try {

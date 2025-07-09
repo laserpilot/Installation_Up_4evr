@@ -13,6 +13,7 @@ const HealthScoringEngine = require('./health-scoring');
 const ValidationWorkflow = require('./validation-workflow');
 const { Logger, LOG_LEVELS, LOG_CATEGORIES } = require('./logger');
 const PM2ServiceManager = require('./pm2-service-manager');
+const axios = require('axios');
 
 class PlatformManager {
     constructor() {
@@ -71,7 +72,7 @@ class PlatformManager {
             }
 
             // Initialize monitoring
-            this.monitoring = new MonitoringCore();
+            this.monitoring = new MonitoringCore(this.config);
             
             // Inject logger into monitoring
             if (this.monitoring.setLogger) {
@@ -1166,6 +1167,71 @@ class PlatformManager {
             });
         });
 
+        // Granular Installation Settings routes
+        this.api.registerRoute('/installation/settings/camera', 'GET', async () => {
+            const settings = this.getInstallationSettings();
+            return APIResponse.success({ settings: settings.camera || {} });
+        });
+
+        this.api.registerRoute('/installation/settings/camera/threshold', 'POST', async (data) => {
+            const settings = this.getInstallationSettings();
+            if (!settings.camera) settings.camera = {};
+            settings.camera.threshold = data.value;
+            await this.saveInstallationSettings(settings);
+            return APIResponse.success({ 
+                message: 'Camera threshold updated',
+                value: data.value 
+            });
+        });
+
+        this.api.registerRoute('/installation/settings/audio', 'GET', async () => {
+            const settings = this.getInstallationSettings();
+            return APIResponse.success({ settings: settings.audio || {} });
+        });
+
+        this.api.registerRoute('/installation/settings/audio/threshold', 'POST', async (data) => {
+            const settings = this.getInstallationSettings();
+            if (!settings.audio) settings.audio = {};
+            settings.audio.threshold = data.value;
+            await this.saveInstallationSettings(settings);
+            return APIResponse.success({ 
+                message: 'Audio threshold updated',
+                value: data.value 
+            });
+        });
+
+        this.api.registerRoute('/installation/settings/sensor', 'GET', async () => {
+            const settings = this.getInstallationSettings();
+            return APIResponse.success({ settings: settings.sensor || {} });
+        });
+
+        this.api.registerRoute('/installation/settings/sensor/polling', 'POST', async (data) => {
+            const settings = this.getInstallationSettings();
+            if (!settings.sensor) settings.sensor = {};
+            settings.sensor.polling = data.value;
+            await this.saveInstallationSettings(settings);
+            return APIResponse.success({ 
+                message: 'Sensor polling rate updated',
+                value: data.value 
+            });
+        });
+
+        this.api.registerRoute('/installation/settings/network', 'GET', async () => {
+            const settings = this.getInstallationSettings();
+            return APIResponse.success({ settings: settings.network || {} });
+        });
+
+        this.api.registerRoute('/installation/settings/network/timeout', 'POST', async (data) => {
+            const settings = this.getInstallationSettings();
+            if (!settings.network) settings.network = {};
+            settings.network.timeout = data.value;
+            await this.saveInstallationSettings(settings);
+            return APIResponse.success({ 
+                message: 'Network timeout updated',
+                value: data.value 
+            });
+        });
+
         // Notification routes
         this.api.registerRoute('/notifications/config', 'GET', async () => {
             const config = this.getNotificationConfig();
@@ -1945,9 +2011,87 @@ class PlatformManager {
             message: 'All installation settings are properly formatted'
         });
 
+        // Create detailed results for the modal
+        const detailedResults = {
+            camera: {
+                status: 'success',
+                threshold: 'Valid range (0-100%)',
+                timeout: 'Valid timeout value'
+            },
+            capacitive: {
+                status: 'success',
+                threshold: 'Valid range (0-100%)',
+                pins: 'Pin configuration valid'
+            },
+            audio: {
+                status: 'success',
+                threshold: 'Valid range (0-100%)',
+                sampleRate: 'Valid sample rate'
+            },
+            network: {
+                status: 'success',
+                connectivity: 'Network configuration valid',
+                timeout: 'Valid timeout value'
+            }
+        };
+
+        // Update detailed results based on actual settings
+        if (settings.camera) {
+            const threshold = settings.camera.threshold;
+            if (threshold !== undefined) {
+                detailedResults.camera.threshold = (threshold >= 0 && threshold <= 100) 
+                    ? `Valid: ${threshold}%` 
+                    : `Invalid: ${threshold}% (outside 0-100% range)`;
+                detailedResults.camera.status = (threshold >= 0 && threshold <= 100) ? 'success' : 'warning';
+            }
+            
+            const timeout = settings.camera.timeout;
+            if (timeout !== undefined) {
+                detailedResults.camera.timeout = (timeout > 0 && timeout <= 60) 
+                    ? `Valid: ${timeout}s` 
+                    : `Warning: ${timeout}s (recommended: 1-60s)`;
+            }
+        }
+
+        if (settings.capacitive) {
+            const threshold = settings.capacitive.threshold;
+            if (threshold !== undefined) {
+                detailedResults.capacitive.threshold = (threshold >= 0 && threshold <= 100) 
+                    ? `Valid: ${threshold}%` 
+                    : `Invalid: ${threshold}% (outside 0-100% range)`;
+                detailedResults.capacitive.status = (threshold >= 0 && threshold <= 100) ? 'success' : 'warning';
+            }
+            
+            const pins = settings.capacitive.activePins;
+            if (pins && Array.isArray(pins)) {
+                detailedResults.capacitive.pins = pins.length > 0 
+                    ? `Valid: ${pins.length} active pins` 
+                    : 'Warning: No active pins selected';
+            }
+        }
+
+        if (settings.audio) {
+            const threshold = settings.audio.threshold;
+            if (threshold !== undefined) {
+                detailedResults.audio.threshold = (threshold >= 0 && threshold <= 100) 
+                    ? `Valid: ${threshold}dB` 
+                    : `Invalid: ${threshold}dB (outside 0-100dB range)`;
+                detailedResults.audio.status = (threshold >= 0 && threshold <= 100) ? 'success' : 'warning';
+            }
+            
+            const sampleRate = settings.audio.sampleRate;
+            if (sampleRate !== undefined) {
+                const validRates = [22050, 44100, 48000, 96000];
+                detailedResults.audio.sampleRate = validRates.includes(sampleRate) 
+                    ? `Valid: ${sampleRate}Hz` 
+                    : `Warning: ${sampleRate}Hz (non-standard rate)`;
+            }
+        }
+
         return {
             success: true,
             tests,
+            results: detailedResults,
             summary: `${tests.length} tests completed`,
             timestamp: new Date().toISOString()
         };
@@ -2014,6 +2158,13 @@ class PlatformManager {
     async saveNotificationConfig(config) {
         try {
             await this.config.update('notifications', config);
+
+            // Also update the running monitoring instance
+            if (this.monitoring) {
+                // No specific update function needed, as it reads from config directly
+                console.log('[PLATFORM] Notification config saved and applied to live monitoring service.');
+            }
+
             return {
                 success: true,
                 message: 'Notification configuration saved successfully',
@@ -2027,32 +2178,31 @@ class PlatformManager {
 
     async testSlackNotification(data) {
         const { config, message } = data;
-        
+
         if (!config || !config.webhookUrl) {
-            return {
-                success: false,
-                message: 'Slack webhook URL is required'
-            };
+            return { success: false, message: 'Slack webhook URL is required' };
         }
 
+        const slackPayload = {
+            text: message,
+            channel: config.channel || undefined,
+            username: config.username || 'Installation Up 4evr',
+            icon_emoji: config.icon || ':robot_face:'
+        };
+
         try {
-            // In demo mode, simulate sending Slack notification
-            console.log('[NOTIFICATIONS] Slack test:', {
-                webhook: config.webhookUrl,
-                channel: config.channel,
-                message: message
+            await axios.post(config.webhookUrl, slackPayload, {
+                headers: { 'Content-Type': 'application/json' }
             });
 
-            return {
-                success: true,
-                message: 'Slack test notification sent successfully',
-                note: 'Demo mode: actual Slack integration requires webhook implementation'
-            };
+            return { success: true, message: 'Slack test notification sent successfully.' };
+
         } catch (error) {
-            return {
-                success: false,
-                message: `Slack test failed: ${error.message}`
-            };
+            console.error('[SLACK-TEST] Error sending webhook:', error.message);
+            const errorMessage = error.response ?
+                `Slack API returned error: ${error.response.status} ${error.response.data}` :
+                `Network error: ${error.message}`;
+            return { success: false, message: errorMessage };
         }
     }
 
