@@ -266,7 +266,7 @@ class PlatformManager {
         });
 
         // Launch Agents routes (macOS specific)
-        this.api.registerRoute('/launch-agents/list', 'GET', async () => {
+        this.api.registerRoute('/pm2-processes/list', 'GET', async () => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -274,7 +274,7 @@ class PlatformManager {
             return APIResponse.success(agents);
         });
 
-        this.api.registerRoute('/launch-agents/status', 'GET', async () => {
+        this.api.registerRoute('/pm2-processes/status', 'GET', async () => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -291,7 +291,7 @@ class PlatformManager {
             return APIResponse.success(statusList);
         });
 
-        this.api.registerRoute('/launch-agents/create', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/create', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -314,7 +314,7 @@ class PlatformManager {
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/install', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/install', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -337,7 +337,7 @@ class PlatformManager {
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/remove', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/remove', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -351,7 +351,7 @@ class PlatformManager {
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/app-info', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/app-info', 'POST', async (data) => {
             // This endpoint is for getting app info - we can return basic info
             const { appPath } = data;
             if (!appPath) {
@@ -366,7 +366,7 @@ class PlatformManager {
             });
         });
 
-        this.api.registerRoute('/launch-agents/test', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/test', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -374,13 +374,13 @@ class PlatformManager {
             if (!label) {
                 throw new Error('Label is required');
             }
-            const result = await this.processManager.testLaunchAgent(label);
+            const result = await this.processManager.testPM2Process(label);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/export', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/export', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -388,13 +388,13 @@ class PlatformManager {
             if (!label) {
                 throw new Error('Label is required');
             }
-            const result = await this.processManager.exportLaunchAgent(label);
+            const result = await this.processManager.exportPM2Process(label);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/create-web', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/create-web', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Web application launch agents only available on macOS' });
             }
@@ -402,13 +402,13 @@ class PlatformManager {
             if (!name || !url || !browserPath) {
                 throw new Error('Name, URL, and browser path are required');
             }
-            const result = await this.processManager.createWebAppLaunchAgent(name, url, browserPath, options);
+            const result = await this.processManager.createWebAppPM2Process(name, url, browserPath, options);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/view', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/view', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -416,13 +416,13 @@ class PlatformManager {
             if (!label) {
                 throw new Error('Label is required');
             }
-            const result = await this.processManager.viewLaunchAgent(label);
+            const result = await this.processManager.viewPM2Process(label);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/update', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/update', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -430,13 +430,13 @@ class PlatformManager {
             if (!label || !content) {
                 throw new Error('Label and content are required');
             }
-            const result = await this.processManager.updateLaunchAgent(label, content);
+            const result = await this.processManager.updatePM2Process(label, content);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/start', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/start', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -444,13 +444,13 @@ class PlatformManager {
             if (!label) {
                 throw new Error('Label is required');
             }
-            const result = await this.processManager.startLaunchAgent(label);
+            const result = await this.processManager.startPM2Process(label);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/stop', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/stop', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -458,13 +458,13 @@ class PlatformManager {
             if (!label) {
                 throw new Error('Label is required');
             }
-            const result = await this.processManager.stopLaunchAgent(label);
+            const result = await this.processManager.stopPM2Process(label);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/restart', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/restart', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -472,13 +472,13 @@ class PlatformManager {
             if (!label) {
                 throw new Error('Label is required');
             }
-            const result = await this.processManager.restartLaunchAgent(label);
+            const result = await this.processManager.restartPM2Process(label);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);
         });
 
-        this.api.registerRoute('/launch-agents/delete', 'POST', async (data) => {
+        this.api.registerRoute('/pm2-processes/delete', 'POST', async (data) => {
             if (this.platform !== 'macos') {
                 return APIResponse.error({ message: 'Launch agents only available on macOS' });
             }
@@ -486,7 +486,7 @@ class PlatformManager {
             if (!label) {
                 throw new Error('Label is required');
             }
-            const result = await this.processManager.removeLaunchAgent(label);
+            const result = await this.processManager.removePM2Process(label);
             return result.success ? 
                 APIResponse.success(result) : 
                 APIResponse.error(result);

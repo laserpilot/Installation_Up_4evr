@@ -858,6 +858,9 @@ curl -X POST /api/installation/settings/network/timeout \\
                                     <button class="mode-tab" data-mode="web">
                                         <i class="fas fa-globe"></i> Web Applications
                                     </button>
+                                    <button class="mode-tab" data-mode="service">
+                                        <i class="fas fa-server"></i> Background Services
+                                    </button>
                                 </div>
                             </div>
 
@@ -954,6 +957,113 @@ curl -X POST /api/installation/settings/network/timeout \\
                                             <i class="fas fa-lightbulb"></i>
                                             <strong>Testing Tip:</strong> For best results when testing web app
                                             processes, close Chrome completely before testing.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Background Service Mode -->
+                            <div class="creation-mode" id="service-mode" style="display: none;">
+                                <div class="service-creator">
+                                    <div class="service-form">
+                                        <h3><i class="fas fa-server"></i> Create Background Service Process</h3>
+                                        <p>Add Node.js servers, APIs, or other background services to PM2 management</p>
+
+                                        <div class="form-group">
+                                            <label for="service-name">Service Name:</label>
+                                            <input type="text" id="service-name" placeholder="my-node-server" required>
+                                            <small class="help-text">Friendly name for the service process</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="service-command">Start Command:</label>
+                                            <input type="text" id="service-command" placeholder="node server.js" required>
+                                            <small class="help-text">The command to start your service (e.g., 'node server.js', 'npm start')</small>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="service-cwd">Working Directory:</label>
+                                            <input type="text" id="service-cwd" placeholder="/path/to/your/service" required>
+                                            <small class="help-text">The directory where your service files are located</small>
+                                            <button type="button" class="btn btn-sm btn-outline" id="browse-service-dir">
+                                                <i class="fas fa-folder-open"></i> Browse
+                                            </button>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="service-port">Port (optional):</label>
+                                            <input type="number" id="service-port" placeholder="3000" min="1" max="65535">
+                                            <small class="help-text">Port number if your service runs a web server</small>
+                                        </div>
+
+                                        <div class="service-options">
+                                            <h4><i class="fas fa-cog"></i> Service Options</h4>
+                                            <div class="options-grid">
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="service-watch" checked>
+                                                    <span class="checkbox-custom"></span>
+                                                    Watch for file changes (auto-restart)
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="service-autorestart" checked>
+                                                    <span class="checkbox-custom"></span>
+                                                    Auto-restart on crash
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="service-startup">
+                                                    <span class="checkbox-custom"></span>
+                                                    Start on system boot
+                                                </label>
+                                                <label class="checkbox-label">
+                                                    <input type="checkbox" id="service-merge-logs">
+                                                    <span class="checkbox-custom"></span>
+                                                    Merge stdout/stderr logs
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="action-buttons">
+                                            <button id="create-service-process" class="btn btn-primary"
+                                                title="Create PM2 process for this service">
+                                                <i class="fas fa-plus"></i> Create Service Process
+                                            </button>
+                                            <button id="preview-service-command" class="btn btn-outline"
+                                                title="Preview the PM2 command that will be used">
+                                                <i class="fas fa-eye"></i> Preview PM2 Command
+                                            </button>
+                                        </div>
+
+                                        <div class="info-banner">
+                                            <i class="fas fa-info-circle"></i>
+                                            <strong>Background Services:</strong> Perfect for Node.js servers, APIs, databases, 
+                                            or any long-running processes that need to stay alive. PM2 will monitor, restart, 
+                                            and log everything automatically.
+                                        </div>
+
+                                        <div class="service-examples">
+                                            <h4><i class="fas fa-lightbulb"></i> Common Examples</h4>
+                                            <div class="examples-grid">
+                                                <div class="example-item">
+                                                    <h5>Node.js Express Server</h5>
+                                                    <code>node app.js</code>
+                                                    <small>Standard Node.js web server</small>
+                                                </div>
+                                                <div class="example-item">
+                                                    <h5>React Development Server</h5>
+                                                    <code>npm start</code>
+                                                    <small>Development server for React apps</small>
+                                                </div>
+                                                <div class="example-item">
+                                                    <h5>Python Flask API</h5>
+                                                    <code>python app.py</code>
+                                                    <small>Python web API server</small>
+                                                </div>
+                                                <div class="example-item">
+                                                    <h5>Custom Script</h5>
+                                                    <code>node my-script.js</code>
+                                                    <small>Any custom background process</small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1096,6 +1206,124 @@ curl -X POST /api/installation/settings/network/timeout \\
                                     your applications. PM2 provides rich monitoring data including CPU usage, memory
                                     consumption, and restart counts. GUI applications are managed seamlessly alongside
                                     command-line tools, giving you comprehensive process control and monitoring.
+                                </div>
+
+                                <!-- Terminal Commands Information -->
+                                <div class="terminal-commands-section">
+                                    <h4><i class="fas fa-terminal"></i> PM2 Terminal Commands</h4>
+                                    <p>Use these commands to manage PM2 processes directly from the terminal:</p>
+                                    
+                                    <div class="commands-grid">
+                                        <div class="command-group">
+                                            <h5><i class="fas fa-list"></i> View Processes</h5>
+                                            <div class="command-item">
+                                                <code>pm2 list</code>
+                                                <small>Show all running processes</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 monit</code>
+                                                <small>Real-time process monitoring</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 status</code>
+                                                <small>Process status overview</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="command-group">
+                                            <h5><i class="fas fa-play"></i> Start/Stop/Restart</h5>
+                                            <div class="command-item">
+                                                <code>pm2 start &lt;process-name&gt;</code>
+                                                <small>Start a specific process</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 stop &lt;process-name&gt;</code>
+                                                <small>Stop a specific process</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 restart &lt;process-name&gt;</code>
+                                                <small>Restart a specific process</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 restart all</code>
+                                                <small>Restart all processes</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="command-group">
+                                            <h5><i class="fas fa-plus"></i> Add/Remove</h5>
+                                            <div class="command-item">
+                                                <code>pm2 start app.js --name "my-app"</code>
+                                                <small>Add a new process</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 delete &lt;process-name&gt;</code>
+                                                <small>Remove a process</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 delete all</code>
+                                                <small>Remove all processes</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="command-group">
+                                            <h5><i class="fas fa-file-alt"></i> Logs & Info</h5>
+                                            <div class="command-item">
+                                                <code>pm2 logs</code>
+                                                <small>View all process logs</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 logs &lt;process-name&gt;</code>
+                                                <small>View specific process logs</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 describe &lt;process-name&gt;</code>
+                                                <small>Detailed process information</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="command-group">
+                                            <h5><i class="fas fa-cog"></i> Configuration</h5>
+                                            <div class="command-item">
+                                                <code>pm2 startup</code>
+                                                <small>Generate startup script</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 save</code>
+                                                <small>Save current process list</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 resurrect</code>
+                                                <small>Restore saved processes</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="command-group">
+                                            <h5><i class="fas fa-download"></i> Export/Import</h5>
+                                            <div class="command-item">
+                                                <code>pm2 dump</code>
+                                                <small>Export all processes</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 kill</code>
+                                                <small>Kill PM2 daemon</small>
+                                            </div>
+                                            <div class="command-item">
+                                                <code>pm2 update</code>
+                                                <small>Update PM2 in-memory</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="terminal-tips">
+                                        <h5><i class="fas fa-lightbulb"></i> Pro Tips</h5>
+                                        <ul>
+                                            <li>Use <code>pm2 monit</code> for real-time process monitoring</li>
+                                            <li>Process names can be used instead of IDs for commands</li>
+                                            <li>Use <code>pm2 logs --lines 50</code> to view recent log entries</li>
+                                            <li>Run <code>pm2 startup</code> to enable auto-start on boot</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </section>

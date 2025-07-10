@@ -1399,7 +1399,7 @@ async function createWizardLaunchAgent() {
                 path: wizardCurrentAppPath
             };
             
-            creationResult = await apiCall('/api/launch-agents/create', {
+            creationResult = await apiCall('/api/pm2-processes/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -1435,7 +1435,7 @@ async function createWizardLaunchAgent() {
             
             // Try the web-specific endpoint first
             try {
-                creationResult = await apiCall('/api/launch-agents/create-web', {
+                creationResult = await apiCall('/api/pm2-processes/create-web', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1645,7 +1645,7 @@ async function verifyLaunchAgentStatus(agentLabel) {
         // Add a delay to allow the system to register the agent
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        const response = await apiCall(`/api/launch-agents/status/${encodeURIComponent(agentLabel)}`);
+        const response = await apiCall(`/api/pm2-processes/status/${encodeURIComponent(agentLabel)}`);
         
         if (response.success) {
             const status = response.data;
@@ -1702,7 +1702,7 @@ async function testLaunchAgent(agentLabel, agentInfo) {
     testButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
     
     try {
-        const response = await apiCall(`/api/launch-agents/test/${encodeURIComponent(agentLabel)}`, {
+        const response = await apiCall(`/api/pm2-processes/test/${encodeURIComponent(agentLabel)}`, {
             method: 'POST'
         });
         

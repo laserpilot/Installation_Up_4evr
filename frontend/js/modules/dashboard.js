@@ -306,7 +306,7 @@ function formatDashboardUptime(seconds) {
 // Global function for app toggle (called from HTML)
 window.toggleApplication = async function(appName) {
     try {
-        const response = await apiCall(`/api/launch-agents/toggle`, {
+        const response = await apiCall(`/api/pm2-processes/toggle`, {
             method: 'POST',
             body: JSON.stringify({ name: appName })
         });
@@ -327,7 +327,7 @@ window.toggleApplication = async function(appName) {
 window.toggleLaunchAgent = async function(agentLabel) {
     try {
         // Get current status first
-        const statusResponse = await apiCall('/api/launch-agents/status');
+        const statusResponse = await apiCall('/api/pm2-processes/status');
         const agent = statusResponse.find(a => a.label === agentLabel);
         
         if (!agent) {
@@ -337,7 +337,7 @@ window.toggleLaunchAgent = async function(agentLabel) {
         
         // Toggle the agent
         const action = agent.isRunning ? 'stop' : 'start';
-        const response = await apiCall(`/api/launch-agents/${action}`, {
+        const response = await apiCall(`/api/pm2-processes/${action}`, {
             method: 'POST',
             body: JSON.stringify({ label: agentLabel })
         });

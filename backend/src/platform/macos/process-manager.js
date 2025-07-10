@@ -17,7 +17,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     constructor() {
         super();
         this.platform = 'macos';
-        this.launchAgentsDir = path.join(os.homedir(), 'Library', 'LaunchAgents');
+        this.launchAgentsDir = path.join(os.homedir(), 'Library', 'LaunchAgents'); // Legacy directory for compatibility
         this.logger = null;
         this.pm2Connected = false;
         
@@ -310,33 +310,31 @@ class MacOSProcessManager extends ProcessManagerInterface {
     }
 
     async removeAutoStartEntry(name) {
-        try {
-            const launchAgentName = `com.installation-up-4evr.${name.toLowerCase().replace(/\s+/g, '-')}`;
-            const plistPath = path.join(this.launchAgentsDir, `${launchAgentName}.plist`);
-
-            // Unload the launch agent
-            try {
-                await execAsync(`launchctl unload "${plistPath}"`);
-            } catch (unloadError) {
-                console.warn('Failed to unload launch agent (may not be loaded):', unloadError.message);
+        return new Promise((resolve) => {
+            if (!this.pm2Connected) {
+                resolve({
+                    success: false,
+                    message: 'PM2 not connected'
+                });
+                return;
             }
 
-            // Remove plist file
-            await fs.unlink(plistPath);
-
-            return {
-                success: true,
-                message: `Auto-start entry removed for ${name}`,
-                launchAgentName,
-                plistPath
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: `Failed to remove auto-start entry: ${error.message}`,
-                error: error.message
-            };
-        }
+            pm2.delete(name, (err) => {
+                if (err) {
+                    resolve({
+                        success: false,
+                        message: `Failed to remove PM2 process: ${err.message}`,
+                        error: err.message
+                    });
+                } else {
+                    resolve({
+                        success: true,
+                        message: `Auto-start entry removed for ${name}`,
+                        processName: name
+                    });
+                }
+            });
+        });
     }
 
     async getAutoStartEntries() {
@@ -405,9 +403,9 @@ class MacOSProcessManager extends ProcessManagerInterface {
     // Legacy isLaunchAgentLoaded removed - replaced with PM2 status checking
 
     /**
-     * Test a launch agent to verify it works correctly
+     * Test a PM2 process to verify it works correctly
      */
-    async testLaunchAgent(label) {
+    async testPM2Process(label) {
         return new Promise((resolve) => {
             if (!this.pm2Connected) {
                 resolve({
@@ -460,7 +458,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     /**
      * PM2 process description (replaces view/export functionality)
      */
-    async viewLaunchAgent(label) {
+    async viewPM2Process(label) {
         return new Promise((resolve) => {
             if (!this.pm2Connected) {
                 resolve({
@@ -503,7 +501,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     /**
      * Export PM2 process config (replaces plist export)
      */
-    async exportLaunchAgent(label) {
+    async exportPM2Process(label) {
         return new Promise((resolve) => {
             if (!this.pm2Connected) {
                 resolve({
@@ -547,7 +545,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     /**
      * Update PM2 process (replaces plist update)
      */
-    async updateLaunchAgent(label, content) {
+    async updatePM2Process(label, content) {
         return {
             success: false,
             message: 'PM2 process configuration update not supported via content editing. Use PM2 CLI or restart process.'
@@ -557,7 +555,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     /**
      * Start a launch agent
      */
-    async startLaunchAgent(label) {
+    async startPM2Process(label) {
         return new Promise((resolve) => {
             if (!this.pm2Connected) {
                 resolve({
@@ -587,7 +585,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     /**
      * Stop a launch agent
      */
-    async stopLaunchAgent(label) {
+    async stopPM2Process(label) {
         return new Promise((resolve) => {
             if (!this.pm2Connected) {
                 resolve({
@@ -616,7 +614,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     /**
      * Restart a launch agent
      */
-    async restartLaunchAgent(label) {
+    async restartPM2Process(label) {
         return new Promise((resolve) => {
             if (!this.pm2Connected) {
                 resolve({
@@ -645,7 +643,7 @@ class MacOSProcessManager extends ProcessManagerInterface {
     /**
      * Remove/delete a launch agent
      */
-    async removeLaunchAgent(label) {
+    async removePM2Process(label) {
         // Log the process removal attempt
         if (this.logger) {
             await this.logger.application(2, `Removing PM2 process: ${label}`, {
@@ -692,17 +690,17 @@ class MacOSProcessManager extends ProcessManagerInterface {
      * This looks for Chrome/browser-specific launch agent patterns
      */
     /**
-     * Create a web application launch agent
+     * Create a web application PM2 process
      */
-    async createWebAppLaunchAgent(name, url, browserPath, options = {}) {
-        // Log the launch agent creation attempt
+    async createWebAppPM2Process(name, url, browserPath, options = {}) {
+        // Log the PM2 process creation attempt
         if (this.logger) {
-            await this.logger.application(1, `Creating web app launch agent: ${name}`, {
+            await this.logger.application(1, `Creating web app PM2 process: ${name}`, {
                 name,
                 url,
                 browserPath,
                 options,
-                action: 'create_web_app_launch_agent'
+                action: 'create_web_app_pm2_process'
             });
         }
 
@@ -717,12 +715,29 @@ class MacOSProcessManager extends ProcessManagerInterface {
                 };
             }
 
+            // Ensure PM2 is connected
+            if (!this.pm2Connected) {
+                await this.initializePM2();
+                if (!this.pm2Connected) {
+                    return {
+                        success: false,
+                        message: 'PM2 connection failed'
+                    };
+                }
+            }
+
             // Create safe label
             const label = name.replace(/[^a-zA-Z0-9.-]/g, '-').toLowerCase();
-            const plistPath = path.join(this.launchAgentsDir, `${label}.plist`);
+
+            // Get the actual executable path from the browser app bundle
+            const executablePath = await this.getExecutablePath(browserPath);
+            
+            // Debug logging
+            console.log('[PM2-DEBUG] Browser path:', browserPath);
+            console.log('[PM2-DEBUG] Executable path:', executablePath);
 
             // Build browser arguments
-            const args = [browserPath];
+            const args = [];
             
             if (options.kioskMode) {
                 args.push('--kiosk');
@@ -747,77 +762,101 @@ class MacOSProcessManager extends ProcessManagerInterface {
             args.push('--disable-infobars');
             args.push(url);
 
-            // Create plist content
-            const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>${label}</string>
-    <key>ProgramArguments</key>
-    <array>
-        ${args.map(arg => `        <string>${arg}</string>`).join('\n')}
-    </array>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>/tmp/${label}.log</string>
-    <key>StandardErrorPath</key>
-    <string>/tmp/${label}.error.log</string>
-</dict>
-</plist>`;
-
-            // Write plist file
-            await fs.writeFile(plistPath, plistContent);
+            // For executables with spaces, PM2 sometimes has issues
+            // Use shell execution mode with proper escaping
+            const quotedPath = `"${executablePath}"`;
+            const command = `${quotedPath} ${args.map(arg => `"${arg}"`).join(' ')}`;
             
-            // Optionally install (load) the agent
-            if (options.runAtLoad) {
-                try {
-                    await execAsync(`launchctl load "${plistPath}"`);
-                } catch (error) {
-                    console.warn(`Created web app launch agent but failed to load: ${error.message}`);
-                }
-            }
-
-            // Log successful creation
-            if (this.logger) {
-                await this.logger.application(1, `Web app launch agent created successfully: ${name}`, {
-                    name,
-                    label,
-                    url,
-                    browserPath,
-                    plistPath,
-                    autoLoaded: options.runAtLoad,
-                    action: 'create_web_app_launch_agent_success'
-                });
-            }
-
-            return {
-                success: true,
-                message: `Web application launch agent created: ${name}`,
-                data: {
-                    label,
-                    plistPath,
-                    url,
-                    browserPath
+            // Debug logging
+            console.log('[PM2-DEBUG] Command to execute:', command);
+            
+            // Create PM2 process configuration using shell mode
+            const pm2Config = {
+                name: label,
+                script: '/bin/bash',
+                args: ['-c', command],
+                cwd: os.homedir(),
+                autorestart: options.keepAlive || false,
+                max_restarts: options.keepAlive ? 10 : 0,
+                restart_delay: 5000,
+                log_file: `/tmp/${label}.log`,
+                error_file: `/tmp/${label}.error.log`,
+                out_file: `/tmp/${label}.out.log`,
+                env: {
+                    NODE_ENV: 'production',
+                    WEB_APP_URL: url,
+                    WEB_APP_NAME: name
                 }
             };
+            
+            // Debug logging
+            console.log('[PM2-DEBUG] PM2 Config:', JSON.stringify(pm2Config, null, 2));
+
+            // Start the PM2 process
+            return new Promise((resolve, reject) => {
+                pm2.start(pm2Config, (err, apps) => {
+                    if (err) {
+                        console.error(`[PM2] Failed to start ${label}:`, err);
+                        if (this.logger) {
+                            this.logger.application(3, `Failed to create web app PM2 process: ${name}`, {
+                                name,
+                                url,
+                                browserPath,
+                                executablePath,
+                                error: err.message,
+                                action: 'create_web_app_pm2_process_error'
+                            });
+                        }
+                        resolve({
+                            success: false,
+                            message: `Failed to create PM2 process: ${err.message}`
+                        });
+                    } else {
+                        // Log successful creation
+                        if (this.logger) {
+                            this.logger.application(1, `Web app PM2 process created successfully: ${name}`, {
+                                name,
+                                label,
+                                url,
+                                browserPath,
+                                executablePath,
+                                pm2Id: apps[0]?.pm_id,
+                                action: 'create_web_app_pm2_process_success'
+                            });
+                        }
+
+                        resolve({
+                            success: true,
+                            message: `Web application PM2 process created: ${name}`,
+                            data: {
+                                label,
+                                pm2Id: apps[0]?.pm_id,
+                                url,
+                                browserPath,
+                                executablePath,
+                                processType: 'web-app'
+                            }
+                        });
+                    }
+                });
+            });
 
         } catch (error) {
             // Log creation failure
             if (this.logger) {
-                await this.logger.application(3, `Failed to create web app launch agent: ${name}`, {
+                await this.logger.application(3, `Failed to create web app PM2 process: ${name}`, {
                     name,
                     url,
                     browserPath,
+                    executablePath: executablePath || 'Failed to determine',
                     error: error.message,
-                    action: 'create_web_app_launch_agent_error'
+                    action: 'create_web_app_pm2_process_error'
                 });
             }
 
             return {
                 success: false,
-                message: `Failed to create web app launch agent: ${error.message}`
+                message: `Failed to create web app PM2 process: ${error.message}`
             };
         }
     }
