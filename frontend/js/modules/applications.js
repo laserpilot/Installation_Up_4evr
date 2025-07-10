@@ -11,13 +11,13 @@ let allProcesses = [];
 let processStatusList = [];
 let currentAppPath = null;
 let statusUpdateInterval = null;
-let currentMode = 'app'; // 'app' or 'web'
+let currentMode = 'app'; // 'app', 'web', or 'service'
 
 async function loadProcesses() {
     try {
         const [agentsResponse, statusResponse] = await Promise.all([
-            apiCall('/api/launch-agents/list'),
-            apiCall('/api/launch-agents/status')
+            apiCall('/api/pm2-processes/list'),
+            apiCall('/api/pm2-processes/status')
         ]);
 
         allProcesses = agentsResponse?.data || agentsResponse || [];
@@ -32,7 +32,7 @@ async function loadProcesses() {
 
 function renderProcesses(filterType = 'all') {
     const container = document.getElementById('launch-agents-list');
-    // Show PM2-managed processes and any legacy launch agents
+    // Show PM2-managed processes and any legacy processes
     let processes = allProcesses.filter(process => 
         process.managedByTool === true || 
         (process.plistPath && 
@@ -119,7 +119,7 @@ function filterProcesses(filterType) {
 
 async function updateProcessStatus() {
     try {
-        const statusResponse = await apiCall('/api/launch-agents/status');
+        const statusResponse = await apiCall('/api/pm2-processes/status');
         processStatusList = statusResponse?.data || statusResponse || [];
         
         // Update existing cards without full re-render
@@ -166,14 +166,14 @@ function startRealtimeStatusUpdates() {
     
     // Update status every 5 seconds
     statusUpdateInterval = setInterval(updateProcessStatus, 5000);
-    console.log('[LAUNCH-AGENTS] Started real-time status updates');
+    console.log('[PM2-PROCESSES] Started real-time status updates');
 }
 
 function stopRealtimeStatusUpdates() {
     if (statusUpdateInterval) {
         clearInterval(statusUpdateInterval);
         statusUpdateInterval = null;
-        console.log('[LAUNCH-AGENTS] Stopped real-time status updates');
+        console.log('[PM2-PROCESSES] Stopped real-time status updates');
     }
 }
 
@@ -193,18 +193,18 @@ async function handleProcessAction(label, action) {
         let result;
         switch (action) {
             case 'start':
-                result = await apiCall(`/api/launch-agents/start`, { method: 'POST', body: JSON.stringify({ label }) });
+                result = await apiCall(`/api/pm2-processes/start`, { method: 'POST', body: JSON.stringify({ label }) });
                 break;
             case 'stop':
-                result = await apiCall(`/api/launch-agents/stop`, { method: 'POST', body: JSON.stringify({ label }) });
+                result = await apiCall(`/api/pm2-processes/stop`, { method: 'POST', body: JSON.stringify({ label }) });
                 break;
             case 'restart':
-                result = await apiCall(`/api/launch-agents/restart`, { method: 'POST', body: JSON.stringify({ label }) });
+                result = await apiCall(`/api/pm2-processes/restart`, { method: 'POST', body: JSON.stringify({ label }) });
                 break;
             case 'test':
                 showLoading('Getting process info...');
                 try {
-                    result = await apiCall(`/api/launch-agents/test`, { method: 'POST', body: JSON.stringify({ label }) });
+                    result = await apiCall(`/api/pm2-processes/test`, { method: 'POST', body: JSON.stringify({ label }) });
                     hideLoading();
                     showTestResults(label, result);
                 } catch (error) {
@@ -213,23 +213,23 @@ async function handleProcessAction(label, action) {
                 }
                 return;
             case 'export':
-                result = await apiCall(`/api/launch-agents/export`, { method: 'POST', body: JSON.stringify({ label }) });
+                result = await apiCall(`/api/pm2-processes/export`, { method: 'POST', body: JSON.stringify({ label }) });
                 downloadAgentFile(label, result);
                 return;
             case 'view':
-                result = await apiCall(`/api/launch-agents/view`, { method: 'POST', body: JSON.stringify({ label }) });
+                result = await apiCall(`/api/pm2-processes/view`, { method: 'POST', body: JSON.stringify({ label }) });
                 if (!result.success) {
                     console.error('[PROCESSES] View PM2 config failed for:', label, result);
                 }
                 showProcessContent(label, result);
                 return;
             case 'edit':
-                result = await apiCall(`/api/launch-agents/view`, { method: 'POST', body: JSON.stringify({ label }) });
+                result = await apiCall(`/api/pm2-processes/view`, { method: 'POST', body: JSON.stringify({ label }) });
                 showProcessEditor(label, result);
                 return;
             case 'delete':
                 if (confirm(`Are you sure you want to delete ${label}? This cannot be undone.`)) {
-                    result = await apiCall(`/api/launch-agents/delete`, { method: 'POST', body: JSON.stringify({ label }) });
+                    result = await apiCall(`/api/pm2-processes/delete`, { method: 'POST', body: JSON.stringify({ label }) });
                 } else {
                     return;
                 }
@@ -266,7 +266,7 @@ async function createProcess() {
     const options = getLaunchAgentOptions();
     
     // Choose endpoint based on "run on reboot" option
-    const endpoint = options.runOnReboot ? '/api/launch-agents/create' : '/api/launch-agents/install';
+    const endpoint = options.runOnReboot ? '/api/pm2-processes/create' : '/api/pm2-processes/install';
     const actionText = options.runOnReboot ? 'Creating process (will start on reboot)...' : 'Creating and starting process...';
     
     showLoading(actionText);
@@ -320,7 +320,7 @@ async function installProcess() {
     
     showLoading('Installing and starting process...');
     try {
-        const result = await apiCall('/api/launch-agents/install', {
+        const result = await apiCall('/api/pm2-processes/install', {
             method: 'POST',
             body: JSON.stringify({ appPath: currentAppPath, options })
         });
@@ -355,10 +355,10 @@ async function installProcess() {
 // Master Configuration Integration
 async function updateMasterConfigWithAgent(agentInfo) {
     try {
-        await MasterConfigAPI.addLaunchAgent(agentInfo);
-        console.log('[LAUNCH-AGENTS] Added agent to master configuration:', agentInfo.name);
+        await MasterConfigAPI.addPM2Process(agentInfo);
+        console.log('[PM2-PROCESSES] Added process to master configuration:', agentInfo.name);
     } catch (error) {
-        console.warn('[LAUNCH-AGENTS] Failed to update master configuration:', error);
+        console.warn('[PM2-PROCESSES] Failed to update master configuration:', error);
         // Don't fail the main operation if master config update fails
     }
 }
@@ -380,25 +380,25 @@ async function addToMonitoring(agentInfo) {
         });
         
         if (response.success) {
-            console.log('[LAUNCH-AGENTS] Added agent to monitoring:', agentInfo.name);
+            console.log('[PM2-PROCESSES] Added process to monitoring:', agentInfo.name);
         } else {
-            console.warn('[LAUNCH-AGENTS] Failed to add agent to monitoring:', response.error);
+            console.warn('[PM2-PROCESSES] Failed to add process to monitoring:', response.error);
         }
     } catch (error) {
-        console.warn('[LAUNCH-AGENTS] Failed to add agent to monitoring:', error);
+        console.warn('[PM2-PROCESSES] Failed to add process to monitoring:', error);
         // Don't fail the main operation if monitoring fails
     }
 }
 
 async function loadMasterConfigAgents() {
     try {
-        const response = await MasterConfigAPI.getLaunchAgents();
+        const response = await MasterConfigAPI.getPM2Processes();
         if (response.success && response.data) {
             const { agents, webApps } = response.data;
             
             // Display additional info about agents tracked in master config
             if (agents && agents.length > 0) {
-                console.log('[LAUNCH-AGENTS] Master config tracks', agents.length, 'launch agents');
+                console.log('[PM2-PROCESSES] Master config tracks', agents.length, 'PM2 processes');
                 
                 // Could add UI indicators for agents tracked in master config
                 agents.forEach(agent => {
@@ -411,15 +411,15 @@ async function loadMasterConfigAgents() {
             }
             
             if (webApps && webApps.length > 0) {
-                console.log('[LAUNCH-AGENTS] Master config tracks', webApps.length, 'web applications');
+                console.log('[PM2-PROCESSES] Master config tracks', webApps.length, 'web applications');
             }
         }
     } catch (error) {
-        console.warn('[LAUNCH-AGENTS] Failed to load master config agents:', error);
+        console.warn('[PM2-PROCESSES] Failed to load master config processes:', error);
     }
 }
 
-// Web Application Launch Agent Functions
+// Web Application PM2 Process Functions
 function switchCreationMode(mode) {
     currentMode = mode;
     
@@ -434,6 +434,7 @@ function switchCreationMode(mode) {
     // Show/hide mode content
     document.getElementById('app-mode').style.display = mode === 'app' ? 'block' : 'none';
     document.getElementById('web-mode').style.display = mode === 'web' ? 'block' : 'none';
+    document.getElementById('service-mode').style.display = mode === 'service' ? 'block' : 'none';
     
     // Reset app info if switching away from app mode
     if (mode !== 'app') {
@@ -504,9 +505,9 @@ async function createWebLaunchAgent() {
         const disableExtensions = document.getElementById('web-disable-extensions').checked;
         const incognitoMode = document.getElementById('web-incognito-mode').checked;
         
-        showLoading('Creating web application launch agent...');
+        showLoading('Creating web application PM2 process...');
         
-        const response = await apiCall('/api/launch-agents/create-web', {
+        const response = await apiCall('/api/pm2-processes/create-web', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -537,7 +538,10 @@ async function createWebLaunchAgent() {
             
             await addToMonitoring(agentInfo);
             
-            showToast(`Web app launch agent created: ${name}. Use the Start button to launch it in kiosk mode.`, 'success');
+            // Add to master configuration
+            await updateMasterConfigWithAgent(agentInfo);
+            
+            showToast(`Web app PM2 process created: ${name}. Use the Start button to launch it in kiosk mode.`, 'success');
             
             // Clear form
             document.getElementById('web-app-url').value = '';
@@ -550,11 +554,11 @@ async function createWebLaunchAgent() {
             // Reload agents list
             loadProcesses();
         } else {
-            showToast(`Failed to create web app launch agent: ${response.message}`, 'error');
+            showToast(`Failed to create web app PM2 process: ${response.message}`, 'error');
         }
     } catch (error) {
-        console.error('Failed to create web launch agent:', error);
-        showToast('Failed to create web launch agent', 'error');
+        console.error('Failed to create web PM2 process:', error);
+        showToast('Failed to create web PM2 process', 'error');
     } finally {
         hideLoading();
     }
@@ -677,6 +681,190 @@ function showCommandPreview(command, url, browserPath) {
     document.addEventListener('keydown', escapeHandler);
 }
 
+// Terminal Commands Toggle Function
+function toggleTerminalCommands() {
+    const content = document.getElementById('terminal-commands-content');
+    const toggle = document.getElementById('terminal-commands-toggle');
+    
+    if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block';
+        toggle.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Terminal Commands';
+    } else {
+        content.style.display = 'none';
+        toggle.innerHTML = '<i class="fas fa-chevron-down"></i> Show Terminal Commands';
+    }
+}
+
+// Service (Background Process) Functions
+async function createServiceProcess() {
+    try {
+        // Validate form
+        const name = document.getElementById('service-name').value;
+        const command = document.getElementById('service-command').value;
+        const workingDir = document.getElementById('service-working-dir').value;
+        const port = document.getElementById('service-port').value;
+        
+        if (!name || !command) {
+            showToast('Please fill in service name and command', 'error');
+            return;
+        }
+        
+        // Get options
+        const autoRestart = document.getElementById('service-auto-restart').checked;
+        const watchFiles = document.getElementById('service-watch-files').checked;
+        const logOutput = document.getElementById('service-log-output').checked;
+        
+        showLoading('Creating background service...');
+        
+        // Create service configuration
+        const serviceConfig = {
+            name,
+            command,
+            workingDir: workingDir || process.cwd(),
+            port: port || null,
+            options: {
+                autoRestart,
+                watchFiles,
+                logOutput,
+                runAtLoad: false,  // Don't auto-start services
+                keepAlive: autoRestart
+            }
+        };
+        
+        // Create a PM2 process for the service
+        const response = await apiCall('/api/pm2-processes/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: `service-${name}`,
+                command: command,
+                workingDirectory: workingDir,
+                options: serviceConfig.options
+            })
+        });
+        
+        if (response.success) {
+            // Add to monitoring system
+            const serviceInfo = {
+                id: `service-${Date.now()}`,
+                name: name,
+                path: command,
+                plistPath: response.data?.plistPath,
+                created: new Date().toISOString(),
+                type: 'service',
+                port: port
+            };
+            
+            await addToMonitoring(serviceInfo);
+            
+            // Add to master configuration
+            await updateMasterConfigWithAgent(serviceInfo);
+            
+            showToast(`Background service created: ${name}. Use the Start button to launch it.`, 'success');
+            
+            // Clear form
+            document.getElementById('service-name').value = '';
+            document.getElementById('service-command').value = '';
+            document.getElementById('service-working-dir').value = '';
+            document.getElementById('service-port').value = '';
+            document.getElementById('service-auto-restart').checked = true;
+            document.getElementById('service-watch-files').checked = false;
+            document.getElementById('service-log-output').checked = true;
+            
+            // Reload processes list
+            loadProcesses();
+        } else {
+            showToast(`Failed to create service: ${response.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Failed to create service:', error);
+        showToast('Failed to create service', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function previewServiceCommand() {
+    const name = document.getElementById('service-name').value;
+    const command = document.getElementById('service-command').value;
+    const workingDir = document.getElementById('service-working-dir').value;
+    const port = document.getElementById('service-port').value;
+    
+    if (!name || !command) {
+        showToast('Please enter service name and command first', 'error');
+        return;
+    }
+    
+    showServicePreview(name, command, workingDir, port);
+}
+
+function showServicePreview(name, command, workingDir, port) {
+    const modal = document.createElement('div');
+    modal.className = 'command-preview-modal';
+    
+    modal.innerHTML = `
+        <div class="command-preview-content">
+            <div class="command-preview-header">
+                <h3><i class="fas fa-server"></i> Service Preview</h3>
+                <button class="command-preview-close">&times;</button>
+            </div>
+            
+            <div class="command-info">
+                <h4><i class="fas fa-info-circle"></i> Service Details</h4>
+                <ul>
+                    <li><strong>Name:</strong> ${name}</li>
+                    <li><strong>Command:</strong> ${command}</li>
+                    <li><strong>Working Directory:</strong> ${workingDir || 'Current directory'}</li>
+                    ${port ? `<li><strong>Port:</strong> ${port}</li>` : ''}
+                    <li><strong>Auto-restart:</strong> ${document.getElementById('service-auto-restart').checked ? 'Yes' : 'No'}</li>
+                    <li><strong>Watch files:</strong> ${document.getElementById('service-watch-files').checked ? 'Yes' : 'No'}</li>
+                </ul>
+            </div>
+            
+            <div class="command-info">
+                <h4><i class="fas fa-lightbulb"></i> What This Does</h4>
+                <ul>
+                    <li>Creates a managed background service process</li>
+                    <li>Monitors the process and provides restart capabilities</li>
+                    <li>Captures logs and provides status monitoring</li>
+                    <li>Integrates with the PM2 process management system</li>
+                </ul>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-primary command-preview-close">
+                    <i class="fas fa-check"></i> Looks Good
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Handle close
+    modal.querySelectorAll('.command-preview-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+            modal.remove();
+        });
+    });
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+    
+    // Close on escape
+    const escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+}
+
 async function handleAppSelection(file) {
     try {
         // For .app files, we need to get the full path
@@ -730,7 +918,7 @@ async function handleAppSelection(file) {
 
 async function getAppInfo(appPath) {
     try {
-        const response = await apiCall('/api/launch-agents/app-info', {
+        const response = await apiCall('/api/pm2-processes/app-info', {
             method: 'POST',
             body: JSON.stringify({ appPath })
         });
@@ -819,6 +1007,16 @@ export function initApplications() {
     // Auto-populate web app name from URL
     document.getElementById('web-app-url').addEventListener('input', autoPopulateWebAppName);
 
+    // Service mode
+    document.getElementById('create-service-process').addEventListener('click', createServiceProcess);
+    document.getElementById('preview-service-command').addEventListener('click', previewServiceCommand);
+
+    // Terminal commands toggle
+    const terminalToggle = document.getElementById('terminal-commands-toggle');
+    if (terminalToggle) {
+        terminalToggle.addEventListener('click', toggleTerminalCommands);
+    }
+
     // Agent filtering buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -852,7 +1050,7 @@ async function loadLaunchAgentsMasterConfig() {
     try {
         const response = await MasterConfigAPI.getMasterProfile();
         if (response.success && response.data.launchAgents) {
-            console.log('[LAUNCH-AGENTS] Loaded master config state:', response.data.launchAgents);
+            console.log('[PM2-PROCESSES] Loaded master config state:', response.data.launchAgents);
             
             // Update UI with saved configuration
             const config = response.data.launchAgents;
@@ -882,7 +1080,7 @@ async function loadLaunchAgentsMasterConfig() {
             }
         }
     } catch (error) {
-        console.error('[LAUNCH-AGENTS] Failed to load master config state:', error);
+        console.error('[PM2-PROCESSES] Failed to load master config state:', error);
     }
 }
 
@@ -906,10 +1104,10 @@ async function saveLaunchAgentsMasterConfig() {
         };
         
         await MasterConfigAPI.update('launchAgents', config);
-        console.log('[LAUNCH-AGENTS] Master config saved:', config);
+        console.log('[PM2-PROCESSES] Master config saved:', config);
         
     } catch (error) {
-        console.error('[LAUNCH-AGENTS] Failed to save master config:', error);
+        console.error('[PM2-PROCESSES] Failed to save master config:', error);
     }
 }
 
@@ -956,8 +1154,8 @@ function showTestResults(label, result) {
 
 function downloadAgentFile(label, result) {
     if (!result.success || !result.data) {
-        console.error('[LAUNCH-AGENTS] Export failed for', label, ':', result);
-        showToast('Failed to export launch agent', 'error');
+        console.error('[PM2-PROCESSES] Export failed for', label, ':', result);
+        showToast('Failed to export PM2 process', 'error');
         return;
     }
     
@@ -971,21 +1169,21 @@ function downloadAgentFile(label, result) {
     // for process configuration export/view
     
     // Debug content only if it appears to be invalid
-    console.log('[LAUNCH-AGENTS] Export content analysis for', label, ':');
+    console.log('[PM2-PROCESSES] Export content analysis for', label, ':');
     console.log('  - result.data:', result.data);
     console.log('  - dataObj:', dataObj);
     console.log('  - content:', content);
     console.log('  - filename:', filename);
     
     if (!content || content === 'undefined' || content === undefined) {
-        console.error('[LAUNCH-AGENTS] Invalid export content for', label, ':', { 
+        console.error('[PM2-PROCESSES] Invalid export content for', label, ':', { 
             content, 
             filename, 
             result,
             dataObj,
             'result.data.data': result.data?.data,
             'result.data.content': result.data?.content,
-            'result.data.plistContent': result.data?.plistContent,
+            'result.data.processContent': result.data?.processContent,
             'result.content': result.content
         });
         showToast('Failed to export process config - invalid content', 'error');
@@ -1009,8 +1207,8 @@ function downloadAgentFile(label, result) {
 }
 
 function showProcessContent(label, result) {
-    console.log('[LAUNCH-AGENTS] showPlistContent called for:', label);
-    console.log('[LAUNCH-AGENTS] Result data structure:', result);
+    console.log('[PM2-PROCESSES] showProcessContent called for:', label);
+    console.log('[PM2-PROCESSES] Result data structure:', result);
     
     if (!result.success || !result.data) {
         console.error('[PROCESSES] View process config failed for', label, ':', result);
@@ -1023,7 +1221,7 @@ function showProcessContent(label, result) {
     const content = dataObj.content || dataObj.processConfig || result.content;
     
     if (!content || content === 'undefined') {
-        console.error('[LAUNCH-AGENTS] No valid content found in result:', {
+        console.error('[PM2-PROCESSES] No valid content found in result:', {
             result,
             dataObj,
             content
@@ -1032,7 +1230,7 @@ function showProcessContent(label, result) {
         return;
     }
     
-    console.log('[LAUNCH-AGENTS] Creating modal for plist content...');
+    console.log('[PM2-PROCESSES] Creating modal for process content...');
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay show';
@@ -1053,11 +1251,11 @@ function showProcessContent(label, result) {
         </div>
     `;
     
-    console.log('[LAUNCH-AGENTS] Appending modal to body...');
+    console.log('[PM2-PROCESSES] Appending modal to body...');
     document.body.appendChild(modal);
-    console.log('[LAUNCH-AGENTS] Modal appended, checking if visible...');
-    console.log('[LAUNCH-AGENTS] Modal element:', modal);
-    console.log('[LAUNCH-AGENTS] Modal styles:', getComputedStyle(modal));
+    console.log('[PM2-PROCESSES] Modal appended, checking if visible...');
+    console.log('[PM2-PROCESSES] Modal element:', modal);
+    console.log('[PM2-PROCESSES] Modal styles:', getComputedStyle(modal));
     
     modal.querySelector('.modal-close').addEventListener('click', () => {
         document.body.removeChild(modal);
@@ -1087,7 +1285,7 @@ function showProcessEditor(label, result) {
     const content = dataObj.content || dataObj.processConfig || result.content;
     
     if (!content || content === 'undefined') {
-        console.error('[LAUNCH-AGENTS] No valid content found in result for edit:', {
+        console.error('[PM2-PROCESSES] No valid content found in result for edit:', {
             result,
             dataObj,
             content
@@ -1131,7 +1329,7 @@ function showProcessEditor(label, result) {
         const newContent = modal.querySelector('#process-editor').value;
         try {
             showLoading('Saving process config changes...');
-            await apiCall('/api/launch-agents/update', {
+            await apiCall('/api/pm2-processes/update', {
                 method: 'POST',
                 body: JSON.stringify({ label, content: newContent })
             });

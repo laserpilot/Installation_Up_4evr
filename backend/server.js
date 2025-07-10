@@ -204,138 +204,138 @@ app.get('/api/system-prefs/generate-restore', async (req, res) => {
     }
 });
 
-// Launch Agents API Routes
-app.get('/api/launch-agents/list', async (req, res) => {
+// PM2 Processes API Routes
+app.get('/api/pm2-processes/list', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/list', 'GET');
+        const result = await platformManager.handleAPIRequest('/pm2-processes/list', 'GET');
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.get('/api/launch-agents/status', async (req, res) => {
+app.get('/api/pm2-processes/status', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/status', 'GET');
+        const result = await platformManager.handleAPIRequest('/pm2-processes/status', 'GET');
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/create', async (req, res) => {
+app.post('/api/pm2-processes/create', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/create', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/create', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/install', async (req, res) => {
+app.post('/api/pm2-processes/install', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/install', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/install', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/remove', async (req, res) => {
+app.post('/api/pm2-processes/remove', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/remove', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/remove', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/app-info', async (req, res) => {
+app.post('/api/pm2-processes/app-info', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/app-info', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/app-info', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/test', async (req, res) => {
+app.post('/api/pm2-processes/test', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/test', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/test', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/export', async (req, res) => {
+app.post('/api/pm2-processes/export', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/export', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/export', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Web Application Launch Agent
-app.post('/api/launch-agents/create-web', async (req, res) => {
+// Web Application PM2 Process
+app.post('/api/pm2-processes/create-web', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/create-web', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/create-web', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Launch Agent Action Routes
-app.post('/api/launch-agents/start', async (req, res) => {
+// PM2 Process Action Routes
+app.post('/api/pm2-processes/start', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/start', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/start', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/stop', async (req, res) => {
+app.post('/api/pm2-processes/stop', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/stop', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/stop', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/restart', async (req, res) => {
+app.post('/api/pm2-processes/restart', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/restart', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/restart', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/view', async (req, res) => {
+app.post('/api/pm2-processes/view', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/view', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/view', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/update', async (req, res) => {
+app.post('/api/pm2-processes/update', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/update', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/update', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/launch-agents/delete', async (req, res) => {
+app.post('/api/pm2-processes/delete', async (req, res) => {
     try {
-        const result = await platformManager.handleAPIRequest('/launch-agents/delete', 'POST', req.body);
+        const result = await platformManager.handleAPIRequest('/pm2-processes/delete', 'POST', req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });

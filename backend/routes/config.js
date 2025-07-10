@@ -213,16 +213,16 @@ module.exports = (platformManager) => {
         }
     });
 
-    // Launch Agents Management
-    router.get('/launch-agents', async (req, res) => {
+    // PM2 Processes Management
+    router.get('/pm2-processes', async (req, res) => {
         try {
             const config = platformManager.getConfig();
-            const agents = config.getLaunchAgents();
+            const agents = config.getPM2Processes();
             const webApps = config.getWebApps();
             res.json({ 
                 success: true, 
                 data: { agents, webApps },
-                message: 'Launch agents retrieved successfully'
+                message: 'PM2 processes retrieved successfully'
             });
         } catch (error) {
             res.status(500).json({ 
@@ -232,13 +232,13 @@ module.exports = (platformManager) => {
         }
     });
 
-    router.post('/launch-agents', async (req, res) => {
+    router.post('/pm2-processes', async (req, res) => {
         try {
             const config = platformManager.getConfig();
-            await config.addLaunchAgent(req.body);
+            await config.addPM2Process(req.body);
             res.json({ 
                 success: true, 
-                message: 'Launch agent added successfully'
+                message: 'PM2 process added successfully'
             });
         } catch (error) {
             res.status(500).json({ 
@@ -248,13 +248,13 @@ module.exports = (platformManager) => {
         }
     });
 
-    router.delete('/launch-agents/:id', async (req, res) => {
+    router.delete('/pm2-processes/:id', async (req, res) => {
         try {
             const config = platformManager.getConfig();
-            await config.removeLaunchAgent(req.params.id);
+            await config.removePM2Process(req.params.id);
             res.json({ 
                 success: true, 
-                message: 'Launch agent removed successfully'
+                message: 'PM2 process removed successfully'
             });
         } catch (error) {
             res.status(500).json({ 
@@ -277,6 +277,88 @@ module.exports = (platformManager) => {
                 success: false,
                 error: error.message 
             });
+        }
+    });
+
+    // Configuration Profiles parameterized routes
+    router.get('/config-profiles', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/config-profiles', 'GET');
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.get('/config-profiles/:id', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest(`/config-profiles/${req.params.id}`, 'GET', null, { params: req.params });
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.post('/config-profiles', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/config-profiles', 'POST', req.body);
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.post('/config-profiles/:id/load', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest(`/config-profiles/${req.params.id}/load`, 'POST', req.body, { params: req.params });
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.delete('/config-profiles/:id', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest(`/config-profiles/${req.params.id}`, 'DELETE', null, { params: req.params });
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.post('/config-profiles/:id/export', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest(`/config-profiles/${req.params.id}/export`, 'POST', req.body, { params: req.params });
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.post('/config-profiles/import', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/config-profiles/import', 'POST', req.body);
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.post('/config-profiles/current', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/config-profiles/current', 'POST', req.body);
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    router.get('/config-profiles/stats', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/config-profiles/stats', 'GET');
+            res.json(result.success ? result.data : { error: result.error });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
         }
     });
 

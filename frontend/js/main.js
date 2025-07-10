@@ -443,9 +443,9 @@ async function updateApplicationsStatus(element, launchAgentData) {
         }
 
         // Count running applications
-        const runningLaunchAgents = launchAgents.filter(app => app.isRunning || app.status === 'running').length;
+        const runningPM2Processes = launchAgents.filter(app => app.isRunning || app.status === 'running').length;
         const runningPM2 = pm2Processes.filter(proc => proc.status === 'online').length;
-        const totalRunning = runningLaunchAgents + runningPM2;
+        const totalRunning = runningPM2Processes + runningPM2;
 
         // Create enhanced status display
         element.innerHTML = `
@@ -455,7 +455,7 @@ async function updateApplicationsStatus(element, launchAgentData) {
                 </div>
                 <div class="apps-breakdown">
                     ${pm2Processes.length > 0 ? `<span class="pm2-badge">PM2: ${runningPM2}/${pm2Processes.length}</span>` : ''}
-                    ${launchAgents.length > 0 ? `<span class="launch-agent-badge">Agents: ${runningLaunchAgents}/${launchAgents.length}</span>` : ''}
+                    ${launchAgents.length > 0 ? `<span class="pm2-process-badge">Processes: ${runningPM2Processes}/${launchAgents.length}</span>` : ''}
                 </div>
             </div>
             <div class="apps-list">
@@ -638,7 +638,7 @@ class InstallationUp4evr {
         }
 
         // Handle real-time updates for launch agents tab
-        if (tabId === 'launch-agents') {
+        if (tabId === 'applications') {
             startRealtimeStatusUpdates();
         } else {
             stopRealtimeStatusUpdates();

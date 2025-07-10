@@ -158,15 +158,15 @@ export const MasterConfigAPI = {
     /**
      * Get launch agents from master config
      */
-    async getLaunchAgents() {
-        return await apiCall('/api/config/launch-agents');
+    async getPM2Processes() {
+        return await apiCall('/api/config/pm2-processes');
     },
 
     /**
      * Add launch agent to master config
      */
-    async addLaunchAgent(agentInfo) {
-        return await apiCall('/api/config/launch-agents', {
+    async addPM2Process(processInfo) {
+        return await apiCall('/api/config/pm2-processes', {
             method: 'POST',
             body: JSON.stringify(agentInfo)
         });
@@ -175,8 +175,8 @@ export const MasterConfigAPI = {
     /**
      * Remove launch agent from master config
      */
-    async removeLaunchAgent(agentId) {
-        return await apiCall(`/api/config/launch-agents/${agentId}`, {
+    async removePM2Process(processId) {
+        return await apiCall(`/api/config/pm2-processes/${processId}`, {
             method: 'DELETE'
         });
     },

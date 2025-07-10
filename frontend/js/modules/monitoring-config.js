@@ -279,7 +279,7 @@ async function loadLaunchAgentSuggestions() {
         // Get running applications and existing launch agents
         const [appsResponse, agentsResponse] = await Promise.all([
             apiCall('/api/monitoring/applications'),
-            apiCall('/api/launch-agents/list')
+            apiCall('/api/pm2-processes/list')
         ]);
         
         const runningApps = appsResponse.data || [];
@@ -403,7 +403,7 @@ async function handleCreateLaunchAgent(event) {
         showLoading('Creating launch agent...');
         
         // Create launch agent using the API
-        const response = await apiCall('/api/launch-agents/create', {
+        const response = await apiCall('/api/pm2-processes/create', {
             method: 'POST',
             body: JSON.stringify({
                 name: appName,
