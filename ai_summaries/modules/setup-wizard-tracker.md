@@ -27,8 +27,13 @@
 - Enhanced web app creation form to match Applications tab (URL, Name, Browser, Kiosk options)
 - Removed Advanced Setup option from Step 1 for cleaner UX
 - Improved Skip Step button visual feedback with loading states
-- Polished Generate Terminal Commands UI with better layout and copy functionality
-- Added Step 6 validation that checks sleep settings and PM2 applications with clear failure guidance
+- Polished Generate Terminal Commands UI with professional modal and multiple copy options
+- Fixed Step 5 Run Tests with fallback validation when API endpoint fails
+- Added Step 6 validation that checks sleep settings and PM2 applications
+- Fixed Step 6 display to show "Setup Incomplete" warning when validation fails
+- Enhanced error handling to eliminate "[Object object]" displays
+- Added Continue button to Step 5 so users aren't stuck on verification
+- Updated setup-card CSS to span full container width
 
 ---
 
@@ -43,7 +48,9 @@
 
 **Current Active Issues:**
 - [ ] Some steps might need clearer explanations for non-technical users
-- [ ] Fix "[Object object]" error display in verification step when API endpoints are missing
+
+**✅ RESOLVED (2025-07-11):**
+- [x] Fix "[Object object]" error display in verification step when API endpoints are missing
 
 ---
 
