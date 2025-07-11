@@ -198,9 +198,6 @@
                                     <button id="skip-wizard" class="btn btn-outline">
                                         <i class="fas fa-forward"></i> Skip Setup
                                     </button>
-                                    <button id="advanced-mode" class="btn btn-outline">
-                                        <i class="fas fa-tools"></i> Advanced Mode
-                                    </button>
                                 </div>
                             </div>
 
@@ -252,23 +249,15 @@
 
                                         <div class="setup-options">
                                             <div class="setup-card">
-                                                <h4><i class="fas fa-magic"></i> Guided Setup (Recommended)</h4>
-                                                <p>Step-by-step configuration with explanations</p>
-                                                <small>Perfect for first-time users</small>
-                                            </div>
-                                            <div class="setup-card">
-                                                <h4><i class="fas fa-tools"></i> Advanced Setup</h4>
-                                                <p>Direct access to all configuration tools</p>
-                                                <small>For experienced users</small>
+                                                <h4><i class="fas fa-magic"></i> Guided Setup</h4>
+                                                <p>Step-by-step configuration with explanations to ensure your installation runs 24/7</p>
+                                                <small>Complete system setup in just 6 easy steps</small>
                                             </div>
                                         </div>
 
                                         <div class="step-actions">
                                             <button class="btn btn-primary" id="start-guided-setup">
-                                                <i class="fas fa-play"></i> Start Guided Setup
-                                            </button>
-                                            <button class="btn btn-secondary" id="go-advanced">
-                                                <i class="fas fa-tools"></i> Advanced Setup
+                                                <i class="fas fa-play"></i> Start Setup
                                             </button>
                                         </div>
                                     </div>
@@ -342,13 +331,53 @@
                                                 <h4><i class="fas fa-globe"></i> Web Application</h4>
                                                 <p>Set up Chrome in kiosk mode</p>
                                                 <div class="web-config">
-                                                    <input type="url" placeholder="https://yoursite.com"
-                                                        class="form-input" id="wizard-web-url">
-                                                    <div class="checkbox-group">
-                                                        <label>
-                                                            <input type="checkbox" id="wizard-kiosk-mode" checked>
-                                                            Full-screen kiosk mode
-                                                        </label>
+                                                    <div class="form-group">
+                                                        <label for="wizard-web-url">Web Application URL:</label>
+                                                        <input type="url" placeholder="https://yoursite.com"
+                                                            class="form-input" id="wizard-web-url">
+                                                        <small class="help-text">Enter the full URL of the web application to launch</small>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label for="wizard-web-name">Application Name:</label>
+                                                        <input type="text" id="wizard-web-name" placeholder="My Web App" class="form-input">
+                                                        <small class="help-text">Friendly name for the process</small>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label for="wizard-browser-path">Browser:</label>
+                                                        <select id="wizard-browser-path" class="form-input">
+                                                            <option value="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome">Google Chrome</option>
+                                                            <option value="/Applications/Chromium.app/Contents/MacOS/Chromium">Chromium</option>
+                                                            <option value="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge">Microsoft Edge</option>
+                                                        </select>
+                                                        <small class="help-text">Select the browser to use for kiosk mode</small>
+                                                    </div>
+
+                                                    <div class="web-options">
+                                                        <h4><i class="fas fa-cog"></i> Kiosk Mode Options</h4>
+                                                        <div class="options-grid">
+                                                            <label class="checkbox-label">
+                                                                <input type="checkbox" id="wizard-kiosk-mode" checked>
+                                                                <span class="checkbox-custom"></span>
+                                                                Full Screen Kiosk Mode
+                                                            </label>
+                                                            <label class="checkbox-label">
+                                                                <input type="checkbox" id="wizard-disable-dev-tools" checked>
+                                                                <span class="checkbox-custom"></span>
+                                                                Disable Developer Tools
+                                                            </label>
+                                                            <label class="checkbox-label">
+                                                                <input type="checkbox" id="wizard-disable-extensions" checked>
+                                                                <span class="checkbox-custom"></span>
+                                                                Disable Extensions
+                                                            </label>
+                                                            <label class="checkbox-label">
+                                                                <input type="checkbox" id="wizard-incognito-mode">
+                                                                <span class="checkbox-custom"></span>
+                                                                Incognito/Private Mode
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -392,8 +421,11 @@
                                             <button class="btn btn-secondary" id="wizard-back-4">
                                                 <i class="fas fa-arrow-left"></i> Back
                                             </button>
-                                            <button class="btn btn-primary" id="wizard-run-tests">
-                                                <i class="fas fa-play"></i> Run Tests
+                                            <button class="btn btn-outline" id="wizard-run-tests">
+                                                <i class="fas fa-play"></i> Run Tests (Optional)
+                                            </button>
+                                            <button class="btn btn-primary" id="wizard-next-5">
+                                                Continue <i class="fas fa-arrow-right"></i>
                                             </button>
                                         </div>
                                     </div>

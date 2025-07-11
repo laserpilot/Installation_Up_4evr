@@ -4237,9 +4237,12 @@ input:checked+.toggle-slider:before {
 
 .setup-options {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: var(--spacing-lg);
     margin: var(--spacing-xl) 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .setup-card {
