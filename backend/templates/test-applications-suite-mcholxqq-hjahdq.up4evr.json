@@ -101,10 +101,7 @@
   "compatibility": {
     "minMacOS": "10.14",
     "maxMacOS": null,
-    "architecture": [
-      "x64",
-      "arm64"
-    ],
+    "architecture": ["x64", "arm64"],
     "sipRequired": false
   },
   "installation": {

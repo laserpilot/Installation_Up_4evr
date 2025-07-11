@@ -7,12 +7,7 @@
   "version": "1.0.0",
   "created": "2025-06-29T13:04:17.426Z",
   "updated": "2025-06-29T13:04:17.426Z",
-  "tags": [
-    "gallery",
-    "kiosk",
-    "art",
-    "interactive"
-  ],
+  "tags": ["gallery", "kiosk", "art", "interactive"],
   "systemSettings": [
     {
       "id": "screensaver",
@@ -65,10 +60,7 @@
   "compatibility": {
     "minMacOS": "10.14",
     "maxMacOS": null,
-    "architecture": [
-      "x64",
-      "arm64"
-    ],
+    "architecture": ["x64", "arm64"],
     "sipRequired": false
   },
   "installation": {

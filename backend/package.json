@@ -6,8 +6,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "legacy": "node server-legacy.js",
-    "dev:legacy": "nodemon server-legacy.js",
     "test": "node test-system-prefs.js && node test-launch-agents.js && node test-profiles.js && node test-monitoring.js",
     "test:system-prefs": "node test-system-prefs.js",
     "test:launch-agents": "node test-launch-agents.js",
@@ -25,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "@expo/sudo-prompt": "^9.3.2",
-    "body-parser": "^1.20.2",
+    "axios": "^1.10.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "pm2": "^6.0.8"

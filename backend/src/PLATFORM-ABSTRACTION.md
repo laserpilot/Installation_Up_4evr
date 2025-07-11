@@ -29,13 +29,14 @@ The platform abstraction layer separates universal functionality from platform-s
 Defines standard interfaces that all platform implementations must follow:
 
 - **SystemManagerInterface**: System configuration management
-- **ProcessManagerInterface**: Application and process management  
+- **ProcessManagerInterface**: Application and process management
 - **MonitoringDataInterface**: Standard monitoring data structure
 - **PlatformFactory**: Creates appropriate platform-specific implementations
 
 ### 2. Platform Manager (`platform-manager.js`)
 
 Main orchestrator that:
+
 - Initializes platform-specific managers
 - Provides unified API endpoints
 - Handles configuration management
@@ -44,6 +45,7 @@ Main orchestrator that:
 ### 3. API Manager (`api-manager.js`)
 
 Standardizes API responses and error handling:
+
 - **APIResponse**: Consistent response format
 - **Middleware support**: Validation, rate limiting, authentication
 - **Error handling**: Standardized error formats
@@ -52,6 +54,7 @@ Standardizes API responses and error handling:
 ### 4. Configuration Manager (`config-manager.js`)
 
 Platform-agnostic configuration management:
+
 - **Hierarchical configuration**: Nested settings with dot notation access
 - **Auto-persistence**: Automatic saving of configuration changes
 - **Import/Export**: Configuration backup and sharing
@@ -64,12 +67,17 @@ Platform-agnostic configuration management:
 1. **Create platform directory**: `/src/platform/[platform-name]/`
 
 2. **Implement required managers**:
+
    ```javascript
    // system-manager.js
    class WindowsSystemManager extends SystemManagerInterface {
-       async getSystemInfo() { /* Windows-specific implementation */ }
-       async applySettings(settings) { /* Windows-specific implementation */ }
-       // ... other required methods
+     async getSystemInfo() {
+       /* Windows-specific implementation */
+     }
+     async applySettings(settings) {
+       /* Windows-specific implementation */
+     }
+     // ... other required methods
    }
    ```
 
@@ -94,6 +102,7 @@ The existing server can be gradually migrated:
 3. **Configuration migration**: Import existing settings into new config system
 
 Example migration:
+
 ```javascript
 const PlatformManager = require('./src/core/platform-manager');
 
@@ -103,35 +112,43 @@ await platform.initialize();
 
 // Use alongside existing code
 app.get('/api/system-prefs/status', async (req, res) => {
-    // Use new platform manager
-    const result = await platform.handleAPIRequest('/system/settings/status', 'GET');
-    res.json(result.data); // Legacy compatibility
+  // Use new platform manager
+  const result = await platform.handleAPIRequest(
+    '/system/settings/status',
+    'GET'
+  );
+  res.json(result.data); // Legacy compatibility
 });
 ```
 
 ## Benefits
 
 ### 1. **Platform Independence**
+
 - Core logic works across different operating systems
 - Easy to add Windows, Linux support in the future
 - Consistent API regardless of underlying platform
 
 ### 2. **Standardized APIs**
+
 - Consistent response formats across all endpoints
 - Built-in error handling and validation
 - Automatic data sanitization
 
 ### 3. **Better Configuration Management**
+
 - Hierarchical settings with validation
 - Easy backup and restore of configurations
 - Platform-specific settings isolated from universal ones
 
 ### 4. **Improved Testing**
+
 - Mock platform implementations for testing
 - Isolated unit tests for core logic
 - Platform-specific integration tests
 
 ### 5. **Future Extensibility**
+
 - Easy to add new monitoring providers
 - Plugin architecture for external integrations
 - Standardized interfaces for external tools
@@ -175,6 +192,7 @@ app.get('/api/system-prefs/status', async (req, res) => {
 ## API Endpoints
 
 ### Universal Endpoints
+
 - `GET /system/info` - System information
 - `GET /system/settings` - Available settings
 - `GET /system/settings/status` - Current settings status
@@ -184,6 +202,7 @@ app.get('/api/system-prefs/status', async (req, res) => {
 - `PUT /config` - Update configuration
 
 ### Legacy Compatibility
+
 - `GET /api/system-prefs/status` - Maps to `/system/settings/status`
 - `POST /api/system-prefs/apply` - Maps to `/system/settings/apply`
 - `GET /api/monitoring/system` - Maps to `/monitoring/status`
@@ -191,6 +210,7 @@ app.get('/api/system-prefs/status', async (req, res) => {
 ## Error Handling
 
 Standardized error responses:
+
 ```json
 {
   "success": false,
@@ -216,18 +236,21 @@ Standardized error responses:
 ## Migration Path
 
 ### Phase 1: Infrastructure (Current)
+
 - ✅ Create platform abstraction interfaces
 - ✅ Implement macOS-specific managers
 - ✅ Create unified platform manager
 - ✅ Add configuration management
 
 ### Phase 2: Integration (Next)
+
 - Update existing server to use platform manager
 - Migrate existing modules to new architecture
 - Update frontend to use standardized APIs
 - Add comprehensive testing
 
 ### Phase 3: Extension (Future)
+
 - Add Windows platform support
 - Add Linux platform support
 - Implement plugin architecture

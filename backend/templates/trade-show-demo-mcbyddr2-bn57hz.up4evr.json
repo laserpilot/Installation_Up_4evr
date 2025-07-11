@@ -7,12 +7,7 @@
   "version": "1.0.0",
   "created": "2025-06-25T12:50:57.374Z",
   "updated": "2025-06-25T12:50:57.374Z",
-  "tags": [
-    "trade-show",
-    "event",
-    "temporary",
-    "demo"
-  ],
+  "tags": ["trade-show", "event", "temporary", "demo"],
   "systemSettings": [
     {
       "id": "screensaver",
@@ -45,10 +40,7 @@
   "compatibility": {
     "minMacOS": "10.14",
     "maxMacOS": null,
-    "architecture": [
-      "x64",
-      "arm64"
-    ],
+    "architecture": ["x64", "arm64"],
     "sipRequired": false
   },
   "installation": {
