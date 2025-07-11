@@ -2119,6 +2119,18 @@ class PlatformManager {
                 method: 'POST',
                 headers: {},
                 format: 'json'
+            },
+            triggers: {
+                app_crash: true,
+                high_cpu: true,
+                high_memory: false,
+                low_disk: false,
+                daily_status: false
+            },
+            severity: {
+                warning: true,
+                critical: true,
+                info: false
             }
         };
         
@@ -2131,28 +2143,47 @@ class PlatformManager {
                 slack: {
                     enabled: existingConfig.channels.slack?.enabled || false,
                     webhookUrl: existingConfig.channels.slack?.webhook || '',
-                    channel: '#alerts',
-                    username: 'Installation Up 4evr',
-                    icon: ':computer:'
+                    channel: existingConfig.slack?.channel || '#alerts',
+                    username: existingConfig.slack?.username || 'Installation Up 4evr',
+                    icon: existingConfig.slack?.icon || ':computer:'
                 },
                 discord: {
                     enabled: existingConfig.channels.discord?.enabled || false,
                     webhookUrl: existingConfig.channels.discord?.webhook || '',
-                    username: 'Installation Up 4evr',
-                    avatarUrl: ''
+                    username: existingConfig.discord?.username || 'Installation Up 4evr',
+                    avatarUrl: existingConfig.discord?.avatarUrl || ''
                 },
                 webhook: {
                     enabled: existingConfig.channels.webhook?.enabled || false,
                     url: existingConfig.channels.webhook?.urls?.[0] || '',
-                    method: 'POST',
-                    headers: {},
-                    format: 'json'
-                }
+                    method: existingConfig.webhook?.method || 'POST',
+                    headers: existingConfig.webhook?.headers || {},
+                    format: existingConfig.webhook?.format || 'json'
+                },
+                triggers: existingConfig.triggers || defaultConfig.triggers,
+                severity: existingConfig.severity || defaultConfig.severity
             };
+            
+            // Save the converted config back to the new format
+            this.saveNotificationConfig(convertedConfig).catch(err => {
+                console.warn('Failed to migrate notification config format:', err);
+            });
+            
             return convertedConfig;
         }
         
-        return existingConfig || defaultConfig;
+        // If we already have the new format, merge with defaults
+        if (existingConfig && (existingConfig.slack || existingConfig.discord || existingConfig.webhook)) {
+            return {
+                slack: { ...defaultConfig.slack, ...existingConfig.slack },
+                discord: { ...defaultConfig.discord, ...existingConfig.discord },
+                webhook: { ...defaultConfig.webhook, ...existingConfig.webhook },
+                triggers: { ...defaultConfig.triggers, ...existingConfig.triggers },
+                severity: { ...defaultConfig.severity, ...existingConfig.severity }
+            };
+        }
+        
+        return defaultConfig;
     }
 
     async saveNotificationConfig(config) {

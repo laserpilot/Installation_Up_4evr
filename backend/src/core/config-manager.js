@@ -55,14 +55,38 @@ class ConfigManager {
             
             // Notification configuration
             notifications: {
-                enabled: true,
-                channels: {
-                    slack: { enabled: false, webhook: null },
-                    discord: { enabled: false, webhook: null },
-                    email: { enabled: false, smtp: null },
-                    webhook: { enabled: false, urls: [] }
+                slack: {
+                    enabled: false,
+                    webhookUrl: '',
+                    channel: '#alerts',
+                    username: 'Installation Up 4evr',
+                    icon: ':computer:'
                 },
-                alertLevels: ['warning', 'critical']
+                discord: {
+                    enabled: false,
+                    webhookUrl: '',
+                    username: 'Installation Up 4evr',
+                    avatarUrl: ''
+                },
+                webhook: {
+                    enabled: false,
+                    url: '',
+                    method: 'POST',
+                    headers: {},
+                    format: 'json'
+                },
+                triggers: {
+                    app_crash: true,
+                    high_cpu: true,
+                    high_memory: false,
+                    low_disk: false,
+                    daily_status: false
+                },
+                severity: {
+                    warning: true,
+                    critical: true,
+                    info: false
+                }
             },
             
             // Dashboard configuration
@@ -247,8 +271,8 @@ class ConfigManager {
     }
 
     async updateNotificationChannel(channel, config) {
-        await this.update(`notifications.channels.${channel}`, {
-            ...this.get(`notifications.channels.${channel}`),
+        await this.update(`notifications.${channel}`, {
+            ...this.get(`notifications.${channel}`),
             ...config
         });
     }
