@@ -282,12 +282,14 @@ class PM2ServiceManager {
             // Start the service with PM2
             const result = await this.startService();
             
-            // Save PM2 configuration
+            // Save PM2 configuration (startup script)
             await this.connect();
             await new Promise((resolve, reject) => {
-                pm2.save((err) => {
+                pm2.startup((err) => {
                     if (err) {
-                        reject(err);
+                        console.warn('[PM2] Startup configuration failed:', err.message);
+                        // Don't fail the entire operation if startup fails
+                        resolve();
                         return;
                     }
                     resolve();
