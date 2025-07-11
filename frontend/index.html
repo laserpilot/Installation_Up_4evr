@@ -2307,9 +2307,9 @@ curl -X POST /api/installation/settings/network/timeout \\
                                     <div class="config-item">
                                         <label for="notification-levels">Alert Levels</label>
                                         <div class="checkbox-group">
-                                            <label class="checkbox-label"><input type="checkbox" value="info" checked><span class="checkbox-custom"></span> Info</label>
-                                            <label class="checkbox-label"><input type="checkbox" value="warning" checked><span class="checkbox-custom"></span> Warning</label>
-                                            <label class="checkbox-label"><input type="checkbox" value="critical" checked><span class="checkbox-custom"></span> Critical</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-severity-info" value="info"><span class="checkbox-custom"></span> Info</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-severity-warning" value="warning" checked><span class="checkbox-custom"></span> Warning</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="notify-severity-critical" value="critical" checked><span class="checkbox-custom"></span> Critical</label>
                                         </div>
                                         <small>Which alert levels to send notifications for</small>
                                     </div>

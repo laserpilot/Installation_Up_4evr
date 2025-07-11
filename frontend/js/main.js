@@ -12,7 +12,7 @@ import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
 import { initSystem } from './modules/system.js';
 import { initApplications, startRealtimeStatusUpdates, stopRealtimeStatusUpdates } from './modules/applications.js';
-import { initNotificationConfig } from './modules/notifications-config.js';
+// Removed redundant notifications-config.js - all functionality consolidated in notifications.js
 import { initNotifications } from './modules/notifications.js';
 import { initBackendService } from './modules/backend-service.js';
 import { initGlobalSettings } from './modules/global-settings.js';

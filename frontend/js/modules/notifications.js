@@ -102,6 +102,11 @@ function setupTestButtons() {
     if (testWebhookBtn) {
         testWebhookBtn.addEventListener('click', () => testNotificationChannel('webhook'));
     }
+
+    const testAllBtn = document.getElementById('test-all-channels');
+    if (testAllBtn) {
+        testAllBtn.addEventListener('click', testAllChannels);
+    }
 }
 
 function setupNotificationActionButtons() {
@@ -118,6 +123,9 @@ function setupNotificationActionButtons() {
 }
 
 function setupFormInteractions() {
+    // Auto-save configuration when fields change
+    setupAutoSave();
+    
     // Auto-fill Slack channel if webhook URL is detected
     const slackWebhookInput = document.getElementById('slack-webhook-url');
     if (slackWebhookInput) {
@@ -141,6 +149,49 @@ function setupFormInteractions() {
             }
         });
     }
+}
+
+function setupAutoSave() {
+    // List of input fields that should trigger auto-save
+    const fieldsToWatch = [
+        'slack-webhook-url', 'slack-channel', 'slack-username', 'slack-icon',
+        'discord-webhook-url', 'discord-username', 'discord-avatar-url',
+        'webhook-url', 'webhook-method', 'webhook-format'
+    ];
+    
+    // List of checkboxes that should trigger auto-save
+    const checkboxesToWatch = [
+        'slack-enabled', 'discord-enabled', 'webhook-enabled',
+        'notify-app-crash', 'notify-high-cpu', 'notify-high-memory', 
+        'notify-low-disk', 'notify-daily-status',
+        'notify-severity-warning', 'notify-severity-critical', 'notify-severity-info'
+    ];
+    
+    // Debounce function to avoid excessive saves
+    let saveTimeout;
+    function debouncedSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            saveNotificationConfig(true); // Silent auto-save
+        }, 1000); // Save 1 second after last change
+    }
+    
+    // Setup auto-save for text inputs
+    fieldsToWatch.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', debouncedSave);
+            field.addEventListener('change', debouncedSave);
+        }
+    });
+    
+    // Setup auto-save for checkboxes
+    checkboxesToWatch.forEach(checkboxId => {
+        const checkbox = document.getElementById(checkboxId);
+        if (checkbox) {
+            checkbox.addEventListener('change', debouncedSave);
+        }
+    });
 }
 
 async function loadMainNotificationConfig() {
@@ -197,7 +248,23 @@ function populateNotificationConfig(config) {
     setValue('webhook-url', config.webhook?.url || '');
     setValue('webhook-method', config.webhook?.method || 'POST');
     setValue('webhook-format', config.webhook?.format || 'json');
-    
+
+    // Notification triggers
+    if (config.triggers) {
+        setCheckbox('notify-app-crash', config.triggers.app_crash !== false); // Default to true
+        setCheckbox('notify-high-cpu', config.triggers.high_cpu !== false); // Default to true
+        setCheckbox('notify-high-memory', config.triggers.high_memory);
+        setCheckbox('notify-low-disk', config.triggers.low_disk);
+        setCheckbox('notify-daily-status', config.triggers.daily_status);
+    }
+
+    // Severity level filters
+    if (config.severity) {
+        setCheckbox('notify-severity-warning', config.severity.warning !== false); // Default to true
+        setCheckbox('notify-severity-critical', config.severity.critical !== false); // Default to true
+        setCheckbox('notify-severity-info', config.severity.info || false); // Default to false
+    }
+
     // Update visibility and enabled class based on toggle states after config is loaded
     const channels = ['slack', 'discord', 'webhook'];
     channels.forEach(channel => {
@@ -243,6 +310,18 @@ function getCurrentConfig() {
             url: getValue('webhook-url'),
             method: getValue('webhook-method'),
             format: getValue('webhook-format')
+        },
+        triggers: {
+            app_crash: getCheckbox('notify-app-crash'),
+            high_cpu: getCheckbox('notify-high-cpu'),
+            high_memory: getCheckbox('notify-high-memory'),
+            low_disk: getCheckbox('notify-low-disk'),
+            daily_status: getCheckbox('notify-daily-status')
+        },
+        severity: {
+            warning: getCheckbox('notify-severity-warning'),
+            critical: getCheckbox('notify-severity-critical'),
+            info: getCheckbox('notify-severity-info')
         }
     };
 }
@@ -276,22 +355,67 @@ async function testNotificationChannel(channel) {
     }
 }
 
-async function saveNotificationConfig() {
+async function saveNotificationConfig(silent = false) {
     try {
         const config = getCurrentConfig();
-        await apiCall('/api/notifications/config', {
+        const response = await apiCall('/api/notifications/config', {
             method: 'POST',
             body: JSON.stringify({ config })
         });
         
-        showToast('Notification configuration saved', 'success');
+        if (!silent) {
+            showToast('Notification configuration saved', 'success');
+        }
+        
+        console.log('[NOTIFICATIONS] Configuration saved successfully', { config });
+        return response;
     } catch (error) {
         console.error('Failed to save notification config:', error);
-        showToast('Failed to save notification configuration', 'error');
+        if (!silent) {
+            showToast('Failed to save notification configuration', 'error');
+        }
+        throw error;
+    }
+}
+
+async function testAllChannels() {
+    showToast('Sending test notifications to all enabled channels...', 'info');
+    const config = getCurrentConfig();
+    const channels = ['slack', 'discord', 'webhook', 'email'];
+    let testsSent = 0;
+
+    for (const channel of channels) {
+        if (config[channel] && config[channel].enabled) {
+            try {
+                await testNotificationChannel(channel);
+                testsSent++;
+            } catch (error) {
+                // The error is already shown by testNotificationChannel
+            }
+        }
+    }
+
+    if (testsSent === 0) {
+        showToast('No notification channels are enabled.', 'warning');
     }
 }
 
 // Utility functions are now imported from form-helpers.js
 
-// Export the save function for use by notification-config buttons
-export { saveNotificationConfig };
+async function resetNotificationConfig() {
+    if (confirm('Are you sure you want to reset the notification configuration to defaults?')) {
+        try {
+            // Reset to default configuration
+            const defaultConfig = getDefaultConfig();
+            populateNotificationConfig(defaultConfig);
+            await saveNotificationConfig();
+            showToast('Notification configuration reset to defaults', 'success');
+        } catch (error) {
+            console.error('Failed to reset notification config:', error);
+            showToast('Failed to reset notification configuration', 'error');
+        }
+    }
+}
+
+// Export functions for external use
+export { saveNotificationConfig, loadMainNotificationConfig, getCurrentConfig, resetNotificationConfig };
