@@ -1,6 +1,6 @@
 /**
- * @file service-control.js
- * @description Logic for the Service Control tab - manages backend service status and controls.
+ * @file backend-service.js
+ * @description Logic for the Backend Service tab - manages the Up4Evr backend service itself.
  */
 
 import { apiCall } from '../utils/api.js';
@@ -9,18 +9,15 @@ import { showToast } from '../utils/ui.js';
 let serviceStatusInterval = null;
 
 export function initBackendService() {
-    console.log('[INIT] Initializing Service Control tab...');
+    console.log('[INIT] Initializing Backend Service tab...');
     
-    // Initialize service status display
     updateServiceStatus();
     
-    // Set up periodic status updates
     if (serviceStatusInterval) {
         clearInterval(serviceStatusInterval);
     }
-    serviceStatusInterval = setInterval(updateServiceStatus, 5000);
+    serviceStatusInterval = setInterval(updateServiceStatus, 5000); // Refresh every 5 seconds
     
-    // Set up button event listeners
     setupServiceControlButtons();
 }
 
@@ -30,154 +27,123 @@ async function updateServiceStatus() {
         const status = response.data || response;
         updateServiceStatusDisplay(status);
     } catch (error) {
-        console.error('Failed to fetch service status:', error);
-        updateServiceStatusDisplay({
-            status: 'error',
-            message: 'Unable to connect to backend',
-            pid: null,
-            uptime: null
-        });
+        console.error('Failed to fetch backend service status:', error);
+        updateServiceStatusDisplay({ status: 'error', message: 'Unable to connect to backend' });
     }
 }
 
 function updateServiceStatusDisplay(status) {
-    const statusIndicator = document.getElementById('service-status-indicator');
     const statusIcon = document.getElementById('service-status-icon');
     const statusText = document.getElementById('service-status-text');
-    const pidElement = document.getElementById('service-pid');
-    const uptimeElement = document.getElementById('service-uptime');
-    
-    if (!statusIndicator || !statusIcon || !statusText) return;
-    
-    // Update status indicator
-    statusIndicator.className = 'service-status-indicator';
-    
-    if (status.status === 'running') {
-        statusIndicator.classList.add('status-running');
-        statusIcon.textContent = '🟢';
-        statusText.textContent = 'Running';
-    } else if (status.status === 'error') {
-        statusIndicator.classList.add('status-error');
-        statusIcon.textContent = '🔴';
-        statusText.textContent = status.message || 'Error';
-    } else {
-        statusIndicator.classList.add('status-unknown');
-        statusIcon.textContent = '🟡';
-        statusText.textContent = 'Unknown';
-    }
-    
-    // Update service details
-    if (pidElement) {
-        pidElement.textContent = status.pid || '--';
-    }
-    if (uptimeElement) {
-        uptimeElement.textContent = formatServiceUptime(status.uptime) || '--';
-    }
-}
+    const pidEl = document.getElementById('service-pid');
+    const uptimeEl = document.getElementById('service-uptime');
+    const managementEl = document.getElementById('service-management-mode');
+    const pm2IdEl = document.getElementById('service-pm2-id');
+    const restartsEl = document.getElementById('service-restart-count');
+    const cpuEl = document.getElementById('service-cpu-usage');
+    const memoryEl = document.getElementById('service-memory-usage');
+    const errorEl = document.getElementById('service-pm2-error');
 
-function formatServiceUptime(seconds) {
-    if (!seconds || seconds < 0) return null;
+    if (!statusIcon) return; // Exit if tab is not rendered
+
+    // Reset all fields
+    [pidEl, uptimeEl, managementEl, pm2IdEl, restartsEl, cpuEl, memoryEl].forEach(el => el.textContent = '--');
+    errorEl.style.display = 'none';
+
+    if (status.status === 'error') {
+        statusIcon.textContent = '🔴';
+        statusText.textContent = 'Error';
+        errorEl.querySelector('span').textContent = status.message;
+        errorEl.style.display = 'block';
+        return;
+    }
     
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
+    // Handle not managed or not found states
+    if (status.status === 'not_managed' || status.status === 'not_found') {
+        statusIcon.textContent = '🟡';
+        statusText.textContent = 'Running (Direct)';
+        managementEl.textContent = 'Direct';
+        managementEl.className = 'management-mode direct-managed';
+        pidEl.textContent = status.pid || '--';
+        uptimeEl.textContent = status.uptime ? `${status.uptime}s` : '--';
+        return;
+    }
+
+    pidEl.textContent = status.pid || '--';
+    uptimeEl.textContent = status.uptime ? `${status.uptime}s` : '--';
     
-    if (hours > 0) {
-        return `${hours}h ${minutes}m ${secs}s`;
-    } else if (minutes > 0) {
-        return `${minutes}m ${secs}s`;
+    if (status.pm2_managed) {
+        statusIcon.textContent = '🟢';
+        statusText.textContent = 'Running (PM2)';
+        managementEl.textContent = 'PM2';
+        managementEl.className = 'management-mode pm2-managed';
+        pm2IdEl.textContent = status.pm2_id || '--';
+        restartsEl.textContent = status.restart_time || '--';
+        cpuEl.textContent = `${status.cpu_usage || 0}%`;
+        memoryEl.textContent = status.memory_usage ? `${(status.memory_usage / 1024 / 1024).toFixed(1)} MB` : '--';
     } else {
-        return `${secs}s`;
+        statusIcon.textContent = '🟡';
+        statusText.textContent = 'Running (Direct)';
+        managementEl.textContent = 'Direct';
+        managementEl.className = 'management-mode direct-managed';
     }
 }
 
 function setupServiceControlButtons() {
     const restartBtn = document.getElementById('restart-backend');
     const stopBtn = document.getElementById('stop-backend');
-    const startBtn = document.getElementById('start-backend');
-    
+    const installBtn = document.getElementById('install-pm2-service');
+    const copyLogBtn = document.getElementById('copy-log-command');
+
     if (restartBtn) {
-        restartBtn.addEventListener('click', async () => {
-            try {
-                restartBtn.disabled = true;
-                showToast('Restarting backend service...', 'info');
-                
-                await apiCall('/api/system/restart', { method: 'POST' });
-                showToast('Backend service restart initiated', 'success');
-                
-                // Wait a moment then update status
-                setTimeout(updateServiceStatus, 2000);
-            } catch (error) {
-                console.error('Failed to restart backend:', error);
-                showToast('Failed to restart backend service', 'error');
-            } finally {
-                restartBtn.disabled = false;
-            }
-        });
+        restartBtn.addEventListener('click', () => handleControlClick('restart', 'Are you sure you want to restart the backend service?'));
     }
-    
     if (stopBtn) {
-        stopBtn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to stop the backend service? This will disconnect all monitoring and controls.')) {
-                return;
-            }
-            
-            try {
-                stopBtn.disabled = true;
-                showToast('Stopping backend service...', 'info');
-                
-                await apiCall('/api/system/stop', { method: 'POST' });
-                showToast('Backend service stopped', 'warning');
-                
-                // Update UI to show stopped state
-                updateServiceStatusDisplay({
-                    status: 'stopped',
-                    message: 'Stopped',
-                    pid: null,
-                    uptime: null
-                });
-                
-                // Show start button, hide stop button
-                stopBtn.style.display = 'none';
-                if (startBtn) startBtn.style.display = 'inline-block';
-                
-            } catch (error) {
-                console.error('Failed to stop backend:', error);
-                showToast('Failed to stop backend service', 'error');
-            } finally {
-                stopBtn.disabled = false;
-            }
-        });
+        stopBtn.addEventListener('click', () => handleControlClick('stop', 'Are you sure you want to stop the backend service? This will disconnect the UI.'));
     }
-    
-    if (startBtn) {
-        startBtn.addEventListener('click', async () => {
-            try {
-                startBtn.disabled = true;
-                showToast('Starting backend service...', 'info');
-                
-                await apiCall('/api/system/start', { method: 'POST' });
-                showToast('Backend service started', 'success');
-                
-                // Hide start button, show stop button
-                startBtn.style.display = 'none';
-                if (stopBtn) stopBtn.style.display = 'inline-block';
-                
-                // Wait a moment then update status
-                setTimeout(updateServiceStatus, 2000);
-                
-            } catch (error) {
-                console.error('Failed to start backend:', error);
-                showToast('Failed to start backend service', 'error');
-            } finally {
-                startBtn.disabled = false;
-            }
+    if (installBtn) {
+        installBtn.addEventListener('click', () => handleControlClick('install-pm2', 'Install the backend to run on boot using PM2?'));
+    }
+
+    if (copyLogBtn) {
+        copyLogBtn.addEventListener('click', () => {
+            const command = document.getElementById('log-command-display').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                showToast('Command copied to clipboard!', 'success');
+            }, () => {
+                showToast('Failed to copy command.', 'error');
+            });
         });
     }
 }
 
-// Clean up interval when tab is switched
-export function cleanupServiceControl() {
+async function handleControlClick(action, confirmMessage) {
+    if (confirmMessage && !confirm(confirmMessage)) {
+        return;
+    }
+
+    const button = document.getElementById(action === 'install-pm2' ? 'install-pm2-service' : `${action}-backend`);
+    button.disabled = true;
+    showToast(`Requesting to ${action} backend...`, 'info');
+
+    try {
+        const response = await apiCall(`/api/system/${action}`, { method: 'POST' });
+        if (response.success) {
+            showToast(response.message || `Backend action '${action}' successful!`, 'success');
+        } else {
+            showToast(response.error || `Action '${action}' failed.`, 'error');
+        }
+    } catch (error) {
+        showToast(`Failed to execute action '${action}': ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        // Refresh status after a short delay to allow backend to process
+        setTimeout(updateServiceStatus, 2000);
+    }
+}
+
+// This function is called by main.js when the tab is switched away from.
+export function cleanupBackendService() {
     if (serviceStatusInterval) {
         clearInterval(serviceStatusInterval);
         serviceStatusInterval = null;

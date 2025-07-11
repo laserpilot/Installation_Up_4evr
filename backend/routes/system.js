@@ -342,5 +342,24 @@ module.exports = (platformManager) => {
         }
     });
 
+    /**
+     * @swagger
+     * /api/system/install-pm2:
+     *   post:
+     *     summary: Install backend service with PM2
+     *     description: Install the backend service to run on boot using PM2 process manager.
+     *     responses:
+     *       200:
+     *         description: Service installed with PM2 successfully.
+     */
+    router.post('/install-pm2', async (req, res) => {
+        try {
+            const result = await platformManager.handleAPIRequest('/system/install-pm2', 'POST', req.body);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     return router;
 };
