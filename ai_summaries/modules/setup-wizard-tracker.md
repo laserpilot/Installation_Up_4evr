@@ -23,16 +23,27 @@
 - Fixed [Object object] display issue in code box
 - Proper command generation and display
 
+**✅ Completed 2025-07-11:**
+- Enhanced web app creation form to match Applications tab (URL, Name, Browser, Kiosk options)
+- Removed Advanced Setup option from Step 1 for cleaner UX
+- Improved Skip Step button visual feedback with loading states
+- Polished Generate Terminal Commands UI with better layout and copy functionality
+- Added Step 6 validation that checks sleep settings and PM2 applications with clear failure guidance
+
 ---
 
 ## Active Issues 🎯
 
-**Currently:** 
-- [ ] Web application launch agent creation needs more options to be in parity in terms of options with the Applications page in the web-app-creator div and the web-options. It should have application title, and the Full Screen Kiosk mode/Disable Developer Tools, Disable Extentions, Incognito options
-- [ ] Skip Step button works but may need better visual feedback
-- [ ] Generate Terminal Commands shows proper commands but UI could be more polished
-- [ ] Wizard flow could benefit from progress indicators
+**Recently Completed (2025-07-11):** ✅
+- [x] Web Application creation on step 4 should match the options given in the web-app-creator div on the Applications tab - should show URL, Name, Browser, and Kiosk Mode option checkboxes
+- [x] Remove the option to click into "Advanced Setup" in Step 1 - just have the only option on the first step be that they can continue to the next
+- [x] Skip Step button works but may need better visual feedback
+- [x] Generate Terminal Commands shows proper commands but UI could be more polished
+- [x] Setup wizard Step 6 shows "Setup Complete" - this should fail if they havent applied the necessary sleep settings from step 2, and if they haven't added an application to pm2. It should direct them on how to still address these issues in other areas if they are failed
+
+**Current Active Issues:**
 - [ ] Some steps might need clearer explanations for non-technical users
+- [ ] Fix "[Object object]" error display in verification step when API endpoints are missing
 
 ---
 
