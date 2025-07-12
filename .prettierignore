@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+coverage
+*.log
+.git
+.DS_Store
+backend/node_modules
+backend/dist
+backend/build
+backend/coverage
+backend/*.log
+frontend/js/modules/setup-wizard.js

@@ -1,26 +1,44 @@
 # Active Issues Tracker - Installation Up 4evr
 
-**Last Updated:** 2025-07-06  
-**Current Sprint:** Post-Phase 9 Development  
-**Status:** Application production ready, monitoring for new issues
+**Last Updated:** 2025-07-11  
+**Current Sprint:** Phase 1-2 Systematic Module Investigation & Critical Fixes  
+**Status:** Investigation complete, implementing critical fixes
 
 ---
 
 ## High Priority 🔥
 *Critical issues that block core functionality*
 
-**Currently:** 
-*No high priority issues*
+**Phase 2 - Critical Fixes In Progress:**
+- [ ] **[Notifications]** Test functionality doesn't use saved configuration - test methods need fallback to saved config when `data.config` not provided in platform-manager.js
+- [ ] **[Backend Service]** Frontend module connection issues - APIs work but UI shows connection problems
+- [ ] **[Dashboard]** PM2 Processes section shows "Checking" but never updates - frontend display issue
+- [ ] **[Dashboard]** System Uptime card shows Unknown and 0s - frontend display fix needed
+
+**Phase 1 Investigation Complete ✅:**
+- [x] Backend Service APIs verified working (all endpoints functional)
+- [x] Dashboard PM2 integration confirmed working (comprehensive process data available)
+- [x] Notifications persistence root cause identified (config save works, test doesn't use saved config)
+- [x] System preferences status verified (~75% accuracy, 5 settings need logic fixes)
 
 ---
 
 ## Medium Priority 🟡  
 *Important improvements and enhancements*
 
-**Currently:** 
-- [ ] Tool-created applications should also appear in Dashboard Application Status section  
-- [ ] Backend Service tab needs investigation - unclear purpose vs Applications, shows "Mode: Electron-managed"
-- [ ] Global tab needs assessment - scope and functionality unclear
+**System Preferences Logic Fixes:**
+- [ ] **[System]** disableNetworkPrompts - Verification logic is backwards (shows Applied when should be Not Applied)
+- [ ] **[System]** disableStageManager - Logic may be reversed (treats enabled=applied when should disable)  
+- [ ] **[System]** autoRestart - Requires sudo access for `systemsetup` commands (permission error)
+- [ ] **[System]** powerFailureRestart - Setting doesn't exist in pmset output (autorestart parameter missing)
+- [ ] **[System]** hideDesktopIcons - Default value handling needed for non-existent preferences
+
+**Dashboard Improvements:**
+- [ ] **[Dashboard]** Remove dashboard-cpu-processes and dashboard-memory-processes divs (inaccurate and misleading)
+- [ ] **[Dashboard]** Health endpoint should include PM2 status summary  
+- [ ] **[Dashboard]** Configuration endpoint (`/api/config/pm2-processes`) has function error
+
+**Legacy Issues (Lower Priority):**
 - [ ] **[Monitoring]** Clicking "Save configuration" gives a notification "Failed to save configuration" 
 - [ ] **[Monitoring]** Unclear what a configuration actually is and what is being saved - needs information below buttons
 - [ ] **[Monitoring]** Would save/load and import/export configuration buttons essentially be the same thing or no?
@@ -35,18 +53,26 @@
 
 **Future:**
 - [ ] Optional toggle for the user to get screenshots of the screen on a regular interval and save them on a cycle with a timestamp. We don't want to keep too many, so it might be better to keep them on a cycle of like every X minutes but only keep the last 100 or something, and older ones get deleted.
+- [ ] user can use a yaml file or similar to describe the installation and upload that to the Up4Evr tool to configure settings for all tabs
+
 
 ---
 
 ## In Progress 🔄
 *Issues currently being worked on*
 
-**Recently Completed:**
-- ✅ Comprehensive logging system - structured JSON logging with rotation, categorization, and API access *(2025-07-06)*
-- ✅ Applications Export button - fixed double-wrapped API response handling *(2025-07-06)*
-- ✅ Excessive console logging streamlined - selective API logging, reduced monitoring noise
-- ✅ Applications UI fixes - View/Edit/Test buttons, modal visibility, MasterConfigAPI error, web app loop prevention
-- ✅ Complete module documentation - trackers for all 8 major application modules
+**Phase 2 Active Work:**
+- 🔄 **[Notifications]** Fixing test functionality to use saved configuration (platform-manager.js modifications)
+- 🔄 **[Backend Service]** Investigating frontend module connection issues
+- 🔄 **[Dashboard]** Fixing PM2 Processes and System Uptime display issues
+
+**Recently Completed (2025-07-11):**
+- ✅ **[SECURITY]** Removed Slack webhook from Git history - rewritten 183 commits, force pushed, enhanced .gitignore
+- ✅ **[Phase 1]** Systematic investigation of all 8 modules completed
+- ✅ **[Backend Service]** API functionality verified - all endpoints working correctly  
+- ✅ **[Dashboard]** PM2 integration confirmed working - comprehensive process data available
+- ✅ **[Notifications]** Root cause identified - config persistence works, test methods need fixes
+- ✅ **[System]** Verification infrastructure confirmed solid - specific logic fixes identified
 
 ---
 

@@ -33,7 +33,8 @@ class HealthScoringEngine {
 
     // Calculate weighted average
     const overallScore = Object.keys(scores).reduce((total, category) => {
-      return total + scores[category] * this.weights[category];
+      const scoreValue = scores[category].score || 0;
+      return total + scoreValue * this.weights[category];
     }, 0);
 
     return {
