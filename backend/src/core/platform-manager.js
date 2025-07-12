@@ -996,6 +996,30 @@ class PlatformManager {
       });
     });
 
+    this.api.registerRoute('/config/pm2-processes', 'GET', async () => {
+      try {
+        const processes = await this.processManager.getAutoStartEntries();
+        const pm2Config = {
+          processes: processes.map(proc => ({
+            name: proc.name,
+            label: proc.label,
+            isRunning: proc.isRunning,
+            autoStart: proc.loaded,
+            createdByTool: proc.createdByTool || false
+          })),
+          totalCount: processes.length,
+          runningCount: processes.filter(p => p.isRunning).length
+        };
+        return APIResponse.success(pm2Config);
+      } catch (error) {
+        console.error('Failed to get PM2 process configuration:', error);
+        return APIResponse.error({
+          message: 'Failed to retrieve PM2 process configuration',
+          error: error.message
+        });
+      }
+    });
+
     this.api.registerRoute('/config/apply', 'POST', async data => {
       // Apply current configuration (restart services if needed)
       const config = this.config.get();
@@ -1611,7 +1635,39 @@ class PlatformManager {
 
     // Health check
     this.api.registerRoute('/health', 'GET', async () => {
-      return this.api.healthCheck();
+      const baseHealth = await this.api.healthCheck();
+      
+      // Add PM2 status summary
+      try {
+        const pm2Status = await this.pm2ServiceManager.getServiceStatus();
+        const applications = await this.handleAPIRequest('/monitoring/applications', 'GET');
+        const pm2Processes = applications.data.filter(app => 
+          app.type === 'pm2-process' || app.type === 'launch-agent'
+        );
+        
+        const runningCount = pm2Processes.filter(app => 
+          app.isRunning !== undefined ? app.isRunning : app.running
+        ).length;
+        
+        baseHealth.data.pm2Summary = {
+          serviceStatus: pm2Status.status || 'unknown',
+          totalProcesses: pm2Processes.length,
+          runningProcesses: runningCount,
+          stoppedProcesses: pm2Processes.length - runningCount,
+          healthRating: pm2Processes.length > 0 ? 
+            (runningCount / pm2Processes.length >= 0.8 ? 'good' : 
+             runningCount / pm2Processes.length >= 0.5 ? 'warning' : 'critical') 
+            : 'none'
+        };
+      } catch (error) {
+        console.error('Failed to get PM2 status for health check:', error);
+        baseHealth.data.pm2Summary = {
+          serviceStatus: 'error',
+          error: error.message
+        };
+      }
+      
+      return baseHealth;
     });
 
     // Platform information
@@ -2491,20 +2547,24 @@ class PlatformManager {
 
   async testSlackNotification(data) {
     const { config, message } = data;
+    
+    // Use provided config or fall back to saved configuration
+    const notificationConfig = config || this.getNotificationConfig();
+    const slackConfig = notificationConfig.slack || notificationConfig;
 
-    if (!config || !config.webhookUrl) {
+    if (!slackConfig || !slackConfig.webhookUrl) {
       return { success: false, message: 'Slack webhook URL is required' };
     }
 
     const slackPayload = {
       text: message,
-      channel: config.channel || undefined,
-      username: config.username || 'Installation Up 4evr',
-      icon_emoji: config.icon || ':robot_face:'
+      channel: slackConfig.channel || undefined,
+      username: slackConfig.username || 'Installation Up 4evr',
+      icon_emoji: slackConfig.icon || ':robot_face:'
     };
 
     try {
-      await axios.post(config.webhookUrl, slackPayload, {
+      await axios.post(slackConfig.webhookUrl, slackPayload, {
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -2523,8 +2583,12 @@ class PlatformManager {
 
   async testDiscordNotification(data) {
     const { config, message } = data;
+    
+    // Use provided config or fall back to saved configuration
+    const notificationConfig = config || this.getNotificationConfig();
+    const discordConfig = notificationConfig.discord || notificationConfig;
 
-    if (!config || !config.webhookUrl) {
+    if (!discordConfig || !discordConfig.webhookUrl) {
       return {
         success: false,
         message: 'Discord webhook URL is required'
@@ -2534,8 +2598,8 @@ class PlatformManager {
     try {
       // In demo mode, simulate sending Discord notification
       console.log('[NOTIFICATIONS] Discord test:', {
-        webhook: config.webhookUrl,
-        username: config.username,
+        webhook: discordConfig.webhookUrl,
+        username: discordConfig.username,
         message: message
       });
 
@@ -2554,8 +2618,12 @@ class PlatformManager {
 
   async testWebhookNotification(data) {
     const { config, message } = data;
+    
+    // Use provided config or fall back to saved configuration
+    const notificationConfig = config || this.getNotificationConfig();
+    const webhookConfig = notificationConfig.webhook || notificationConfig;
 
-    if (!config || !config.url) {
+    if (!webhookConfig || !webhookConfig.url) {
       return {
         success: false,
         message: 'Webhook URL is required'
@@ -2565,9 +2633,9 @@ class PlatformManager {
     try {
       // In demo mode, simulate sending webhook notification
       console.log('[NOTIFICATIONS] Webhook test:', {
-        url: config.url,
-        method: config.method,
-        format: config.format,
+        url: webhookConfig.url,
+        method: webhookConfig.method,
+        format: webhookConfig.format,
         message: message
       });
 

@@ -113,6 +113,13 @@ class MonitoringCore extends EventEmitter {
     try {
       // Get system metrics
       this.monitoringData.system = await this.provider.getSystemMetrics();
+      
+      // Add system uptime to the data
+      const uptimeSeconds = process.uptime();
+      this.monitoringData.system.uptime = {
+        seconds: Math.floor(uptimeSeconds),
+        formatted: this.formatUptime(uptimeSeconds)
+      };
 
       // Get network information
       this.monitoringData.network = await this.provider.getNetworkInfo();
@@ -218,6 +225,23 @@ class MonitoringCore extends EventEmitter {
     // Emit alerts if any pass the severity filter
     if (filteredAlerts.length > 0) {
       this.emit('alerts', filteredAlerts);
+    }
+  }
+
+  /**
+   * Format uptime seconds into human readable format
+   */
+  formatUptime(seconds) {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (days > 0) {
+      return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
     }
   }
 

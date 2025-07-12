@@ -69,7 +69,7 @@ class MacOSSystemManager extends SystemManagerInterface {
           'Restart automatically if system freezes (recommended for installations)',
         command: 'sudo systemsetup -setrestartfreeze on',
         revert: 'sudo systemsetup -setrestartfreeze off',
-        verify: 'systemsetup -getrestartfreeze',
+        verify: 'sudo systemsetup -getrestartfreeze',
         required: false,
         category: 'power'
       },
@@ -78,7 +78,7 @@ class MacOSSystemManager extends SystemManagerInterface {
         description: 'Restart automatically after power failure (optional)',
         command: 'sudo pmset -c autorestart 1',
         revert: 'sudo pmset -c autorestart 0',
-        verify: 'pmset -g | grep autorestart',
+        verify: 'pmset -g custom | grep autorestart || pmset -g | grep autorestart || echo "autorestart 0"',
         required: false,
         category: 'power'
       },
@@ -177,7 +177,7 @@ class MacOSSystemManager extends SystemManagerInterface {
           'defaults write com.apple.finder CreateDesktop -bool false; killall Finder',
         revert:
           'defaults write com.apple.finder CreateDesktop -bool true; killall Finder',
-        verify: 'defaults read com.apple.finder CreateDesktop',
+        verify: 'defaults read com.apple.finder CreateDesktop 2>/dev/null || echo "1"',
         required: false,
         category: 'ui'
       },
@@ -780,6 +780,28 @@ echo "Review the output above for any errors."
         // Check if Problem Reporter app has no permissions (000 means disabled)
         // Output should be like "d---------" for disabled or "drwxr-xr-x" for enabled
         return { applied: output.trim().startsWith('d---------') };
+
+      case 'disableNetworkPrompts':
+        // Check if JoinMode is set to "Automatic" (means prompts are disabled)
+        // When disabled: JoinMode = "Automatic"
+        // When enabled: JoinMode = "Prompt" or missing
+        return { applied: output.trim() === 'Automatic' };
+
+      case 'disableStageManager':
+        // Check if GloballyEnabled is set to false (means Stage Manager is disabled)
+        // When disabled: GloballyEnabled = false
+        // When enabled: GloballyEnabled = true or missing (default is true)
+        return { applied: output.trim() === 'false' || output.trim() === '0' };
+
+      case 'autoRestart':
+        // Check if restart freeze is set to "on"
+        // Output: "Restart on system freeze: On" or "Restart on system freeze: Off"
+        return { applied: output.toLowerCase().includes('on') };
+
+      case 'powerFailureRestart':
+        // Check if autorestart is set to 1
+        // Output: "autorestart 1" or "autorestart 0" or fallback "autorestart 0"
+        return { applied: output.includes('autorestart 1') };
 
       default:
         // Generic check - if command succeeded, consider it applied

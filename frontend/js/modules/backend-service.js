@@ -28,7 +28,18 @@ async function updateServiceStatus() {
         updateServiceStatusDisplay(status);
     } catch (error) {
         console.error('Failed to fetch backend service status:', error);
-        updateServiceStatusDisplay({ status: 'error', message: 'Unable to connect to backend' });
+        
+        // Check if the error is actually a connection issue
+        const isConnectionError = error.name === 'TypeError' && error.message.includes('Failed to fetch');
+        const errorMessage = isConnectionError 
+            ? 'Connection lost - backend may be offline'
+            : `Backend error: ${error.message}`;
+            
+        updateServiceStatusDisplay({ 
+            status: 'error', 
+            message: errorMessage,
+            connectionError: isConnectionError
+        });
     }
 }
 
@@ -51,8 +62,8 @@ function updateServiceStatusDisplay(status) {
     errorEl.style.display = 'none';
 
     if (status.status === 'error') {
-        statusIcon.textContent = '🔴';
-        statusText.textContent = 'Error';
+        statusIcon.textContent = status.connectionError ? '🔗' : '🔴';
+        statusText.textContent = status.connectionError ? 'Connection Error' : 'Error';
         errorEl.querySelector('span').textContent = status.message;
         errorEl.style.display = 'block';
         return;

@@ -129,6 +129,9 @@ async function refreshDashboardData() {
         // Update applications - fix data structure mismatch
         updateApplications(applications.data || []);
         
+        // Update PM2 processes card
+        updatePM2ProcessesCard(applications.data || []);
+        
         // Update alerts/activity
         updateRecentActivity(systemStatus.alerts || []);
         
@@ -193,6 +196,48 @@ function updateSystemMetrics(systemData) {
         type: 'uptime',
         customStatus: uptimeValue > 0 ? 'Active' : 'Unknown'
     });
+}
+
+function updatePM2ProcessesCard(applications) {
+    const valueEl = document.getElementById('pm2-usage-value');
+    const barEl = document.getElementById('pm2-usage-bar');
+    const statusEl = document.getElementById('pm2-usage-status');
+    
+    if (!valueEl || !barEl || !statusEl) return;
+    
+    // Filter for PM2 processes and launch agents
+    const pm2Processes = applications.filter(app => 
+        app.type === 'pm2-process' || app.type === 'launch-agent'
+    );
+    
+    const runningCount = pm2Processes.filter(app => 
+        app.isRunning !== undefined ? app.isRunning : app.running
+    ).length;
+    
+    const totalCount = pm2Processes.length;
+    
+    if (totalCount === 0) {
+        valueEl.textContent = 'None';
+        statusEl.textContent = 'No PM2 processes configured';
+        barEl.style.width = '0%';
+        barEl.className = 'metric-fill';
+        return;
+    }
+    
+    const percentage = Math.round((runningCount / totalCount) * 100);
+    
+    valueEl.textContent = `${runningCount}/${totalCount}`;
+    statusEl.textContent = `${runningCount} running, ${totalCount - runningCount} stopped`;
+    barEl.style.width = `${percentage}%`;
+    
+    // Set color based on running percentage
+    if (percentage >= 80) {
+        barEl.className = 'metric-fill good';
+    } else if (percentage >= 50) {
+        barEl.className = 'metric-fill warning';
+    } else {
+        barEl.className = 'metric-fill critical';
+    }
 }
 
 // Old metric functions replaced by unified MonitoringDisplayManager
