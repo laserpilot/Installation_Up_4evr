@@ -149,8 +149,12 @@ async function saveMonitoringConfig() {
             body: JSON.stringify({ config })
         });
         
-        // Update master configuration
-        await updateMasterConfigWithMonitoring();
+        // Update master configuration (non-critical)
+        try {
+            await updateMasterConfigWithMonitoring();
+        } catch (masterError) {
+            console.warn('[MONITORING-CONFIG] Master config update failed (non-critical):', masterError);
+        }
         
         showToast('Monitoring configuration saved successfully', 'success');
     } catch (error) {

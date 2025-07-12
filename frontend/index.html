@@ -1689,6 +1689,20 @@ curl -X POST /api/installation/settings/network/timeout \\
                                     <button id="import-monitoring-config" class="btn btn-secondary">
                                         <i class="fas fa-upload"></i> Import Config
                                     </button>
+                                    
+                                    <!-- Configuration Help Text -->
+                                    <div class="config-help-text">
+                                        <div class="help-section">
+                                            <h4><i class="fas fa-info-circle"></i> Configuration Management</h4>
+                                            <p><strong>Save Configuration:</strong> Stores current threshold values, monitoring interval, and ping monitors to the system. These settings persist across restarts.</p>
+                                            <p><strong>Reset to Defaults:</strong> Restores factory default monitoring thresholds and settings, removing any custom configurations.</p>
+                                            <p><strong>Export/Import Config:</strong> Export saves your monitoring setup to a file for backup or sharing. Import loads a previously exported configuration file.</p>
+                                            <div class="help-note">
+                                                <i class="fas fa-lightbulb"></i>
+                                                <span><em>Tip: Use Save to apply changes immediately, or Export to create backups of working configurations.</em></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Configuration Help -->
