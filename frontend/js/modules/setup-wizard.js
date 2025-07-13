@@ -1202,7 +1202,7 @@ async function loadWizardSummary() {
                 <h3>${summary.validationPassed ? 'Setup Complete!' : 'Setup Incomplete'}</h3>
                 <p>${summary.validationPassed ? 'Your installation is now configured and ready for 24/7 operation.' : 'Your installation needs additional configuration to run reliably 24/7.'}</p>
                 
-                <div class="setup-summary">`;
+                <div class="setup-summary">
                 <div class="setup-summary-content">
                     ${summary.validationPassed ? `
                         <!-- SUCCESS: Forever Guarantee Section -->

@@ -1022,6 +1022,135 @@ body {
     margin-top: 2px;
 }
 
+/* New Dashboard Application List Layout */
+.app-status-list {
+    width: 100%;
+}
+
+.app-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-sm);
+    transition: all 0.2s ease;
+}
+
+.app-status-row:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.1);
+}
+
+.app-status-row.tool-created {
+    border-left: 3px solid var(--primary-color);
+    background: linear-gradient(90deg, rgba(0, 122, 255, 0.05) 0%, var(--card-background) 20%);
+}
+
+.app-status-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+}
+
+.app-status-icon {
+    font-size: 1.5rem;
+    width: 24px;
+    text-align: center;
+}
+
+.app-details {
+    flex: 1;
+}
+
+.app-name {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.app-type-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.app-type-badge.launch-agent {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--warning-color);
+}
+
+.app-type-badge.pm2-process {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--success-color);
+}
+
+.app-type-badge.system-app {
+    background: rgba(142, 142, 147, 0.1);
+    color: var(--secondary-color);
+}
+
+.tool-created-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 8px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.app-status-text {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+}
+
+.app-status-text .status {
+    font-weight: 500;
+}
+
+.app-status-text .status.running {
+    color: var(--success-color);
+}
+
+.app-status-text .status.stopped {
+    color: var(--danger-color);
+}
+
+.app-status-text .pid {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.app-status-text .resource-info {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.app-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-shrink: 0;
+}
+
 /* Enhanced Application Monitoring with PM2 Integration */
 .apps-summary {
     margin-bottom: var(--spacing-md);
@@ -2339,7 +2468,11 @@ input:checked+.toggle-slider:before {
     gap: var(--spacing-lg);
 }
 
-.threshold-item {}
+.threshold-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
 
 .threshold-item label {
     display: block;

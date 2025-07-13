@@ -610,37 +610,8 @@ class PlatformManager {
         data.applications
       );
 
-      // Include tool-created launch agents on macOS
-      if (this.platform === 'macos') {
-        try {
-          const agents = await this.processManager.getAutoStartEntries();
-          const toolCreatedAgents = agents.filter(
-            agent =>
-              agent.label.includes('installation-up-4evr') ||
-              agent.plistPath.includes('installation-up-4evr') ||
-              (agent.webAppInfo && agent.webAppInfo.isWebApp) ||
-              agent.createdByTool === true
-          );
-
-          // Convert launch agents to application format
-          const agentApplications = toolCreatedAgents.map(agent => ({
-            name: agent.displayName || agent.label,
-            running: agent.isRunning,
-            pid: agent.pid || null,
-            type: 'launch-agent',
-            source: 'tool-created',
-            agentData: agent
-          }));
-
-          // Merge with existing applications
-          applications = [...applications, ...agentApplications];
-        } catch (error) {
-          console.error(
-            '[APPS] Failed to fetch tool-created launch agents:',
-            error
-          );
-        }
-      }
+      // Note: getAutoStartEntries() now returns PM2 processes, not traditional launch agents
+      // Skip this section since PM2 processes are handled below to avoid duplicates
 
       // Include PM2 processes
       try {
@@ -1020,7 +991,7 @@ class PlatformManager {
       }
     });
 
-    this.api.registerRoute('/config/apply', 'POST', async data => {
+    this.api.registerRoute('/config/apply', 'POST', async _data => {
       // Apply current configuration (restart services if needed)
       const config = this.config.get();
 
@@ -1772,8 +1743,8 @@ class PlatformManager {
       }
     );
 
-    this.api.registerRoute('/setup-wizard/run-tests', 'POST', async data => {
-      const validationResults = await this.validation.runValidation();
+    this.api.registerRoute('/setup-wizard/run-tests', 'POST', async _data => {
+      const validationResults = await this.validation.runFullValidation();
 
       return APIResponse.success({
         testResults: validationResults.map(result => ({
@@ -2549,7 +2520,12 @@ class PlatformManager {
     const { config, message } = data;
     
     // Use provided config or fall back to saved configuration
-    const notificationConfig = config || this.getNotificationConfig();
+    let notificationConfig;
+    if (config) {
+      notificationConfig = config;
+    } else {
+      notificationConfig = this.getNotificationConfig();
+    }
     const slackConfig = notificationConfig.slack || notificationConfig;
 
     if (!slackConfig || !slackConfig.webhookUrl) {
@@ -2585,7 +2561,12 @@ class PlatformManager {
     const { config, message } = data;
     
     // Use provided config or fall back to saved configuration
-    const notificationConfig = config || this.getNotificationConfig();
+    let notificationConfig;
+    if (config) {
+      notificationConfig = config;
+    } else {
+      notificationConfig = this.getNotificationConfig();
+    }
     const discordConfig = notificationConfig.discord || notificationConfig;
 
     if (!discordConfig || !discordConfig.webhookUrl) {
@@ -2620,7 +2601,12 @@ class PlatformManager {
     const { config, message } = data;
     
     // Use provided config or fall back to saved configuration
-    const notificationConfig = config || this.getNotificationConfig();
+    let notificationConfig;
+    if (config) {
+      notificationConfig = config;
+    } else {
+      notificationConfig = this.getNotificationConfig();
+    }
     const webhookConfig = notificationConfig.webhook || notificationConfig;
 
     if (!webhookConfig || !webhookConfig.url) {

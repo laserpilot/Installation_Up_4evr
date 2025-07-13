@@ -259,56 +259,79 @@ function updateApplications(applications) {
         return;
     }
     
-    container.innerHTML = applications.map(app => {
-        const isLaunchAgent = app.type === 'launch-agent';
-        const isPM2Process = app.type === 'pm2-process';
-        const isToolCreated = app.source === 'tool-created';
-        const toolBadge = isToolCreated ? '<span class="tool-created-badge"><i class="fas fa-rocket"></i> Up4Evr</span>' : '';
-        
-        // Handle different running status property names
-        const isRunning = app.isRunning !== undefined ? app.isRunning : app.running;
-        
-        return `
-            <div class="app-status-card ${isToolCreated ? 'tool-created-app' : ''}">
-                <div class="app-icon">
-                    <i class="fas ${isRunning ? 'fa-play-circle text-green' : 'fa-stop-circle text-red'}"></i>
-                </div>
-                <div class="app-info">
-                    <h4>${app.name} ${toolBadge}</h4>
-                    <p>${isRunning ? 'Running' : 'Stopped'}</p>
-                    ${app.pid ? `<small>PID: ${app.pid}</small>` : ''}
-                    ${isLaunchAgent ? '<small class="app-type">Launch Agent</small>' : ''}
-                    ${isPM2Process ? '<small class="app-type">PM2 Process</small>' : ''}
-                </div>
-                <div class="app-actions">
-                    ${isLaunchAgent ? `
-                        <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
-                                onclick="toggleLaunchAgent('${app.agentData.label}')">
-                            ${isRunning ? 'Stop' : 'Start'}
-                        </button>
-                        <button class="btn btn-sm btn-outline" 
-                                onclick="viewLaunchAgent('${app.agentData.label}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    ` : isPM2Process ? `
-                        <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
-                                onclick="togglePM2Process('${app.name}')">
-                            ${isRunning ? 'Stop' : 'Start'}
-                        </button>
-                        <button class="btn btn-sm btn-outline" 
-                                onclick="viewPM2Process('${app.name}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    ` : `
-                        <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
-                                onclick="toggleApplication('${app.name}')">
-                            ${isRunning ? 'Stop' : 'Start'}
-                        </button>
-                    `}
-                </div>
-            </div>
-        `;
-    }).join('');
+    container.innerHTML = `
+        <div class="app-status-list">
+            ${applications.map(app => {
+                const isLaunchAgent = app.type === 'launch-agent';
+                const isPM2Process = app.type === 'pm2-process';
+                const isToolCreated = app.source === 'tool-created';
+                const toolBadge = isToolCreated ? '<span class="tool-created-badge"><i class="fas fa-rocket"></i> Up4Evr</span>' : '';
+                
+                // Handle different running status property names
+                const isRunning = app.isRunning !== undefined ? app.isRunning : app.running;
+                
+                return `
+                    <div class="app-status-row ${isToolCreated ? 'tool-created' : ''}">
+                        <div class="app-status-info">
+                            <div class="app-status-icon">
+                                <i class="fas ${isRunning ? 'fa-play-circle' : 'fa-stop-circle'}" 
+                                   style="color: ${isRunning ? '#28a745' : '#dc3545'}"></i>
+                            </div>
+                            <div class="app-details">
+                                <div class="app-name">
+                                    ${app.name}
+                                    ${toolBadge}
+                                    <span class="app-type-badge ${isLaunchAgent ? 'launch-agent' : isPM2Process ? 'pm2-process' : 'system-app'}">
+                                        ${isLaunchAgent ? 'Launch Agent' : isPM2Process ? 'PM2 Process' : 'System App'}
+                                    </span>
+                                </div>
+                                <div class="app-status-text">
+                                    <span class="status ${isRunning ? 'running' : 'stopped'}">
+                                        ${isRunning ? 'Running' : 'Stopped'}
+                                    </span>
+                                    ${app.pid ? `<span class="pid">PID: ${app.pid}</span>` : ''}
+                                    ${isPM2Process && app.pm2Data ? `
+                                        <span class="resource-info">
+                                            CPU: ${app.pm2Data.cpu || 0}% | Memory: ${(app.pm2Data.memory / 1024 / 1024).toFixed(1)}MB
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="app-actions">
+                            ${isLaunchAgent ? `
+                                <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
+                                        onclick="toggleLaunchAgent('${app.agentData?.label || app.name}')">
+                                    <i class="fas ${isRunning ? 'fa-stop' : 'fa-play'}"></i>
+                                    ${isRunning ? 'Stop' : 'Start'}
+                                </button>
+                                <button class="btn btn-sm btn-outline" 
+                                        onclick="viewLaunchAgent('${app.agentData?.label || app.name}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            ` : isPM2Process ? `
+                                <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
+                                        onclick="togglePM2Process('${app.name}')">
+                                    <i class="fas ${isRunning ? 'fa-stop' : 'fa-play'}"></i>
+                                    ${isRunning ? 'Stop' : 'Start'}
+                                </button>
+                                <button class="btn btn-sm btn-outline" 
+                                        onclick="viewPM2Process('${app.name}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            ` : `
+                                <button class="btn btn-sm ${isRunning ? 'btn-danger' : 'btn-success'}" 
+                                        onclick="toggleApplication('${app.name}')">
+                                    <i class="fas ${isRunning ? 'fa-stop' : 'fa-play'}"></i>
+                                    ${isRunning ? 'Stop' : 'Start'}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
 }
 
 function updateRecentActivity(alerts) {

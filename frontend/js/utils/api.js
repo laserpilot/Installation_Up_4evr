@@ -168,7 +168,7 @@ export const MasterConfigAPI = {
     async addPM2Process(processInfo) {
         return await apiCall('/api/config/pm2-processes', {
             method: 'POST',
-            body: JSON.stringify(agentInfo)
+            body: JSON.stringify(processInfo)
         });
     },
 
