@@ -1151,6 +1151,155 @@ body {
     flex-shrink: 0;
 }
 
+/* Service Setup Wizard Styles */
+.service-setup-explanation {
+    margin: var(--spacing-lg) 0;
+}
+
+.service-status {
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-md);
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.status-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.status-icon.checking {
+    background: rgba(142, 142, 147, 0.1);
+    color: var(--secondary-color);
+}
+
+.status-icon.success {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--success-color);
+}
+
+.status-icon.warning {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--warning-color);
+}
+
+.status-icon.error {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--danger-color);
+}
+
+.status-content h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.status-content p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.service-setup-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.service-info {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(0, 122, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.success-note {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: rgba(52, 199, 89, 0.1);
+    border-left: 3px solid var(--success-color);
+    border-radius: 0 8px 8px 0;
+    font-weight: 500;
+}
+
+.info-box.info {
+    background: rgba(0, 122, 255, 0.05);
+    border-left: 3px solid var(--primary-color);
+}
+
+.info-box.success {
+    background: rgba(52, 199, 89, 0.05);
+    border-left: 3px solid var(--success-color);
+}
+
+.info-box.warning {
+    background: rgba(255, 149, 0, 0.05);
+    border-left: 3px solid var(--warning-color);
+}
+
+.info-box.error {
+    background: rgba(255, 59, 48, 0.05);
+    border-left: 3px solid var(--danger-color);
+}
+
+.info-box {
+    padding: var(--spacing-md);
+    border-radius: 0 8px 8px 0;
+    margin: var(--spacing-md) 0;
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.info-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.info-box ul {
+    margin: var(--spacing-sm) 0;
+    padding-left: var(--spacing-lg);
+}
+
+.info-box li {
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.5;
+}
+
+.info-box ol {
+    margin: var(--spacing-sm) 0;
+    padding-left: var(--spacing-lg);
+}
+
+.info-box .note {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
 /* Enhanced Application Monitoring with PM2 Integration */
 .apps-summary {
     margin-bottom: var(--spacing-md);

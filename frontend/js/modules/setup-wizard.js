@@ -8,7 +8,7 @@ import { apiCall } from '../utils/api.js';
 
 // Wizard state variables
 let currentStep = 1;
-const totalSteps = 6; // Based on index.html
+const totalSteps = 7; // Based on index.html
 
 // Step validation function (module-level for access by other functions)
 function validateCurrentStep() {
@@ -42,6 +42,10 @@ function validateCurrentStep() {
                     message: 'Please configure at least one application (desktop app or web URL) before continuing'
                 };
             }
+            return { canProceed: true };
+            
+        case 5: // Service Setup
+            // Service setup is optional - users can skip
             return { canProceed: true };
             
         default:
@@ -131,7 +135,13 @@ export function initSetupWizard() {
             case 4:
                 initApplicationSetup();
                 break;
+            case 5:
+                initServiceSetup();
+                break;
             case 6:
+                // Verification step - no specific initialization needed
+                break;
+            case 7:
                 loadWizardSummary();
                 break;
         }
@@ -2597,4 +2607,218 @@ async function validateSetupCompletion() {
             }
         };
     }
+}
+
+// Service Setup for Step 5
+function initServiceSetup() {
+    console.log('[WIZARD] Initializing Service Setup step...');
+    
+    checkServiceStatus();
+    setupServiceActions();
+}
+
+async function checkServiceStatus() {
+    const statusIcon = document.querySelector('#pm2-service-status .status-icon');
+    const statusText = document.getElementById('service-status-text');
+    const actionContainer = document.getElementById('service-setup-action');
+    
+    try {
+        statusIcon.className = 'status-icon checking';
+        statusIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        statusText.textContent = 'Checking backend service status...';
+        
+        const response = await apiCall('/api/system/status');
+        
+        if (response.pm2_managed) {
+            // PM2 service is already set up
+            statusIcon.className = 'status-icon success';
+            statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            statusText.innerHTML = '<strong>✅ Service auto-start is configured!</strong><br>Your backend will automatically restart after reboots and crashes.';
+            
+            actionContainer.innerHTML = `
+                <div class="info-box success">
+                    <div class="info-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>PM2 Service Active</h4>
+                    </div>
+                    <p>Your backend service is managed by PM2 and configured for:</p>
+                    <ul>
+                        <li>✅ Auto-restart on system boot</li>
+                        <li>✅ Automatic crash recovery</li>
+                        <li>✅ Process monitoring and logging</li>
+                        <li>✅ Resource usage tracking</li>
+                    </ul>
+                    <div class="service-info">
+                        <strong>Service Status:</strong> ${response.status} (PID: ${response.pid})<br>
+                        <strong>Uptime:</strong> ${response.uptime}s<br>
+                        <strong>Management:</strong> PM2 Process Manager
+                    </div>
+                </div>
+            `;
+        } else {
+            // PM2 service needs to be set up
+            statusIcon.className = 'status-icon warning';
+            statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            statusText.innerHTML = '<strong>⚠️ Service auto-start not configured</strong><br>Your backend will not automatically restart after reboots.';
+            
+            actionContainer.innerHTML = `
+                <div class="info-box warning">
+                    <div class="info-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h4>Manual Setup Required</h4>
+                    </div>
+                    <p>Your backend is currently running in <strong>direct mode</strong>. This means:</p>
+                    <ul>
+                        <li>❌ Will not restart after system reboots</li>
+                        <li>❌ No automatic crash recovery</li>
+                        <li>❌ Limited process monitoring</li>
+                        <li>❌ Manual restart required if service fails</li>
+                    </ul>
+                    
+                    <div class="service-setup-buttons">
+                        <button id="install-pm2-service" class="btn btn-primary">
+                            <i class="fas fa-shield-alt"></i>
+                            Install PM2 Service (Recommended)
+                        </button>
+                        <button id="learn-more-pm2" class="btn btn-outline">
+                            <i class="fas fa-info-circle"></i>
+                            Learn More
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="pm2-learn-more" class="info-box info" style="display: none; margin-top: 16px;">
+                    <div class="info-header">
+                        <i class="fas fa-info-circle"></i>
+                        <h4>About PM2 Service Installation</h4>
+                    </div>
+                    <p><strong>PM2 (Process Manager 2)</strong> is a production-grade process manager that will:</p>
+                    <ul>
+                        <li><strong>Auto-start on boot:</strong> Configure your system to automatically start the backend service when the computer boots up</li>
+                        <li><strong>Crash recovery:</strong> Automatically restart the service if it crashes or encounters errors</li>
+                        <li><strong>Resource monitoring:</strong> Track CPU usage, memory consumption, and uptime</li>
+                        <li><strong>Log management:</strong> Centralized logging with automatic log rotation</li>
+                        <li><strong>Zero-downtime restarts:</strong> Update the service without interrupting your installation</li>
+                    </ul>
+                    <p><strong>Installation Process:</strong></p>
+                    <ol>
+                        <li>Register the backend service with PM2</li>
+                        <li>Configure system startup hooks (requires admin password)</li>
+                        <li>Save PM2 configuration for persistence</li>
+                    </ol>
+                    <p class="note"><i class="fas fa-lock"></i> <strong>Note:</strong> You may be prompted for your admin password to configure system-level startup scripts.</p>
+                </div>
+            `;
+            
+            // Add event listeners for the new buttons
+            document.getElementById('install-pm2-service')?.addEventListener('click', installPM2Service);
+            document.getElementById('learn-more-pm2')?.addEventListener('click', () => {
+                const learnMore = document.getElementById('pm2-learn-more');
+                learnMore.style.display = learnMore.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        
+    } catch (error) {
+        console.error('[WIZARD] Error checking service status:', error);
+        statusIcon.className = 'status-icon error';
+        statusIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+        statusText.textContent = 'Failed to check service status. Please try again.';
+        
+        actionContainer.innerHTML = `
+            <div class="info-box error">
+                <div class="info-header">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h4>Status Check Failed</h4>
+                </div>
+                <p>Unable to determine current service status: ${error.message}</p>
+                <button id="retry-status-check" class="btn btn-outline">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            </div>
+        `;
+        
+        document.getElementById('retry-status-check')?.addEventListener('click', checkServiceStatus);
+    }
+}
+
+async function installPM2Service() {
+    const button = document.getElementById('install-pm2-service');
+    const actionContainer = document.getElementById('service-setup-action');
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+    
+    try {
+        showToast('Installing PM2 service - this may take a moment...', 'info');
+        
+        const response = await apiCall('/api/system/install-pm2', {
+            method: 'POST'
+        });
+        
+        if (response.success) {
+            showToast('PM2 service installed successfully!', 'success');
+            
+            // Update the display to show success
+            actionContainer.innerHTML = `
+                <div class="info-box success">
+                    <div class="info-header">
+                        <i class="fas fa-check-circle"></i>
+                        <h4>PM2 Service Installed Successfully!</h4>
+                    </div>
+                    <p>Your backend service is now configured for 24/7 operation:</p>
+                    <ul>
+                        <li>✅ Auto-restart on system boot</li>
+                        <li>✅ Automatic crash recovery</li>
+                        <li>✅ Process monitoring and logging</li>
+                        <li>✅ Resource usage tracking</li>
+                    </ul>
+                    <p class="success-note">
+                        <i class="fas fa-shield-alt"></i>
+                        <strong>Your installation is now protected!</strong> The backend service will automatically restart if your computer reboots or if there are any service crashes.
+                    </p>
+                </div>
+            `;
+            
+            // Update the status display
+            const statusIcon = document.querySelector('#pm2-service-status .status-icon');
+            const statusText = document.getElementById('service-status-text');
+            
+            statusIcon.className = 'status-icon success';
+            statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            statusText.innerHTML = '<strong>✅ Service auto-start is configured!</strong><br>Your backend will automatically restart after reboots and crashes.';
+            
+        } else {
+            throw new Error(response.message || 'Failed to install PM2 service');
+        }
+        
+    } catch (error) {
+        console.error('[WIZARD] PM2 installation failed:', error);
+        showToast(`Failed to install PM2 service: ${error.message}`, 'error');
+        
+        // Re-enable button and restore original text
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-shield-alt"></i> Install PM2 Service (Recommended)';
+        
+        // Show error message
+        actionContainer.innerHTML += `
+            <div class="info-box error" style="margin-top: 16px;">
+                <div class="info-header">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h4>Installation Failed</h4>
+                </div>
+                <p><strong>Error:</strong> ${error.message}</p>
+                <p>You can continue without PM2 service installation, but your backend will not automatically restart after system reboots.</p>
+                <p><strong>Manual Setup:</strong> You can set up PM2 service later from the "Backend Service" tab in the settings section.</p>
+            </div>
+        `;
+    }
+}
+
+function setupServiceActions() {
+    // Skip service setup button
+    document.getElementById('wizard-skip-service')?.addEventListener('click', () => {
+        showToast('Service setup skipped - you can configure this later in Backend Service settings', 'info');
+        window.navigateWizard('next');
+    });
 }

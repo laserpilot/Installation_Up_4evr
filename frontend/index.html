@@ -225,10 +225,14 @@
                                     </div>
                                     <div class="step" data-step="5">
                                         <div class="step-number">5</div>
-                                        <div class="step-label">Verification</div>
+                                        <div class="step-label">Service Setup</div>
                                     </div>
                                     <div class="step" data-step="6">
                                         <div class="step-number">6</div>
+                                        <div class="step-label">Verification</div>
+                                    </div>
+                                    <div class="step" data-step="7">
+                                        <div class="step-number">7</div>
                                         <div class="step-label">Complete</div>
                                     </div>
                                 </div>
@@ -407,8 +411,59 @@
                                     </div>
                                 </div>
 
-                                <!-- Step 5: Verification -->
+                                <!-- Step 5: Service Setup -->
                                 <div class="wizard-step" id="wizard-step-5">
+                                    <div class="step-content">
+                                        <h3><i class="fas fa-server"></i> Backend Service Setup</h3>
+                                        <p>Configure your installation to run 24/7 by setting up automatic backend service management.</p>
+
+                                        <div class="service-setup-explanation">
+                                            <div class="info-box info">
+                                                <div class="info-header">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    <h4>Why is this important?</h4>
+                                                </div>
+                                                <p>For your installation to truly run <strong>"forever"</strong>, the backend service needs to automatically restart:</p>
+                                                <ul>
+                                                    <li><strong>After system reboots</strong> - Ensures your installation comes back online</li>
+                                                    <li><strong>If the service crashes</strong> - Automatic recovery without manual intervention</li>
+                                                    <li><strong>During system updates</strong> - Maintains uptime through system maintenance</li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="service-status" id="pm2-service-status">
+                                                <div class="status-item">
+                                                    <div class="status-icon checking">
+                                                        <i class="fas fa-spinner fa-spin"></i>
+                                                    </div>
+                                                    <div class="status-content">
+                                                        <h4>Backend Service Status</h4>
+                                                        <p id="service-status-text">Checking current status...</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="service-setup-action" id="service-setup-action">
+                                                <!-- Populated by JavaScript based on status -->
+                                            </div>
+                                        </div>
+
+                                        <div class="step-actions">
+                                            <button class="btn btn-secondary" id="wizard-back-5">
+                                                <i class="fas fa-arrow-left"></i> Back
+                                            </button>
+                                            <button class="btn btn-outline" id="wizard-skip-service">
+                                                Skip for Now
+                                            </button>
+                                            <button class="btn btn-primary" id="wizard-next-5">
+                                                Continue <i class="fas fa-arrow-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 6: Verification -->
+                                <div class="wizard-step" id="wizard-step-6">
                                     <div class="step-content">
                                         <h3><i class="fas fa-check-circle"></i> Verification</h3>
                                         <p>Let's test your setup to make sure everything works correctly.</p>
@@ -418,21 +473,21 @@
                                         </div>
 
                                         <div class="step-actions">
-                                            <button class="btn btn-secondary" id="wizard-back-4">
+                                            <button class="btn btn-secondary" id="wizard-back-6">
                                                 <i class="fas fa-arrow-left"></i> Back
                                             </button>
                                             <button class="btn btn-outline" id="wizard-run-tests">
                                                 <i class="fas fa-play"></i> Run Tests (Optional)
                                             </button>
-                                            <button class="btn btn-primary" id="wizard-next-5">
+                                            <button class="btn btn-primary" id="wizard-next-6">
                                                 Continue <i class="fas fa-arrow-right"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Step 6: Complete -->
-                                <div class="wizard-step" id="wizard-step-6">
+                                <!-- Step 7: Complete -->
+                                <div class="wizard-step" id="wizard-step-7">
                                     <div class="step-content">
                                         <div class="completion-icon">
                                             <i class="fas fa-check-circle"></i>
