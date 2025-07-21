@@ -11,8 +11,7 @@ import { monitoringDisplay } from '../utils/monitoring-display.js';
 const MONITORING_THRESHOLDS = {
     cpu: { warning: 70, critical: 85 },
     memory: { warning: 75, critical: 90 },
-    disk: { warning: 80, critical: 95 },
-    temperature: { warning: 70, critical: 85 }
+    disk: { warning: 80, critical: 95 }
 };
 
 let isInitialized = false;

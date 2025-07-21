@@ -70,22 +70,6 @@ async function loadMonitoringConfig() {
                 }
             }
             
-            // Temperature thresholds
-            if (thresholds.temperature) {
-                const tempWarningSlider = document.getElementById('temperature-warning-slider');
-                const tempWarningInput = document.getElementById('temperature-warning-input');
-                const tempCriticalSlider = document.getElementById('temperature-critical-slider');
-                const tempCriticalInput = document.getElementById('temperature-critical-input');
-                
-                if (tempWarningSlider && tempWarningInput) {
-                    tempWarningSlider.value = thresholds.temperature.warning || 75;
-                    tempWarningInput.value = thresholds.temperature.warning || 75;
-                }
-                if (tempCriticalSlider && tempCriticalInput) {
-                    tempCriticalSlider.value = thresholds.temperature.critical || 85;
-                    tempCriticalInput.value = thresholds.temperature.critical || 85;
-                }
-            }
         }
         
         // Load monitoring settings
@@ -126,10 +110,6 @@ async function saveMonitoringConfig() {
                 disk: {
                     warning: parseInt(document.getElementById('disk-warning-input')?.value || 80),
                     critical: parseInt(document.getElementById('disk-critical-input')?.value || 95)
-                },
-                temperature: {
-                    warning: parseInt(document.getElementById('temperature-warning-input')?.value || 75),
-                    critical: parseInt(document.getElementById('temperature-critical-input')?.value || 85)
                 }
             },
             monitoring: {
@@ -206,10 +186,6 @@ async function applyMonitoringConfig() {
                 disk: {
                     warning: parseInt(document.getElementById('disk-warning-input')?.value || 80),
                     critical: parseInt(document.getElementById('disk-critical-input')?.value || 95)
-                },
-                temperature: {
-                    warning: parseInt(document.getElementById('temperature-warning-input')?.value || 75),
-                    critical: parseInt(document.getElementById('temperature-critical-input')?.value || 85)
                 }
             },
             monitoring: {
@@ -250,7 +226,7 @@ export function initMonitoringConfig() {
     setupMonitoringConfigButtons();
     setupStatusDisplay();
     setupThresholdControls();
-    setupLaunchAgentSuggestions();
+    // setupLaunchAgentSuggestions(); // Disabled - functionality deprecated
     
     // Initialize with current config and status
     loadMonitoringConfig();
@@ -260,10 +236,10 @@ export function initMonitoringConfig() {
         window.app.monitoringData.refreshData();
     }
     
-    // Load launch agent suggestions after initial load
-    setTimeout(() => {
-        loadLaunchAgentSuggestions();
-    }, 1000);
+    // Load launch agent suggestions after initial load - DISABLED
+    // setTimeout(() => {
+    //     loadLaunchAgentSuggestions();
+    // }, 1000);
 }
 
 // Launch Agent Suggestions Functionality
@@ -520,7 +496,7 @@ function setupStatusDisplay() {
 function setupThresholdControls() {
     console.log('[THRESHOLD] Setting up threshold controls...');
     // Setup synchronization between sliders and number inputs
-    const thresholdTypes = ['cpu', 'memory', 'disk', 'temperature'];
+    const thresholdTypes = ['cpu', 'memory', 'disk'];
     const thresholdLevels = ['warning', 'critical'];
     
     let setupCount = 0;

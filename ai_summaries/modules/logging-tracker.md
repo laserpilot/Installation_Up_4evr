@@ -265,6 +265,53 @@ grep '"category":"system"' ~/.installation-up-4evr/logs/system-$(date +%Y-%m-%d)
 
 ---
 
+---
+
+## Design Philosophy and Recommendations
+
+This section outlines the recommended best practices for the logging architecture, balancing immediate forensic needs with future scalability for integration with log analysis platforms like Grafana.
+
+### Logging Strategy: Multiple, Structured Log Files
+
+The recommended approach is to use **multiple, separate log files per functional area** rather than a single, monolithic log file. This provides significant advantages in clarity, searchability, and management.
+
+| Feature | Single Log File | Multiple Log Files (Recommended) |
+| :--- | :--- | :--- |
+| **Clarity** | **Poor.** Critical app crashes are mixed with routine CPU stats, making it hard to see the signal for the noise. | **Excellent.** When a user wants to know why the network is down, they can just open `ping.log`. The context is clean. |
+| **Searchability** | **Difficult.** Requires complex `grep` commands to filter by source or severity. Slow on large files. | **Easy.** The first step of filtering is simply choosing the right file. Searching within is much faster. |
+| **Size Management** | **Difficult.** The file can grow to gigabytes very quickly, becoming unwieldy to open, search, or rotate. | **Easy.** You can set different rotation policies. `system.log` might rotate every 10MB, while the critical `events.log` might be kept for longer. |
+| **Grafana/Loki** | **Possible, but requires heavy parsing.** You have to configure complex rules to parse each line and assign labels based on content. | **Ideal.** This model maps perfectly to modern logging systems. Each file becomes a distinct "log stream" with its own set of labels, making queries fast and simple. |
+
+### Proposed Log File Structure
+
+A `logs` directory in the backend should contain specific files for each component:
+
+-   `logs/system.log`: For periodic system metrics (CPU, memory, disk usage). This will be the "noisiest" log but is useful for performance analysis.
+-   `logs/application.log`: For all events related to managed processes (start, stop, crash, restart). This is the most important log for debugging application behavior.
+-   `logs/ping.log`: For network connectivity checks. A clean history of network health.
+-   `logs/events.log`: **(The "Human-Readable" Log)**. A high-level log that only records significant events: critical errors, user actions (e.g., "User created new web process"), and daily health summaries. It should be clean enough for a non-technical user to read.
+
+### Log Format: Structured JSON
+
+To make logs machine-readable and easy to filter, each entry should be a JSON object.
+
+**Example `application.log` entry:**
+```json
+{"timestamp":"2025-07-10T14:22:01Z", "level":"error", "component":"process-manager", "message":"Process 'Main-Kiosk-App' crashed with exit code 1.", "details":{"pid":12345, "restarts":3, "expected":true}}
+```
+
+**Example `system.log` entry:**
+```json
+{"timestamp":"2025-07-10T14:23:00Z", "level":"info", "component":"system-monitor", "message":"Periodic health check.", "metrics":{"cpu_usage":25.5, "memory_usage_gb":4.2, "disk_percent":68}}
+```
+
+### Implementation Notes
+
+-   **Log Rotation:** Use a library like `winston` or `pino` in the Node.js backend to automatically manage log file size and archive old logs.
+-   **Grafana Integration:** This multi-file, structured approach is ideal for Grafana. Each log file can be treated as a separate stream with its own labels, simplifying queries and dashboard creation significantly.
+
+---
+
 **Next Steps:**
 1. Test logging system with real operations and validate file creation
 2. Implement Phase 2: Extend logging coverage to system preferences and UI interactions

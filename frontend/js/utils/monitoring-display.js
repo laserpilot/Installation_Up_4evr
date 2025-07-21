@@ -17,8 +17,7 @@ export class MonitoringDisplayManager {
             thresholds: {
                 cpu: { warning: 60, critical: 80 },
                 memory: { warning: 70, critical: 90 },
-                disk: { warning: 80, critical: 90 },
-                temperature: { warning: 75, critical: 85 }
+                disk: { warning: 80, critical: 90 }
             }
         };
     }

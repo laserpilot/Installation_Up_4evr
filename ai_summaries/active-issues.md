@@ -10,10 +10,10 @@
 *Critical issues that block core functionality*
 
 **Phase 2 - Critical Fixes In Progress:**
-- [ ] **[Notifications]** Test functionality doesn't use saved configuration - test methods need fallback to saved config when `data.config` not provided in platform-manager.js
-- [ ] **[Backend Service]** Frontend module connection issues - APIs work but UI shows connection problems
-- [ ] **[Dashboard]** PM2 Processes section shows "Checking" but never updates - frontend display issue
-- [ ] **[Dashboard]** System Uptime card shows Unknown and 0s - frontend display fix needed
+- [x] **[Notifications]** Test functionality doesn't use saved configuration - test methods need fallback to saved config when `data.config` not provided in platform-manager.js
+- [x] **[Backend Service]** Frontend module connection issues - APIs work but UI shows connection problems
+- [x] **[Dashboard]** PM2 Processes section shows "Checking" but never updates - frontend display issue
+- [x] **[Dashboard]** System Uptime card shows Unknown and 0s - frontend display fix needed
 
 **Phase 1 Investigation Complete ✅:**
 - [x] Backend Service APIs verified working (all endpoints functional)
