@@ -46,14 +46,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from frontend directory
-// Fix path resolution for packaged vs development
+// Fix path resolution for packaged vs development (cross-platform)
 let frontendPath;
 if (__dirname.includes('.app/Contents/Resources')) {
-  // In packaged Electron app, frontend files are in extraResources
+  // In packaged Electron app (macOS), frontend files are in extraResources
+  frontendPath = path.join(__dirname, '../frontend');
+} else if (process.platform === 'win32' && __dirname.includes('resources\\app\\backend')) {
+  // In packaged Electron app (Windows), frontend files are in extraResources
   frontendPath = path.join(__dirname, '../frontend');
 } else {
-  // In development
-  frontendPath = path.join(__dirname, '../frontend');
+  // In development (cross-platform)
+  frontendPath = path.resolve(__dirname, '../frontend');
 }
 
 console.log('SERVER: Serving static files from:', frontendPath);
@@ -110,7 +113,7 @@ app.use((req, res, next) => {
 
 // Root route - serve frontend
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // API Routes

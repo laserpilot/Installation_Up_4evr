@@ -1,7 +1,7 @@
 {
   "name": "installation-up-4evr-backend",
   "version": "1.0.0",
-  "description": "Backend automation tools for Mac installation setups",
+  "description": "Backend automation tools for macOS and Windows installation setups",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -14,6 +14,8 @@
   },
   "keywords": [
     "macos",
+    "windows",
+    "cross-platform",
     "installation",
     "automation",
     "system-preferences",
@@ -26,7 +28,9 @@
     "axios": "^1.10.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "pm2": "^6.0.8"
+    "pm2": "^6.0.8",
+    "winreg": "^1.2.5",
+    "node-powershell": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
