@@ -207,7 +207,7 @@ async function loadSystemCheck() {
         {
             id: 'computer-sleep',
             name: 'Computer Sleep Disabled',
-            description: 'Prevents your Mac from going to sleep and stopping your installation',
+            description: 'Prevents your computer from going to sleep and stopping your installation',
             whyItMatters: 'If your computer sleeps, your installation will stop running',
             howToCheck: 'System Preferences → Energy Saver → Computer Sleep: Never',
             icon: 'fas fa-power-off'
@@ -1923,7 +1923,7 @@ async function verifyLaunchAgentStatus(agentLabel) {
                 </div>
                 <div class="status-explanation">
                     ${status.loaded 
-                        ? '<p class="text-success">✓ Launch agent is properly registered with macOS</p>'
+                        ? '<p class="text-success">✓ Process is properly registered with the system</p>'
                         : '<p class="text-warning">⚠ Launch agent may need time to load or manual loading</p>'
                     }
                     ${status.running 

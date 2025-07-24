@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Installation Up 4evr - Mac Automation Tool</title>
+    <title>Installation Up 4evr - Installation Automation Tool</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
 </head>
@@ -21,7 +21,7 @@
         <header class="header">
             <div class="header-content">
                 <h1><i class="fas fa-desktop"></i> Installation Up 4evr</h1>
-                <p>Automate Mac setup for creative technology installations</p>
+                <p>Automate system setup for creative technology installations</p>
             </div>
             <div class="status-indicators">
                 <div class="status-indicator" id="server-status">
@@ -247,7 +247,7 @@
                                             <i class="fas fa-desktop"></i>
                                         </div>
                                         <h3>Welcome to Installation Up 4evr</h3>
-                                        <p>This wizard will guide you through setting up your Mac for 24/7 installation
+                                        <p>This wizard will guide you through setting up your computer for 24/7 installation
                                             use. We'll configure system settings, set up monitoring, and ensure your
                                             installation runs reliably.</p>
 
@@ -351,9 +351,11 @@
                                                     <div class="form-group">
                                                         <label for="wizard-browser-path">Browser:</label>
                                                         <select id="wizard-browser-path" class="form-input">
-                                                            <option value="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome">Google Chrome</option>
-                                                            <option value="/Applications/Chromium.app/Contents/MacOS/Chromium">Chromium</option>
-                                                            <option value="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge">Microsoft Edge</option>
+                                                            <option value="">Select a browser...</option>
+                                                            <option value="chrome">Google Chrome (Auto-detect)</option>
+                                                            <option value="edge">Microsoft Edge (Auto-detect)</option>
+                                                            <option value="chromium">Chromium (Auto-detect)</option>
+                                                            <option value="custom">Custom Path...</option>
                                                         </select>
                                                         <small class="help-text">Select the browser to use for kiosk mode</small>
                                                     </div>
@@ -526,7 +528,7 @@
                     <div id="system-tab" class="tab-pane">
                         <section class="card">
                             <h2><i class="fas fa-cog"></i> System Preferences</h2>
-                            <p>Configure macOS settings for 24/7 installation use</p>
+                            <p>Configure system settings for 24/7 installation use</p>
 
                             <div class="refresh-section">
                                 <button id="refresh-settings" class="btn btn-outline btn-sm"
@@ -555,7 +557,7 @@
 
                             <div class="action-buttons">
                                 <button id="verify-settings" class="btn btn-secondary"
-                                    title="Check if your current macOS settings match the recommended configuration for 24/7 installations">
+                                    title="Check if your current system settings match the recommended configuration for 24/7 installations">
                                     <i class="fas fa-search"></i> Verify Current Settings
                                 </button>
                                 <button id="apply-required" class="btn btn-primary"
@@ -571,7 +573,7 @@
                                     <i class="fas fa-terminal"></i> Generate Terminal Commands
                                 </button>
                                 <button id="generate-restore-script" class="btn btn-warning"
-                                    title="Generate terminal script to restore all macOS settings back to defaults">
+                                    title="Generate script to restore all system settings back to defaults">
                                     <i class="fas fa-undo"></i> Generate Restore Script
                                 </button>
                             </div>
@@ -988,14 +990,10 @@ curl -X POST /api/installation/settings/network/timeout \\
                                         <div class="form-group">
                                             <label for="browser-path">Browser Path:</label>
                                             <select id="browser-path">
-                                                <option
-                                                    value="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome">
-                                                    Google Chrome</option>
-                                                <option value="/Applications/Chromium.app/Contents/MacOS/Chromium">
-                                                    Chromium</option>
-                                                <option
-                                                    value="/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge">
-                                                    Microsoft Edge</option>
+                                                <option value="">Select a browser...</option>
+                                                <option value="chrome">Google Chrome (Auto-detect)</option>
+                                                <option value="edge">Microsoft Edge (Auto-detect)</option>
+                                                <option value="chromium">Chromium (Auto-detect)</option>
                                                 <option value="custom">Custom Browser Path...</option>
                                             </select>
                                             <input type="text" id="custom-browser-path" placeholder="/path/to/browser"
@@ -1206,7 +1204,7 @@ curl -X POST /api/installation/settings/network/timeout \\
                                     <div class="form-group">
                                         <label for="program-filepath">Program File Path:</label>
                                         <input type="text" id="program-filepath"
-                                            placeholder="/Applications/YourApp.app/Contents/MacOS/YourApp">
+                                            placeholder="/path/to/your/application/executable">
                                         <small class="help-text">Specify the exact executable path for the launch
                                             agent</small>
                                     </div>

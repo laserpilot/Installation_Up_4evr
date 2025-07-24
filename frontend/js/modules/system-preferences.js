@@ -283,7 +283,7 @@ async function generateRestoreScript() {
                     <div class="modal-body">
                         <div class="warning-banner">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <strong>Warning:</strong> This will restore all system settings to macOS defaults.
+                            <strong>Warning:</strong> This will restore all system settings to defaults.
                         </div>
                         <p>Copy and paste these commands into Terminal to restore system settings:</p>
                         <pre class="code-block" id="restore-commands">${commands}</pre>
@@ -543,7 +543,7 @@ function initializeTooltips() {
     // Add tooltip to Verify Settings button
     addTooltip('verify-settings', {
         title: "Why verify settings?",
-        content: "Check your current macOS settings against recommended values for creative installations. This helps ensure your system won't sleep during performances or automatically restart applications.",
+        content: "Check your current system settings against recommended values for creative installations. This helps ensure your system won't sleep during performances or automatically restart applications.",
         undoInfo: "Verification is read-only and makes no changes to your system."
     });
     
@@ -551,7 +551,7 @@ function initializeTooltips() {
     addTooltip('apply-required', {
         title: "Why these settings matter",
         content: "Required settings prevent system sleep, disable screensavers, and stop automatic updates during creative performances. These are essential for uninterrupted installations.",
-        undoInfo: "To undo: Use 'Generate Restore Script' button to create commands that revert to macOS defaults."
+        undoInfo: "To undo: Use 'Generate Restore Script' button to create commands that revert to system defaults."
     });
     
     // Add tooltip to Generate Script button
