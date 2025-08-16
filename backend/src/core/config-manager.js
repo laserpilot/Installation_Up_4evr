@@ -97,6 +97,77 @@ class ConfigManager {
         theme: 'light'
       },
 
+      // Enhanced Logging Configuration
+      logging: {
+        enabled: true,
+        level: 'INFO', // DEBUG, INFO, WARN, ERROR, CRITICAL
+        enableForensics: true,
+        enableConsole: true,
+        maxFileSize: 100 * 1024 * 1024, // 100MB
+        retentionDays: 30,
+        categories: {
+          system: true,
+          application: true,
+          security: true,
+          performance: true,
+          user_action: true,
+          api: true,
+          monitoring: true,
+          integration: true,
+          baseline: true,
+          exception: true,
+          anomaly: true,
+          incident: true
+        }
+      },
+
+      // Baseline System Logging
+      baseline: {
+        enabled: true,
+        interval: 30 * 60 * 1000, // 30 minutes
+        captureProcesses: true,
+        captureNetwork: false,
+        captureDisplays: false,
+        captureOpenFiles: false, // More intensive, off by default
+        maxProcessCount: 50,
+        retentionHours: 48,
+        anomalyDetection: true,
+        alertOnSignificantChanges: true
+      },
+
+      // Screenshot Logging for Visual Forensics
+      screenshots: {
+        enabled: false, // OFF by default for privacy
+        interval: 60 * 60 * 1000, // 1 hour
+        retentionHours: 48,
+        quality: 50, // 0-100, lower = smaller files
+        format: 'jpg', // jpg or png
+        onlyOnEvents: false, // Only capture during incidents
+        maxFiles: 100,
+        temporaryEnable: {
+          duration: 60, // minutes
+          allowRemoteActivation: false
+        }
+      },
+
+      // Forensic Investigation Settings
+      forensics: {
+        enabled: true,
+        autoInvestigate: true,
+        investigationTimeWindow: 2, // hours back to look
+        exportInvestigations: true,
+        exportFormat: 'json', // json or txt
+        correlationTracking: true,
+        incidentPriority: {
+          autoTriage: true,
+          escalationThresholds: {
+            criticalEvents: 1,
+            errorThreshold: 10,
+            timeWindow: 30 // minutes
+          }
+        }
+      },
+
       // Installation settings
       installation: {
         name: 'Installation Up 4evr',
@@ -327,6 +398,165 @@ class ConfigManager {
 
   async updateUserPreference(key, value) {
     await this.update(`userPreferences.${key}`, value);
+  }
+
+  // Enhanced Logging Configuration Helpers
+  getLoggingConfig() {
+    return this.get('logging');
+  }
+
+  async updateLoggingConfig(config) {
+    await this.update('logging', {
+      ...this.get('logging'),
+      ...config
+    });
+  }
+
+  async updateLoggingLevel(level) {
+    await this.update('logging.level', level);
+  }
+
+  async toggleLoggingCategory(category, enabled) {
+    await this.update(`logging.categories.${category}`, enabled);
+  }
+
+  // Baseline Logging Configuration Helpers
+  getBaselineConfig() {
+    return this.get('baseline');
+  }
+
+  async updateBaselineConfig(config) {
+    await this.update('baseline', {
+      ...this.get('baseline'),
+      ...config
+    });
+  }
+
+  async updateBaselineInterval(interval) {
+    await this.update('baseline.interval', interval);
+  }
+
+  async toggleBaselineCapture(captureType, enabled) {
+    const validTypes = ['captureProcesses', 'captureNetwork', 'captureDisplays', 'captureOpenFiles'];
+    if (validTypes.includes(captureType)) {
+      await this.update(`baseline.${captureType}`, enabled);
+    }
+  }
+
+  // Screenshot Configuration Helpers
+  getScreenshotConfig() {
+    return this.get('screenshots');
+  }
+
+  async updateScreenshotConfig(config) {
+    await this.update('screenshots', {
+      ...this.get('screenshots'),
+      ...config
+    });
+  }
+
+  async enableScreenshots(enabled = true) {
+    await this.update('screenshots.enabled', enabled);
+  }
+
+  async updateScreenshotInterval(interval) {
+    await this.update('screenshots.interval', interval);
+  }
+
+  async updateScreenshotQuality(quality) {
+    if (quality >= 0 && quality <= 100) {
+      await this.update('screenshots.quality', quality);
+    }
+  }
+
+  // Forensics Configuration Helpers
+  getForensicsConfig() {
+    return this.get('forensics');
+  }
+
+  async updateForensicsConfig(config) {
+    await this.update('forensics', {
+      ...this.get('forensics'),
+      ...config
+    });
+  }
+
+  async updateInvestigationTimeWindow(hours) {
+    await this.update('forensics.investigationTimeWindow', hours);
+  }
+
+  async updateEscalationThresholds(thresholds) {
+    await this.update('forensics.incidentPriority.escalationThresholds', {
+      ...this.get('forensics.incidentPriority.escalationThresholds'),
+      ...thresholds
+    });
+  }
+
+  // Combined Forensic System Configuration
+  getForensicSystemConfig() {
+    return {
+      logging: this.get('logging'),
+      baseline: this.get('baseline'),
+      screenshots: this.get('screenshots'),
+      forensics: this.get('forensics')
+    };
+  }
+
+  async enableForensicMode(enabled = true) {
+    // Enable/disable the entire forensic system
+    await this.update('logging.enableForensics', enabled);
+    await this.update('baseline.enabled', enabled);
+    await this.update('forensics.enabled', enabled);
+    // Note: Screenshots remain user-controlled due to privacy
+  }
+
+  async configureForInstallationMode() {
+    // Optimize configuration for installation environments
+    await this.updateBaselineConfig({
+      enabled: true,
+      interval: 15 * 60 * 1000, // 15 minutes for more frequent monitoring
+      captureProcesses: true,
+      captureNetwork: true,
+      captureDisplays: true,
+      anomalyDetection: true,
+      alertOnSignificantChanges: true
+    });
+    
+    await this.updateLoggingConfig({
+      level: 'INFO',
+      enableForensics: true,
+      retentionDays: 7 // Shorter retention for installations
+    });
+
+    await this.updateForensicsConfig({
+      autoInvestigate: true,
+      investigationTimeWindow: 4, // Longer window for installation issues
+      exportInvestigations: true
+    });
+  }
+
+  async configureForProductionMode() {
+    // Optimize configuration for production environments
+    await this.updateBaselineConfig({
+      enabled: true,
+      interval: 60 * 60 * 1000, // 1 hour for production
+      captureProcesses: true,
+      captureNetwork: false, // Less network monitoring in production
+      captureDisplays: false, // Usually no displays in production
+      anomalyDetection: true
+    });
+
+    await this.updateLoggingConfig({
+      level: 'WARN', // Less verbose in production
+      enableForensics: true,
+      retentionDays: 30
+    });
+
+    await this.updateForensicsConfig({
+      autoInvestigate: true,
+      investigationTimeWindow: 1, // Shorter window for production
+      exportInvestigations: true
+    });
   }
 
   // Master Configuration Management

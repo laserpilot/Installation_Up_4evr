@@ -5,6 +5,7 @@
 
 const EventEmitter = require('events');
 const { PlatformFactory, MonitoringDataInterface } = require('../interfaces');
+const { LOG_LEVELS } = require('../logger');
 
 class MonitoringCore extends EventEmitter {
   constructor(configManager) {
@@ -16,6 +17,7 @@ class MonitoringCore extends EventEmitter {
     this.appHistory = new Map();
     this.monitoringInterval = null;
     this.heartbeatInterval = null;
+    this.dailyReportInterval = null;
     this.notifications = [];
     this.alertThresholds = {
       cpuUsage: 90,
@@ -25,6 +27,16 @@ class MonitoringCore extends EventEmitter {
       appRestarts: 5
     };
     this.logger = null;
+    
+    // Daily reporting data
+    this.dailyMetrics = [];
+    this.lastDailyReport = null;
+    this.dailyStats = {
+      alerts: [],
+      uptimeEvents: [],
+      performanceSpikes: [],
+      errors: []
+    };
 
     // Initialize platform-specific provider
     try {
@@ -71,6 +83,7 @@ class MonitoringCore extends EventEmitter {
       try {
         await this.collectMonitoringData();
         this.evaluateAlerts();
+        this.collectDailyMetrics(); // Collect metrics for daily reporting
       } catch (error) {
         console.error('[ERROR] Monitoring data collection failed:', error);
       }
@@ -83,6 +96,9 @@ class MonitoringCore extends EventEmitter {
       },
       Math.min(interval, 60000)
     ); // Heartbeat at least every minute
+
+    // Start daily reporting
+    this.startDailyReporting();
 
     // Initial data collection
     await this.collectMonitoringData();
@@ -100,6 +116,10 @@ class MonitoringCore extends EventEmitter {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
+    }
+    if (this.dailyReportInterval) {
+      clearInterval(this.dailyReportInterval);
+      this.dailyReportInterval = null;
     }
     console.log('[INFO] Monitoring system stopped');
   }
@@ -329,6 +349,452 @@ class MonitoringCore extends EventEmitter {
    */
   getApplicationHistory(appName) {
     return this.appHistory.get(appName) || [];
+  }
+
+  /**
+   * Start daily reporting system
+   */
+  startDailyReporting() {
+    const notificationConfig = this.configManager.get('notifications') || {};
+    const triggers = notificationConfig.triggers || {};
+    
+    if (!triggers.daily_status) {
+      return; // Daily reporting disabled
+    }
+
+    // Calculate next 9 AM
+    const now = new Date();
+    let nextReport = new Date();
+    nextReport.setHours(9, 0, 0, 0); // 9 AM
+    
+    if (nextReport <= now) {
+      // If it's past 9 AM today, schedule for tomorrow
+      nextReport.setDate(nextReport.getDate() + 1);
+    }
+
+    const msUntilNextReport = nextReport.getTime() - now.getTime();
+
+    if (this.logger) {
+      this.logger.info('monitoring', `Daily report scheduled for ${nextReport.toISOString()}`, {
+        millisecondsUntil: msUntilNextReport
+      });
+    }
+
+    // Set timeout for first report
+    setTimeout(() => {
+      this.generateDailyReport();
+      
+      // Then set up daily interval (24 hours)
+      this.dailyReportInterval = setInterval(() => {
+        this.generateDailyReport();
+      }, 24 * 60 * 60 * 1000);
+      
+    }, msUntilNextReport);
+  }
+
+  /**
+   * Collect metrics for daily reporting
+   */
+  collectDailyMetrics() {
+    const timestamp = new Date();
+    const system = this.monitoringData.system;
+
+    if (!system) return;
+
+    const metric = {
+      timestamp: timestamp.toISOString(),
+      cpu: system.cpu?.usage || 0,
+      memory: system.memory?.usage || 0,
+      disk: system.disk?.usage || 0,
+      uptime: system.uptime?.seconds || 0,
+      applicationCount: this.monitoringData.applications?.length || 0,
+      status: this.getOverallStatus()
+    };
+
+    this.dailyMetrics.push(metric);
+
+    // Keep only last 24 hours of metrics (assuming 30-second intervals = 2880 data points)
+    const maxMetrics = 2880;
+    if (this.dailyMetrics.length > maxMetrics) {
+      this.dailyMetrics = this.dailyMetrics.slice(-maxMetrics);
+    }
+
+    // Detect performance spikes
+    this.detectPerformanceSpikes(metric);
+  }
+
+  /**
+   * Detect performance spikes for daily reporting
+   */
+  detectPerformanceSpikes(currentMetric) {
+    if (this.dailyMetrics.length < 10) return; // Need some history
+
+    const recentMetrics = this.dailyMetrics.slice(-10);
+    const avgCpu = recentMetrics.reduce((sum, m) => sum + m.cpu, 0) / recentMetrics.length;
+    const avgMemory = recentMetrics.reduce((sum, m) => sum + m.memory, 0) / recentMetrics.length;
+
+    // Detect spikes (current usage 50% higher than recent average)
+    if (currentMetric.cpu > avgCpu * 1.5 && currentMetric.cpu > 60) {
+      this.dailyStats.performanceSpikes.push({
+        timestamp: currentMetric.timestamp,
+        type: 'cpu',
+        value: currentMetric.cpu,
+        average: avgCpu
+      });
+    }
+
+    if (currentMetric.memory > avgMemory * 1.5 && currentMetric.memory > 60) {
+      this.dailyStats.performanceSpikes.push({
+        timestamp: currentMetric.timestamp,
+        type: 'memory',
+        value: currentMetric.memory,
+        average: avgMemory
+      });
+    }
+
+    // Limit spike history to prevent memory bloat
+    if (this.dailyStats.performanceSpikes.length > 100) {
+      this.dailyStats.performanceSpikes = this.dailyStats.performanceSpikes.slice(-50);
+    }
+  }
+
+  /**
+   * Generate comprehensive daily report
+   */
+  async generateDailyReport() {
+    try {
+      const report = await this.compileDailyReport();
+      const notificationData = this.formatDailyReportForNotification(report);
+
+      // Emit daily report event
+      this.emit('dailyReport', report);
+
+      // Log the daily report
+      if (this.logger) {
+        this.logger.monitoring(LOG_LEVELS.INFO, 'Daily system report generated', {
+          report: report.summary,
+          notificationChannels: notificationData.channels
+        });
+      }
+
+      // Send notification if configured
+      const notificationConfig = this.configManager.get('notifications') || {};
+      if (notificationConfig.enabled) {
+        this.emit('notification', {
+          type: 'daily_report',
+          data: notificationData,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      this.lastDailyReport = report;
+
+      // Reset daily stats for next day
+      this.resetDailyStats();
+
+    } catch (error) {
+      if (this.logger) {
+        this.logger.logException(error, {
+          operation: 'generateDailyReport',
+          component: 'MonitoringCore'
+        });
+      }
+    }
+  }
+
+  /**
+   * Compile comprehensive daily report data
+   */
+  async compileDailyReport() {
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    const todayMetrics = this.dailyMetrics.filter(m => 
+      new Date(m.timestamp) > yesterday
+    );
+
+    // Calculate statistics
+    const stats = this.calculateDailyStats(todayMetrics);
+    
+    // Get log statistics if logger is available
+    let logStats = {};
+    if (this.logger) {
+      try {
+        logStats = await this.logger.getLogStats(24);
+      } catch (error) {
+        logStats = { error: 'Failed to get log statistics' };
+      }
+    }
+
+    const report = {
+      generatedAt: now.toISOString(),
+      installationId: this.installationId,
+      period: {
+        start: yesterday.toISOString(),
+        end: now.toISOString(),
+        hours: 24
+      },
+      summary: {
+        status: this.getOverallStatus(),
+        uptime: this.formatUptime(process.uptime()),
+        dataPoints: todayMetrics.length,
+        alertCount: this.dailyStats.alerts.length,
+        errorCount: logStats.errorCount || 0,
+        spikeCount: this.dailyStats.performanceSpikes.length
+      },
+      performance: stats,
+      applications: {
+        monitored: this.watchedApplications.size,
+        current: this.monitoringData.applications?.length || 0,
+        issues: this.monitoringData.applications?.filter(app => 
+          app.status === 'stopped' && app.shouldBeRunning
+        ).length || 0
+      },
+      alerts: this.dailyStats.alerts.slice(-10), // Last 10 alerts
+      spikes: this.dailyStats.performanceSpikes.slice(-5), // Last 5 spikes
+      logs: logStats,
+      trends: this.calculateTrends(todayMetrics),
+      recommendations: this.generateRecommendations(stats, logStats)
+    };
+
+    return report;
+  }
+
+  /**
+   * Calculate daily statistics from metrics
+   */
+  calculateDailyStats(metrics) {
+    if (metrics.length === 0) {
+      return {
+        cpu: { min: 0, max: 0, avg: 0 },
+        memory: { min: 0, max: 0, avg: 0 },
+        disk: { min: 0, max: 0, avg: 0 }
+      };
+    }
+
+    const calculate = (values) => ({
+      min: Math.min(...values),
+      max: Math.max(...values),
+      avg: values.reduce((sum, val) => sum + val, 0) / values.length
+    });
+
+    return {
+      cpu: calculate(metrics.map(m => m.cpu)),
+      memory: calculate(metrics.map(m => m.memory)),
+      disk: calculate(metrics.map(m => m.disk)),
+      statusDistribution: this.calculateStatusDistribution(metrics)
+    };
+  }
+
+  /**
+   * Calculate status distribution
+   */
+  calculateStatusDistribution(metrics) {
+    const distribution = { good: 0, warning: 0, critical: 0 };
+    metrics.forEach(metric => {
+      distribution[metric.status] = (distribution[metric.status] || 0) + 1;
+    });
+    return distribution;
+  }
+
+  /**
+   * Calculate performance trends
+   */
+  calculateTrends(metrics) {
+    if (metrics.length < 2) return { cpu: 'stable', memory: 'stable', disk: 'stable' };
+
+    const recent = metrics.slice(-Math.min(10, metrics.length));
+    const earlier = metrics.slice(0, Math.min(10, metrics.length));
+
+    const calculateTrend = (recentVals, earlierVals) => {
+      const recentAvg = recentVals.reduce((sum, val) => sum + val, 0) / recentVals.length;
+      const earlierAvg = earlierVals.reduce((sum, val) => sum + val, 0) / earlierVals.length;
+      const diff = recentAvg - earlierAvg;
+      
+      if (Math.abs(diff) < 5) return 'stable';
+      return diff > 0 ? 'increasing' : 'decreasing';
+    };
+
+    return {
+      cpu: calculateTrend(recent.map(m => m.cpu), earlier.map(m => m.cpu)),
+      memory: calculateTrend(recent.map(m => m.memory), earlier.map(m => m.memory)),
+      disk: calculateTrend(recent.map(m => m.disk), earlier.map(m => m.disk))
+    };
+  }
+
+  /**
+   * Generate recommendations based on daily statistics
+   */
+  generateRecommendations(stats, logStats) {
+    const recommendations = [];
+
+    // Performance recommendations
+    if (stats.cpu.avg > 70) {
+      recommendations.push({
+        type: 'performance',
+        severity: 'warning',
+        message: `Average CPU usage is high (${stats.cpu.avg.toFixed(1)}%). Consider identifying resource-intensive processes.`
+      });
+    }
+
+    if (stats.memory.avg > 80) {
+      recommendations.push({
+        type: 'performance',
+        severity: 'warning',
+        message: `Average memory usage is high (${stats.memory.avg.toFixed(1)}%). Consider checking for memory leaks.`
+      });
+    }
+
+    if (stats.disk.avg > 85) {
+      recommendations.push({
+        type: 'storage',
+        severity: 'critical',
+        message: `Disk usage is high (${stats.disk.avg.toFixed(1)}%). Clean up unnecessary files or expand storage.`
+      });
+    }
+
+    // Error recommendations
+    if (logStats.errorCount > 50) {
+      recommendations.push({
+        type: 'stability',
+        severity: 'warning',
+        message: `High error count detected (${logStats.errorCount} errors in 24h). Review error logs for patterns.`
+      });
+    }
+
+    // Stability recommendations
+    const statusDist = stats.statusDistribution || {};
+    const totalStatuses = Object.values(statusDist).reduce((sum, count) => sum + count, 0);
+    if (totalStatuses > 0) {
+      const criticalPercent = (statusDist.critical || 0) / totalStatuses * 100;
+      if (criticalPercent > 10) {
+        recommendations.push({
+          type: 'stability',
+          severity: 'critical',
+          message: `System spent ${criticalPercent.toFixed(1)}% of time in critical status. Investigate root causes.`
+        });
+      }
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Format daily report for notification channels
+   */
+  formatDailyReportForNotification(report) {
+    const summary = report.summary;
+    const performance = report.performance;
+
+    // Status emoji
+    const statusEmoji = {
+      good: '🟢',
+      warning: '🟡', 
+      critical: '🔴'
+    };
+
+    // Trend arrows
+    const trendEmoji = {
+      increasing: '📈',
+      decreasing: '📉',
+      stable: '➡️'
+    };
+
+    const message = [
+      `📊 **Daily System Report - ${new Date().toLocaleDateString()}**`,
+      `${statusEmoji[summary.status]} **Status:** ${summary.status.toUpperCase()}`,
+      `⏱️ **Uptime:** ${summary.uptime}`,
+      '',
+      '**Performance (24h averages):**',
+      `🔥 CPU: ${performance.cpu.avg.toFixed(1)}% (${performance.cpu.min}-${performance.cpu.max}%) ${trendEmoji[report.trends.cpu]}`,
+      `🧠 Memory: ${performance.memory.avg.toFixed(1)}% (${performance.memory.min}-${performance.memory.max}%) ${trendEmoji[report.trends.memory]}`,
+      `💾 Disk: ${performance.disk.avg.toFixed(1)}% (${performance.disk.min}-${performance.disk.max}%) ${trendEmoji[report.trends.disk]}`,
+      '',
+      '**Activity Summary:**',
+      `📱 Applications: ${report.applications.current}/${report.applications.monitored} monitored`,
+      `⚠️ Alerts: ${summary.alertCount}`,
+      `❌ Errors: ${summary.errorCount}`,
+      `📊 Performance spikes: ${summary.spikeCount}`
+    ];
+
+    // Add recommendations if any
+    if (report.recommendations.length > 0) {
+      message.push('', '**🔍 Recommendations:**');
+      report.recommendations.slice(0, 3).forEach(rec => {
+        const emoji = rec.severity === 'critical' ? '🚨' : '⚠️';
+        message.push(`${emoji} ${rec.message}`);
+      });
+    }
+
+    // Add recent alerts if any
+    if (report.alerts.length > 0) {
+      message.push('', '**🚨 Recent Alerts:**');
+      report.alerts.slice(-3).forEach(alert => {
+        const time = new Date(alert.timestamp).toLocaleTimeString();
+        message.push(`• ${time}: ${alert.message}`);
+      });
+    }
+
+    return {
+      message: message.join('\n'),
+      channels: ['slack', 'discord', 'webhook'],
+      attachments: [{
+        color: summary.status === 'critical' ? '#FF0000' : 
+               summary.status === 'warning' ? '#FFA500' : '#00FF00',
+        title: `Installation Up 4evr - Daily Report`,
+        text: `System ID: ${this.installationId}`,
+        fields: [
+          { title: 'Status', value: summary.status, short: true },
+          { title: 'Uptime', value: summary.uptime, short: true },
+          { title: 'Avg CPU', value: `${performance.cpu.avg.toFixed(1)}%`, short: true },
+          { title: 'Avg Memory', value: `${performance.memory.avg.toFixed(1)}%`, short: true }
+        ],
+        footer: 'Installation Up 4evr Monitoring',
+        ts: Math.floor(Date.now() / 1000)
+      }]
+    };
+  }
+
+  /**
+   * Reset daily statistics for new day
+   */
+  resetDailyStats() {
+    this.dailyStats = {
+      alerts: [],
+      uptimeEvents: [],
+      performanceSpikes: [],
+      errors: []
+    };
+  }
+
+  /**
+   * Add alert to daily statistics
+   */
+  addAlertToDailyStats(alert) {
+    this.dailyStats.alerts.push({
+      timestamp: new Date().toISOString(),
+      ...alert
+    });
+
+    // Limit alert history
+    if (this.dailyStats.alerts.length > 100) {
+      this.dailyStats.alerts = this.dailyStats.alerts.slice(-50);
+    }
+  }
+
+  /**
+   * Get last daily report
+   */
+  getLastDailyReport() {
+    return this.lastDailyReport;
+  }
+
+  /**
+   * Force generate daily report (for testing)
+   */
+  async forceDailyReport() {
+    await this.generateDailyReport();
+    return this.lastDailyReport;
   }
 }
 

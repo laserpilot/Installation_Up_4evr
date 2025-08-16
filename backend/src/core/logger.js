@@ -29,7 +29,11 @@ const LOG_CATEGORIES = {
   USER_ACTION: 'user_action',
   API: 'api',
   MONITORING: 'monitoring',
-  INTEGRATION: 'integration'
+  INTEGRATION: 'integration',
+  BASELINE: 'baseline',
+  EXCEPTION: 'exception',
+  ANOMALY: 'anomaly',
+  INCIDENT: 'incident'
 };
 
 class Logger {
@@ -43,9 +47,15 @@ class Logger {
       retentionDays: options.retentionDays || 30,
       enableConsole: options.enableConsole !== false,
       installationId: options.installationId || null,
+      enableForensics: options.enableForensics !== false,
       ...options
     };
 
+    // Initialize correlation tracking
+    this.correlationMap = new Map();
+    this.sessionId = this.generateSessionId();
+    this.currentIncidentId = null;
+    
     this.initPromise = this.initialize();
   }
 
@@ -82,10 +92,54 @@ class Logger {
   }
 
   /**
-   * Create structured log entry
+   * Generate unique session ID for this logger instance
+   */
+  generateSessionId() {
+    const crypto = require('crypto');
+    return crypto.randomBytes(8).toString('hex');
+  }
+
+  /**
+   * Generate correlation ID for related events
+   */
+  generateCorrelationId() {
+    const crypto = require('crypto');
+    return crypto.randomBytes(6).toString('hex');
+  }
+
+  /**
+   * Start incident tracking with correlation ID
+   */
+  startIncident(description = 'Incident detected') {
+    this.currentIncidentId = this.generateCorrelationId();
+    this.incident(LOG_LEVELS.WARN, `Incident started: ${description}`, {
+      incidentId: this.currentIncidentId,
+      incidentStart: true
+    });
+    return this.currentIncidentId;
+  }
+
+  /**
+   * End incident tracking
+   */
+  endIncident(description = 'Incident resolved') {
+    if (this.currentIncidentId) {
+      const incidentId = this.currentIncidentId;
+      this.incident(LOG_LEVELS.INFO, `Incident ended: ${description}`, {
+        incidentId,
+        incidentEnd: true
+      });
+      this.currentIncidentId = null;
+      return incidentId;
+    }
+    return null;
+  }
+
+  /**
+   * Create structured log entry with forensic enhancements
    */
   createLogEntry(level, category, message, context = {}) {
-    return {
+    const entry = {
       timestamp: new Date().toISOString(),
       level: Object.keys(LOG_LEVELS)[level],
       category,
@@ -94,9 +148,34 @@ class Logger {
       pid: process.pid,
       hostname: os.hostname(),
       platform: os.platform(),
+      sessionId: this.sessionId,
       context,
       ...context // Allow context to override any field
     };
+
+    // Add forensic information if enabled
+    if (this.options.enableForensics) {
+      // Add correlation ID for exceptions and incidents
+      if (['exception', 'anomaly', 'incident'].includes(category)) {
+        entry.correlationId = context.correlationId || this.generateCorrelationId();
+      }
+
+      // Add current incident context
+      if (this.currentIncidentId) {
+        entry.incidentId = this.currentIncidentId;
+      }
+
+      // Add system state snapshot for critical events
+      if (level >= LOG_LEVELS.ERROR) {
+        entry.systemSnapshot = {
+          memoryUsage: process.memoryUsage(),
+          uptime: process.uptime(),
+          timestamp: Date.now()
+        };
+      }
+    }
+
+    return entry;
   }
 
   /**
@@ -241,6 +320,60 @@ class Logger {
 
   integration(level, message, context = {}) {
     return this.log(level, LOG_CATEGORIES.INTEGRATION, message, context);
+  }
+
+  // Enhanced forensic logging methods
+  baseline(level, message, context = {}) {
+    return this.log(level, LOG_CATEGORIES.BASELINE, message, context);
+  }
+
+  exception(level, message, context = {}) {
+    return this.log(level, LOG_CATEGORIES.EXCEPTION, message, context);
+  }
+
+  anomaly(level, message, context = {}) {
+    return this.log(level, LOG_CATEGORIES.ANOMALY, message, context);
+  }
+
+  incident(level, message, context = {}) {
+    return this.log(level, LOG_CATEGORIES.INCIDENT, message, context);
+  }
+
+  /**
+   * Log baseline system snapshot
+   */
+  logBaselineSnapshot(snapshot, context = {}) {
+    return this.baseline(LOG_LEVELS.INFO, 'System baseline snapshot', {
+      snapshot,
+      snapshotType: 'system_baseline',
+      ...context
+    });
+  }
+
+  /**
+   * Log exception with automatic correlation
+   */
+  logException(error, context = {}) {
+    const correlationId = this.generateCorrelationId();
+    return this.exception(LOG_LEVELS.ERROR, `Exception: ${error.message || error}`, {
+      error: error.stack || error.toString(),
+      correlationId,
+      errorType: error.name || 'Unknown',
+      ...context
+    });
+  }
+
+  /**
+   * Log anomaly detection
+   */
+  logAnomaly(description, currentValue, expectedValue, context = {}) {
+    return this.anomaly(LOG_LEVELS.WARN, `Anomaly detected: ${description}`, {
+      currentValue,
+      expectedValue,
+      deviation: currentValue - expectedValue,
+      correlationId: this.generateCorrelationId(),
+      ...context
+    });
   }
 
   /**
