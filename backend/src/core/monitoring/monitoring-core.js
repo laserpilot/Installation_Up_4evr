@@ -28,6 +28,10 @@ class MonitoringCore extends EventEmitter {
     };
     this.logger = null;
     
+    // Ping monitoring
+    this.pingMonitors = new Map();
+    this.pingTimers = new Map();
+    
     // Daily reporting data
     this.dailyMetrics = [];
     this.lastDailyReport = null;
@@ -100,6 +104,9 @@ class MonitoringCore extends EventEmitter {
     // Start daily reporting
     this.startDailyReporting();
 
+    // Load and start ping monitoring
+    await this.loadPingMonitors();
+
     // Initial data collection
     await this.collectMonitoringData();
     this.sendHeartbeat();
@@ -121,6 +128,8 @@ class MonitoringCore extends EventEmitter {
       clearInterval(this.dailyReportInterval);
       this.dailyReportInterval = null;
     }
+    // Stop ping monitoring
+    this.stopPingMonitoring();
     console.log('[INFO] Monitoring system stopped');
   }
 
@@ -795,6 +804,197 @@ class MonitoringCore extends EventEmitter {
   async forceDailyReport() {
     await this.generateDailyReport();
     return this.lastDailyReport;
+  }
+
+  /**
+   * Add a ping monitor to the system
+   */
+  addPingMonitor(monitor) {
+    console.log(`[PING] Adding ping monitor for ${monitor.ipAddress} (${monitor.id})`);
+    this.pingMonitors.set(monitor.id, monitor);
+    this.startPingTimer(monitor);
+  }
+
+  /**
+   * Update a ping monitor
+   */
+  updatePingMonitor(monitor) {
+    console.log(`[PING] Updating ping monitor for ${monitor.ipAddress} (${monitor.id})`);
+    this.pingMonitors.set(monitor.id, monitor);
+    // Restart timer with new interval
+    this.stopPingTimer(monitor.id);
+    this.startPingTimer(monitor);
+  }
+
+  /**
+   * Remove a ping monitor
+   */
+  removePingMonitor(monitorId) {
+    console.log(`[PING] Removing ping monitor ${monitorId}`);
+    this.pingMonitors.delete(monitorId);
+    this.stopPingTimer(monitorId);
+  }
+
+  /**
+   * Start ping timer for a monitor
+   */
+  startPingTimer(monitor) {
+    if (this.pingTimers.has(monitor.id)) {
+      clearInterval(this.pingTimers.get(monitor.id));
+    }
+
+    const intervalMs = (monitor.interval || 30) * 1000;
+    console.log(`[PING] Starting timer for ${monitor.ipAddress} every ${monitor.interval}s`);
+    
+    // Run initial ping immediately
+    this.executePing(monitor);
+    
+    // Set up recurring timer
+    const timer = setInterval(() => {
+      this.executePing(monitor);
+    }, intervalMs);
+    
+    this.pingTimers.set(monitor.id, timer);
+  }
+
+  /**
+   * Stop ping timer for a monitor
+   */
+  stopPingTimer(monitorId) {
+    if (this.pingTimers.has(monitorId)) {
+      clearInterval(this.pingTimers.get(monitorId));
+      this.pingTimers.delete(monitorId);
+    }
+  }
+
+  /**
+   * Execute a ping and update the monitor's history
+   */
+  async executePing(monitor) {
+    try {
+      const result = await this.testPingConnectivity(monitor.ipAddress, monitor.timeout);
+      
+      // Update monitor history
+      const updatedMonitor = this.pingMonitors.get(monitor.id);
+      if (updatedMonitor) {
+        updatedMonitor.status = result.status;
+        updatedMonitor.lastCheck = result.timestamp;
+        updatedMonitor.responseTime = result.responseTime;
+        
+        // Initialize pingHistory if it doesn't exist
+        if (!updatedMonitor.pingHistory) {
+          updatedMonitor.pingHistory = [];
+        }
+        
+        // Add to history (most recent first)
+        updatedMonitor.pingHistory.unshift({
+          timestamp: result.timestamp,
+          status: result.status,
+          responseTime: result.responseTime,
+          success: result.success,
+          error: result.error || null
+        });
+        
+        // Keep only last 5 results
+        if (updatedMonitor.pingHistory.length > 5) {
+          updatedMonitor.pingHistory = updatedMonitor.pingHistory.slice(0, 5);
+        }
+        
+        // Update the stored monitor
+        this.pingMonitors.set(monitor.id, updatedMonitor);
+        
+        // Save to config
+        await this.updatePingMonitorConfig(updatedMonitor);
+        
+        // Emit ping result event
+        this.emit('pingResult', {
+          monitorId: monitor.id,
+          result: result,
+          monitor: updatedMonitor
+        });
+      }
+    } catch (error) {
+      console.error(`[PING] Error executing ping for ${monitor.ipAddress}:`, error);
+    }
+  }
+
+  /**
+   * Test ping connectivity (same as platform manager implementation)
+   */
+  async testPingConnectivity(ipAddress, timeout = 5) {
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      const startTime = Date.now();
+      const timeoutMs = timeout * 1000;
+      await execAsync(`ping -c 1 -W ${timeoutMs} ${ipAddress}`);
+      const responseTime = Date.now() - startTime;
+      
+      return {
+        success: true,
+        status: 'online',
+        responseTime: responseTime,
+        timestamp: new Date().toISOString(),
+        ipAddress: ipAddress
+      };
+    } catch (error) {
+      return {
+        success: false,
+        status: 'offline',
+        responseTime: null,
+        timestamp: new Date().toISOString(),
+        ipAddress: ipAddress,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Update ping monitor configuration
+   */
+  async updatePingMonitorConfig(monitor) {
+    try {
+      const currentMonitors = this.configManager.get('monitoring.pingMonitors') || [];
+      const monitorIndex = currentMonitors.findIndex(m => m.id === monitor.id);
+      
+      if (monitorIndex !== -1) {
+        currentMonitors[monitorIndex] = monitor;
+        await this.configManager.update('monitoring.pingMonitors', currentMonitors);
+      }
+    } catch (error) {
+      console.error('[PING] Failed to update monitor config:', error);
+    }
+  }
+
+  /**
+   * Load existing ping monitors from config and start monitoring
+   */
+  async loadPingMonitors() {
+    try {
+      const pingMonitors = this.configManager.get('monitoring.pingMonitors') || [];
+      console.log(`[PING] Loading ${pingMonitors.length} ping monitors from config`);
+      
+      for (const monitor of pingMonitors) {
+        if (monitor.enabled !== false) {
+          this.addPingMonitor(monitor);
+        }
+      }
+    } catch (error) {
+      console.error('[PING] Failed to load ping monitors:', error);
+    }
+  }
+
+  /**
+   * Stop all ping monitoring
+   */
+  stopPingMonitoring() {
+    console.log('[PING] Stopping all ping monitoring');
+    for (const monitorId of this.pingTimers.keys()) {
+      this.stopPingTimer(monitorId);
+    }
+    this.pingMonitors.clear();
   }
 }
 

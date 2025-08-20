@@ -78,66 +78,36 @@ Changelog:
 
 ## TL;DR Quick Checklist
 
-<!-- 🔄 UPDATE NOTE: Convert all these manual System Preferences tasks to command-line equivalents -->
-<!-- 🔄 UPDATE NOTE: Add Apple Silicon specific considerations -->
-<!-- 🔄 UPDATE NOTE: Remove references to outdated GUI tools -->
-
 - System Preferences:
 	- **Recommended:**
 		- [ ] Set Screensaver to Never (Screensaver)
-		<!-- 🔄 UPDATE: Replace with: `defaults -currentHost write com.apple.screensaver idleTime 0` -->
-		
 		- [ ] Disable Automatic Software Updates (Software Update)
-		<!-- 🔄 UPDATE: Replace with: `sudo softwareupdate --schedule off` -->
-		
 		- [ ] Set Computer and Display Sleep to Never (Energy Saver)
-		<!-- 🔄 UPDATE: Replace with: `sudo pmset -a displaysleep 0` and `sudo pmset -a sleep 0` -->
-		
 		- [ ] Set Desktop background to solid black (Desktop)
-		<!-- 🔄 UPDATE: Replace with: `osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'` -->
-		
-		- [ ] Uncheck "Disable Automatic Login" (Security)
-		<!-- ⚠️ SECURITY WARNING: This needs stronger security guidance for 2025 -->
-		
-		- [ ] Enable Automatic Login for a specific user (Users & Groups)
-		<!-- ⚠️ SECURITY WARNING: Emphasize non-admin user -->
+		- [ ] ⚠️ Uncheck "Disable Automatic Login" (Security) - *Security implications, see full doc*
+		- [ ] ⚠️ Enable Automatic Login for a specific user (Users & Groups) - *Security implications, see full doc*
 		
 	- **Optional:**
 		- [ ] Enable Screensharing and Filesharing (Sharing)
-		<!-- 🔄 UPDATE: Replace with: `sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.screensharing.plist` -->
-		
 		- [ ] Disable Bluetooth Setup Assistant(Bluetooth)
-		<!-- 🔄 UPDATE: Replace with: `defaults write /Library/Preferences/com.apple.Bluetooth BluetoothAutoSeekKeyboard -bool false` -->
-		
-		- [ ] Disable Notification Center/Set Do Not Disturb to be 24hrs (Notification Center)
-		<!-- ⚠️ SIP WARNING: This approach no longer works without disabling SIP -->
-		<!-- 🔄 UPDATE: Replace with Focus Modes programmatic control -->
+		- [ ] ⚠️ Disable Notification Center/Set Do Not Disturb to be 24hrs (Notification Center) - *May require advanced setup*
 	
 - Booting into your software
 	- [ ] Use Login Items in _Users and Groups_ or use a Launch Agent
-	<!-- 🔄 UPDATE: Emphasize Launch Agent over Login Items -->
 	
 - Keeping the software running at all times
 	- [ ] Use a Launch Agent to start your app and have the OS keep it running
-	<!-- ✅ GOOD: This is still the best approach -->
 	
 - Rebooting automatically
-	- [ ] Use an app like [Onyx](https://www.titanium-software.fr/en/onyx.html) (free) to schedule daily reboots (Apple's native GUI for this has been removed from the System Settings)
-	<!-- 🔄 UPDATE: Replace with launchd agent that runs `sudo shutdown -r now` -->
-	
+	- [ ] Schedule daily reboots (native GUI removed from System Settings - see full doc for alternatives)
 	- [ ] Set up something to log in to the computer remotely (Logmein, Teamviewer, etc)
-	<!-- 🔄 UPDATE: Streamline to 2-3 modern options -->
-	
 	- [ ] Log various details about the computer and app to textfiles or to slack
-	<!-- 🔄 UPDATE: Emphasize structured logging (JSON) and secure webhook URLs -->
 	
 - Testing
 	- [ ] Do several test boots and scenarios and monitor for the first week to make sure everything is functioning predictably
-	<!-- ✅ GOOD: Keep this -->
 	
 - Other things
 	- [ ] Backup the drive you prepared and save it somewhere
-	<!-- 🔄 UPDATE: Add modern backup solutions beyond CCC -->
 
 ## 2019 preface: 
 

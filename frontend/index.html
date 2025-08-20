@@ -1858,14 +1858,44 @@ curl -X POST /api/installation/settings/network/timeout \\
 
                             <!-- Service Logs -->
                             <div class="service-logs-section">
-                                <h3><i class="fas fa-file-alt"></i> Viewing Service Logs</h3>
-                                <div class="info-banner">
-                                    <p>For detailed diagnostics, you can view the live logs for the backend service directly from your terminal.</p>
-                                    <h4>To view logs:</h4>
-                                    <pre class="code-block" id="log-command-display">pm2 logs Up4Evr-Backend</pre>
-                                    <button class="btn btn-small" id="copy-log-command">
-                                        <i class="fas fa-copy"></i> Copy Command
-                                    </button>
+                                <h3><i class="fas fa-file-alt"></i> System Logs</h3>
+                                <div class="logs-container">
+                                    <!-- Live Log Viewer -->
+                                    <div class="log-viewer-section">
+                                        <div class="log-viewer-header">
+                                            <h4><i class="fas fa-stream"></i> Live Log Tail</h4>
+                                            <div class="log-viewer-controls">
+                                                <button class="btn btn-small" id="refresh-logs">
+                                                    <i class="fas fa-sync"></i> Refresh
+                                                </button>
+                                                <button class="btn btn-small" id="clear-log-viewer">
+                                                    <i class="fas fa-trash"></i> Clear
+                                                </button>
+                                                <button class="btn btn-small" id="toggle-auto-refresh">
+                                                    <i class="fas fa-play"></i> Auto-refresh
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="log-viewer" id="log-viewer">
+                                            <div class="log-loading">
+                                                <i class="fas fa-spinner fa-spin"></i> Loading recent logs...
+                                            </div>
+                                        </div>
+                                        <div class="log-viewer-stats" id="log-viewer-stats">
+                                            <span class="log-count">0 entries</span>
+                                            <span class="log-last-update">Never updated</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Terminal Instructions -->
+                                    <div class="info-banner">
+                                        <h4>Terminal Access:</h4>
+                                        <p>For advanced diagnostics, you can also view logs directly from your terminal:</p>
+                                        <pre class="code-block" id="log-command-display">pm2 logs Up4Evr-Backend</pre>
+                                        <button class="btn btn-small" id="copy-log-command">
+                                            <i class="fas fa-copy"></i> Copy Command
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </section>

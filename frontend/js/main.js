@@ -7,6 +7,7 @@ console.log("main.js loaded and executing!"); // Added for debugging
 
 import { AuthSessionManager } from './modules/auth.js';
 import { MonitoringDataManager, PingMonitorManager } from './modules/monitoring.js';
+import { LogViewerManager } from './modules/log-viewer.js';
 import { UIManager } from './modules/UIManager.js';
 import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
@@ -514,11 +515,15 @@ class InstallationUp4evr {
             this.pingMonitorManager = new PingMonitorManager();
             console.log('[INIT] ✅ PingMonitorManager created');
             
+            this.logViewerManager = new LogViewerManager();
+            console.log('[INIT] ✅ LogViewerManager created');
+            
             this.uiManager = new UIManager();
             console.log('[INIT] ✅ UIManager created');
             
-            // Attach PingMonitorManager to global window object
+            // Attach managers to global window object
             window.pingMonitorManager = this.pingMonitorManager;
+            window.logViewerManager = this.logViewerManager;
             console.log('[INIT] ✅ PingMonitorManager attached to window');
             
             // Use async initialization properly
@@ -666,6 +671,10 @@ InstallationUp4evr.prototype.moduleInitializers = {
         // Initialize ping monitor manager when monitoring tab is opened
         if (window.app && window.app.pingMonitorManager) {
             window.app.pingMonitorManager.initialize();
+        }
+        // Initialize log viewer manager
+        if (window.app && window.app.logViewerManager) {
+            window.app.logViewerManager.initialize();
         }
     },
     'backend-service': initBackendService,

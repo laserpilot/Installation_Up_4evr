@@ -496,11 +496,7 @@ export class PingMonitorManager {
                             <span class="ping-monitor-address">${monitor.ipAddress}</span>
                         </div>
                         <div class="ping-monitor-status">
-                            <span class="status-indicator ${monitor.status || 'pending'}">
-                                ${this.getStatusIcon(monitor.status)}
-                                ${this.getStatusText(monitor.status)}
-                            </span>
-                            ${monitor.responseTime ? `<span class="response-time">${monitor.responseTime}ms</span>` : ''}
+                            ${this.renderPingHistory(monitor)}
                         </div>
                     </div>
                     <div class="ping-monitor-actions">
@@ -540,6 +536,66 @@ export class PingMonitorManager {
             case 'pending': return 'Pending';
             default: return 'Unknown';
         }
+    }
+
+    renderPingHistory(monitor) {
+        const history = monitor.pingHistory || [];
+        
+        if (history.length === 0) {
+            return `
+                <div class="ping-status-current">
+                    <span class="status-indicator ${monitor.status || 'pending'}">
+                        ${this.getStatusIcon(monitor.status)}
+                        ${this.getStatusText(monitor.status)}
+                    </span>
+                    ${monitor.responseTime ? `<span class="response-time">${monitor.responseTime}ms</span>` : ''}
+                </div>
+                <div class="ping-history-empty">No ping history yet</div>
+            `;
+        }
+
+        const historyItems = history.slice(0, 5).map((ping, index) => {
+            const timeAgo = this.getTimeAgo(ping.timestamp);
+            const statusIcon = ping.success ? '🟢' : '🔴';
+            const responseTime = ping.responseTime ? `${ping.responseTime}ms` : 'timeout';
+            
+            return `
+                <div class="ping-history-item ${ping.success ? 'success' : 'failure'}" title="${new Date(ping.timestamp).toLocaleString()}">
+                    <span class="ping-history-icon">${statusIcon}</span>
+                    <span class="ping-history-time">${timeAgo}</span>
+                    <span class="ping-history-latency">${responseTime}</span>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="ping-status-current">
+                <span class="status-indicator ${history[0].status}">
+                    ${this.getStatusIcon(history[0].status)}
+                    Latest: ${history[0].responseTime ? `${history[0].responseTime}ms` : 'Failed'}
+                </span>
+            </div>
+            <div class="ping-history">
+                <div class="ping-history-header">Last 5 pings:</div>
+                <div class="ping-history-list">
+                    ${historyItems}
+                </div>
+            </div>
+        `;
+    }
+
+    getTimeAgo(timestamp) {
+        const now = new Date();
+        const past = new Date(timestamp);
+        const diffMs = now - past;
+        const diffSecs = Math.floor(diffMs / 1000);
+        const diffMins = Math.floor(diffSecs / 60);
+        const diffHours = Math.floor(diffMins / 60);
+
+        if (diffSecs < 60) return `${diffSecs}s ago`;
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return past.toLocaleDateString();
     }
 
     isValidIPOrHostname(input) {

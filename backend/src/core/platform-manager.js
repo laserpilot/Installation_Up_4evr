@@ -812,7 +812,8 @@ class PlatformManager {
         lastCheck: null,
         responseTime: null,
         enabled: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        pingHistory: []
       };
 
       const currentMonitors = this.config.get('monitoring.pingMonitors') || [];
@@ -912,13 +913,96 @@ class PlatformManager {
           monitor.timeout
         );
 
+        // Update monitor with latest result and add to history
+        const monitorIndex = currentMonitors.findIndex(m => m.id === monitorId);
+        if (monitorIndex !== -1) {
+          const updatedMonitor = currentMonitors[monitorIndex];
+          updatedMonitor.status = testResult.status;
+          updatedMonitor.lastCheck = testResult.timestamp;
+          updatedMonitor.responseTime = testResult.responseTime;
+          
+          // Initialize pingHistory if it doesn't exist (for existing monitors)
+          if (!updatedMonitor.pingHistory) {
+            updatedMonitor.pingHistory = [];
+          }
+          
+          // Add to ping history (keep only last 5 results)
+          updatedMonitor.pingHistory.unshift({
+            timestamp: testResult.timestamp,
+            status: testResult.status,
+            responseTime: testResult.responseTime,
+            success: testResult.success,
+            error: testResult.error || null
+          });
+          
+          // Keep only last 5 ping results
+          if (updatedMonitor.pingHistory.length > 5) {
+            updatedMonitor.pingHistory = updatedMonitor.pingHistory.slice(0, 5);
+          }
+          
+          // Save updated monitor config
+          await this.config.update('monitoring.pingMonitors', currentMonitors);
+        }
+
         return APIResponse.success({
           message: 'Ping test completed',
-          monitor: monitor,
+          monitor: currentMonitors[monitorIndex],
           result: testResult
         });
       }
     );
+
+    // Logs routes
+    this.api.registerRoute('/logs/recent', 'GET', async () => {
+      if (!this.logger) {
+        return APIResponse.error({ message: 'Logging system not available' });
+      }
+      
+      try {
+        const logs = await this.logger.getLogs({
+          limit: 50,
+          startDate: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+        });
+        
+        return APIResponse.success(logs);
+      } catch (error) {
+        return APIResponse.error({ message: 'Failed to retrieve logs', error: error.message });
+      }
+    });
+
+    this.api.registerRoute('/logs/stats', 'GET', async () => {
+      if (!this.logger) {
+        return APIResponse.error({ message: 'Logging system not available' });
+      }
+      
+      try {
+        const stats = await this.logger.getLogStats(24);
+        return APIResponse.success(stats);
+      } catch (error) {
+        return APIResponse.error({ message: 'Failed to retrieve log stats', error: error.message });
+      }
+    });
+
+    this.api.registerRoute('/logs/tail', 'GET', async () => {
+      if (!this.logger) {
+        return APIResponse.error({ message: 'Logging system not available' });
+      }
+      
+      try {
+        // Get last 20 log entries
+        const logs = await this.logger.getLogs({
+          limit: 20,
+          startDate: new Date(Date.now() - 60 * 60 * 1000) // Last hour
+        });
+        
+        // Sort by timestamp (most recent first)
+        logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        return APIResponse.success(logs);
+      } catch (error) {
+        return APIResponse.error({ message: 'Failed to retrieve log tail', error: error.message });
+      }
+    });
 
     // Configuration routes
     this.api.registerRoute('/config', 'GET', async () => {
