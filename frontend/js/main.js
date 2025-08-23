@@ -8,6 +8,7 @@ console.log("main.js loaded and executing!"); // Added for debugging
 import { AuthSessionManager } from './modules/auth.js';
 import { MonitoringDataManager, PingMonitorManager } from './modules/monitoring.js';
 import { LogViewerManager } from './modules/log-viewer.js';
+import { InstallationLogViewerManager } from './modules/installation-log-viewer.js';
 import { UIManager } from './modules/UIManager.js';
 import { monitoringDisplay } from './utils/monitoring-display.js';
 import { initMonitoringConfig } from './modules/monitoring-config.js';
@@ -17,6 +18,7 @@ import { initApplications, startRealtimeStatusUpdates, stopRealtimeStatusUpdates
 import { initNotifications } from './modules/notifications.js';
 import { initBackendService } from './modules/backend-service.js';
 import { initGlobalSettings } from './modules/global-settings.js';
+import { initLoggingConfig } from './modules/logging-config.js';
 import { initSetupWizard } from './modules/setup-wizard.js';
 import { initDashboard } from './modules/dashboard.js';
 import { apiCall } from './utils/api.js';
@@ -411,52 +413,52 @@ function getMetricLevelClass(percentage) {
 /**
  * Enhanced application status display with PM2 integration
  */
-async function updateApplicationsStatus(element, launchAgentData) {
+async function updateApplicationsStatus(element, fallbackProcessData) {
     try {
-        // Fetch enhanced applications data (includes PM2 processes)
+        // Fetch PM2 processes data
         const appsResponse = await fetch('/api/monitoring/applications');
-        let allApplications = [];
+        let allProcesses = [];
         let pm2Processes = [];
-        let launchAgents = [];
+        let systemProcesses = [];
         
         if (appsResponse.ok) {
             const appsData = await appsResponse.json();
-            allApplications = appsData.data?.data || appsData.data || [];
+            allProcesses = appsData.data?.data || appsData.data || [];
             
-            // Separate PM2 processes and launch agents
-            pm2Processes = allApplications.filter(app => app.type === 'pm2-process');
-            launchAgents = allApplications.filter(app => app.type === 'launch-agent' || !app.type);
+            // Filter for PM2 processes and system processes
+            pm2Processes = allProcesses.filter(app => app.type === 'pm2-process');
+            systemProcesses = allProcesses.filter(app => !app.type || (app.type !== 'pm2-process'));
         } else {
-            // Fallback to passed launchAgentData if API fails
-            launchAgents = Array.isArray(launchAgentData) ? launchAgentData : [];
+            // Fallback to passed process data if API fails
+            systemProcesses = Array.isArray(fallbackProcessData) ? fallbackProcessData : [];
         }
 
-        const totalApps = pm2Processes.length + launchAgents.length;
+        const totalProcesses = pm2Processes.length + systemProcesses.length;
         
-        if (totalApps === 0) {
+        if (totalProcesses === 0) {
             element.innerHTML = `
                 <div class="no-apps">
                     <i class="fas fa-info-circle"></i>
-                    <span>No managed applications</span>
+                    <span>No managed processes</span>
                 </div>
             `;
             return;
         }
 
-        // Count running applications
-        const runningPM2Processes = launchAgents.filter(app => app.isRunning || app.status === 'running').length;
-        const runningPM2 = pm2Processes.filter(proc => proc.status === 'online').length;
-        const totalRunning = runningPM2Processes + runningPM2;
+        // Count running processes
+        const runningSystemProcesses = systemProcesses.filter(app => app.isRunning || app.status === 'running').length;
+        const runningPM2Processes = pm2Processes.filter(proc => proc.status === 'online').length;
+        const totalRunning = runningSystemProcesses + runningPM2Processes;
 
         // Create enhanced status display
         element.innerHTML = `
             <div class="apps-summary">
                 <div class="apps-count">
-                    <span class="running-count">${totalRunning}</span>/<span class="total-count">${totalApps}</span> apps running
+                    <span class="running-count">${totalRunning}</span>/<span class="total-count">${totalProcesses}</span> processes running
                 </div>
                 <div class="apps-breakdown">
-                    ${pm2Processes.length > 0 ? `<span class="pm2-badge">PM2: ${runningPM2}/${pm2Processes.length}</span>` : ''}
-                    ${launchAgents.length > 0 ? `<span class="pm2-process-badge">Processes: ${runningPM2Processes}/${launchAgents.length}</span>` : ''}
+                    ${pm2Processes.length > 0 ? `<span class="pm2-badge">PM2: ${runningPM2Processes}/${pm2Processes.length}</span>` : ''}
+                    ${systemProcesses.length > 0 ? `<span class="system-process-badge">System: ${runningSystemProcesses}/${systemProcesses.length}</span>` : ''}
                 </div>
             </div>
             <div class="apps-list">
@@ -469,33 +471,33 @@ async function updateApplicationsStatus(element, launchAgentData) {
                         <small class="app-metrics">CPU: ${proc.pm2Data?.cpu || 0}% | RAM: ${Math.round((proc.pm2Data?.memory || 0) / 1024 / 1024)}MB</small>
                     </div>
                 `).join('')}
-                ${launchAgents.slice(0, 2).map(app => `
-                    <div class="app-item launch-agent-app">
+                ${systemProcesses.slice(0, 2).map(app => `
+                    <div class="app-item system-app">
                         <span class="app-status ${app.isRunning || app.status === 'running' ? 'running' : 'stopped'}">
-                            <i class="fas fa-rocket"></i>
+                            <i class="fas fa-cog"></i>
                             ${app.name}
                         </span>
-                        <small class="app-type">Launch Agent</small>
+                        <small class="app-type">System Process</small>
                     </div>
                 `).join('')}
-                ${totalApps > 4 ? `<div class="more-apps">+${totalApps - 4} more...</div>` : ''}
+                ${totalProcesses > 4 ? `<div class="more-apps">+${totalProcesses - 4} more...</div>` : ''}
             </div>
         `;
 
     } catch (error) {
-        console.error('[APPS] Failed to update applications status:', error);
+        console.error('[PROCESSES] Failed to update process status:', error);
         // Fallback to basic display
-        const launchAgents = Array.isArray(launchAgentData) ? launchAgentData : [];
-        if (launchAgents.length > 0) {
-            const running = launchAgents.filter(app => app.isRunning || app.status === 'running').length;
+        const processes = Array.isArray(fallbackProcessData) ? fallbackProcessData : [];
+        if (processes.length > 0) {
+            const running = processes.filter(app => app.isRunning || app.status === 'running').length;
             element.innerHTML = `
-                <div>${running}/${launchAgents.length} launch agents running</div>
-                <div class="apps-list">${launchAgents.slice(0, 3).map(app => 
+                <div>${running}/${processes.length} processes running</div>
+                <div class="apps-list">${processes.slice(0, 3).map(app => 
                     `<span class="app-status ${app.isRunning || app.status === 'running' ? 'running' : 'stopped'}">${app.name}</span>`
                 ).join('')}</div>
             `;
         } else {
-            element.textContent = 'No monitored applications';
+            element.textContent = 'No monitored processes';
         }
     }
 }
@@ -518,13 +520,17 @@ class InstallationUp4evr {
             this.logViewerManager = new LogViewerManager();
             console.log('[INIT] ✅ LogViewerManager created');
             
+            this.installationLogViewerManager = new InstallationLogViewerManager();
+            console.log('[INIT] ✅ InstallationLogViewerManager created');
+            
             this.uiManager = new UIManager();
             console.log('[INIT] ✅ UIManager created');
             
             // Attach managers to global window object
             window.pingMonitorManager = this.pingMonitorManager;
             window.logViewerManager = this.logViewerManager;
-            console.log('[INIT] ✅ PingMonitorManager attached to window');
+            window.installationLogViewerManager = this.installationLogViewerManager;
+            console.log('[INIT] ✅ Managers attached to window');
             
             // Use async initialization properly
             this.init().catch(error => {
@@ -676,9 +682,16 @@ InstallationUp4evr.prototype.moduleInitializers = {
         if (window.app && window.app.logViewerManager) {
             window.app.logViewerManager.initialize();
         }
+        // Initialize installation log viewer manager
+        if (window.app && window.app.installationLogViewerManager) {
+            window.app.installationLogViewerManager.initialize();
+        }
     },
     'backend-service': initBackendService,
-    'global': initGlobalSettings,
+    'global': () => {
+        initGlobalSettings();
+        initLoggingConfig();
+    },
     'notifications': initNotifications
 };
 

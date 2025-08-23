@@ -5,7 +5,7 @@
 
 import { apiCall, MasterConfigAPI } from '../utils/api.js';
 import { showToast, showLoading, hideLoading } from '../utils/ui.js';
-import { createAgentCard } from '../components/LaunchAgentCard.js';
+import { createProcessCard } from '../components/ProcessCard.js';
 
 let allProcesses = [];
 let processStatusList = [];
@@ -31,7 +31,7 @@ async function loadProcesses() {
 }
 
 function renderProcesses(filterType = 'all') {
-    const container = document.getElementById('launch-agents-list');
+    const container = document.getElementById('pm2-processes-list');
     // Show PM2-managed processes and any legacy processes
     let processes = allProcesses.filter(process => 
         process.managedByTool === true || 
@@ -80,7 +80,7 @@ function renderProcesses(filterType = 'all') {
             pid: statusData.pid || 'N/A',
             lastExitStatus: statusData.lastExitStatus || 'N/A'
         };
-        return createAgentCard(process, status);
+        return createProcessCard(process, status);
     }).join('');
 
     addProcessActionListeners();
@@ -130,7 +130,7 @@ async function updateProcessStatus() {
 }
 
 function updateExistingProcessCards() {
-    const processCards = document.querySelectorAll('.agent-card');
+    const processCards = document.querySelectorAll('.process-card');
     
     processCards.forEach(card => {
         const label = card.dataset.label;
@@ -142,18 +142,18 @@ function updateExistingProcessCards() {
         card.classList.toggle('status-stopped', !isRunning);
         
         // Update status text and indicator
-        const statusSpan = card.querySelector('.agent-status span:last-child');
+        const statusSpan = card.querySelector('.process-status span:last-child');
         if (statusSpan) {
             statusSpan.textContent = isRunning ? 'Running' : 'Stopped';
         }
         
         // Update PID and exit status
-        const pidSpan = card.querySelector('.agent-info span:first-child');
+        const pidSpan = card.querySelector('.process-info span:first-child');
         if (pidSpan) {
             pidSpan.textContent = `PID: ${statusData.pid || 'N/A'}`;
         }
         
-        const exitSpan = card.querySelector('.agent-info span:last-child');
+        const exitSpan = card.querySelector('.process-info span:last-child');
         if (exitSpan) {
             exitSpan.textContent = `Exit: ${statusData.lastExitStatus || 'N/A'}`;
         }
@@ -178,9 +178,9 @@ function stopRealtimeStatusUpdates() {
 }
 
 function addProcessActionListeners() {
-    document.querySelectorAll('.agent-card .btn-action').forEach(button => {
+    document.querySelectorAll('.process-card .btn-action').forEach(button => {
         button.addEventListener('click', (e) => {
-            const card = e.currentTarget.closest('.agent-card');
+            const card = e.currentTarget.closest('.process-card');
             const label = card.dataset.label;
             const action = e.currentTarget.dataset.action;
             handleProcessAction(label, action);
@@ -952,8 +952,8 @@ export function initApplications() {
     });
 
     // Desktop app mode
-    document.getElementById('create-launch-agent').addEventListener('click', createProcess);
-    document.getElementById('install-launch-agent').addEventListener('click', installProcess);
+    document.getElementById('create-pm2-process').addEventListener('click', createProcess);
+    document.getElementById('install-pm2-process').addEventListener('click', installProcess);
 
     // Drag and Drop
     const dropZone = document.getElementById('app-drop-zone');
@@ -1001,7 +1001,7 @@ export function initApplications() {
 
     // Web app mode
     document.getElementById('browser-path').addEventListener('change', handleBrowserPathChange);
-    document.getElementById('create-web-launch-agent').addEventListener('click', createWebLaunchAgent);
+    document.getElementById('create-web-pm2-process').addEventListener('click', createWebLaunchAgent);
     document.getElementById('preview-web-command').addEventListener('click', previewWebCommand);
     
     // Auto-populate web app name from URL
