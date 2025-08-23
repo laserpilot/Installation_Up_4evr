@@ -1411,6 +1411,40 @@ curl -X POST /api/installation/settings/network/timeout \\
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Auto-Recovery Settings -->
+                            <div class="config-section">
+                                <h3><i class="fas fa-magic"></i> Auto-Recovery Settings</h3>
+                                <p>Configure automatic restart behavior for crashed applications</p>
+                                <div class="config-grid">
+                                    <div class="config-item">
+                                        <label for="auto-restart-apps">Auto-restart Crashed Apps</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="auto-restart-apps" checked>
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically restart applications that crash</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="restart-delay">Restart Delay (seconds)</label>
+                                        <input type="number" id="restart-delay" min="1" max="300" value="5">
+                                        <small>Wait time before restarting crashed apps</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="max-restart-attempts">Max Restart Attempts</label>
+                                        <input type="number" id="max-restart-attempts" min="1" max="10" value="3">
+                                        <small>Maximum restart attempts before giving up</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="auto-reboot">Auto-reboot on Critical Errors</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="auto-reboot">
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Automatically reboot system for critical failures</small>
+                                    </div>
+                                </div>
+                            </div>
                         </section>
                     </div>
 
@@ -1702,18 +1736,21 @@ curl -X POST /api/installation/settings/network/timeout \\
 
                                 <!-- Configuration Actions -->
                                 <div class="config-actions">
-                                    <button id="save-monitoring-config" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Save Configuration
-                                    </button>
-                                    <button id="reset-monitoring-config" class="btn btn-outline">
-                                        <i class="fas fa-undo"></i> Reset to Defaults
-                                    </button>
-                                    <button id="export-monitoring-config" class="btn btn-secondary">
-                                        <i class="fas fa-download"></i> Export Config
-                                    </button>
-                                    <button id="import-monitoring-config" class="btn btn-secondary">
-                                        <i class="fas fa-upload"></i> Import Config
-                                    </button>
+                                    <!-- Configuration Buttons Row -->
+                                    <div class="config-buttons-row">
+                                        <button id="save-monitoring-config" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Save Configuration
+                                        </button>
+                                        <button id="reset-monitoring-config" class="btn btn-outline">
+                                            <i class="fas fa-undo"></i> Reset to Defaults
+                                        </button>
+                                        <button id="export-monitoring-config" class="btn btn-secondary">
+                                            <i class="fas fa-download"></i> Export Config
+                                        </button>
+                                        <button id="import-monitoring-config" class="btn btn-secondary">
+                                            <i class="fas fa-upload"></i> Import Config
+                                        </button>
+                                    </div>
                                     
                                     <!-- Configuration Help Text -->
                                     <div class="config-help-text">
@@ -1753,6 +1790,80 @@ curl -X POST /api/installation/settings/network/timeout \\
                                             <strong>Export/Import:</strong> Download/upload configuration as JSON files
                                             for backup or sharing
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Installation Logs Section -->
+                            <div class="installation-logs-section">
+                                <h3><i class="fas fa-file-alt"></i> Installation Logs</h3>
+                                <p>View logs from the installation monitoring system including CPU usage, app status, display connections, and network health.</p>
+                                
+                                <div class="logs-container">
+                                    <!-- Log Categories Filter -->
+                                    <div class="log-filters">
+                                        <h4><i class="fas fa-filter"></i> Log Categories</h4>
+                                        <div class="log-filter-buttons">
+                                            <button class="btn btn-small log-filter active" data-category="all">
+                                                <i class="fas fa-list"></i> All Logs
+                                            </button>
+                                            <button class="btn btn-small log-filter" data-category="monitoring">
+                                                <i class="fas fa-chart-line"></i> Monitoring
+                                            </button>
+                                            <button class="btn btn-small log-filter" data-category="system">
+                                                <i class="fas fa-desktop"></i> System
+                                            </button>
+                                            <button class="btn btn-small log-filter" data-category="performance">
+                                                <i class="fas fa-tachometer-alt"></i> Performance
+                                            </button>
+                                            <button class="btn btn-small log-filter" data-category="security">
+                                                <i class="fas fa-shield-alt"></i> Security
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Live Log Viewer -->
+                                    <div class="log-viewer-section">
+                                        <div class="log-viewer-header">
+                                            <h4><i class="fas fa-stream"></i> Installation Log Viewer</h4>
+                                            <div class="log-viewer-controls">
+                                                <button class="btn btn-small" id="refresh-installation-logs">
+                                                    <i class="fas fa-sync"></i> Refresh
+                                                </button>
+                                                <button class="btn btn-small" id="clear-installation-log-viewer">
+                                                    <i class="fas fa-trash"></i> Clear
+                                                </button>
+                                                <button class="btn btn-small" id="toggle-installation-auto-refresh">
+                                                    <i class="fas fa-play"></i> Auto-refresh
+                                                </button>
+                                                <button class="btn btn-small" id="export-installation-logs">
+                                                    <i class="fas fa-download"></i> Export
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="log-viewer" id="installation-log-viewer">
+                                            <div class="log-loading">
+                                                <i class="fas fa-spinner fa-spin"></i> Loading installation logs...
+                                            </div>
+                                        </div>
+                                        <div class="log-viewer-stats" id="installation-log-viewer-stats">
+                                            <span class="log-count">0 entries</span>
+                                            <span class="log-last-update">Never updated</span>
+                                            <span class="log-file-path">~/.installation-up-4evr/logs/</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Log File Information -->
+                                    <div class="info-banner">
+                                        <h4>Log Files Location:</h4>
+                                        <p>Installation logs are stored in: <code>~/.installation-up-4evr/logs/</code></p>
+                                        <p>Files include: <code>monitoring-YYYY-MM-DD.log</code>, <code>system-YYYY-MM-DD.log</code>, <code>performance-YYYY-MM-DD.log</code></p>
+                                        <button class="btn btn-small" id="copy-log-path">
+                                            <i class="fas fa-copy"></i> Copy Path
+                                        </button>
+                                        <button class="btn btn-small" id="open-log-directory">
+                                            <i class="fas fa-folder-open"></i> Open Directory
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1856,48 +1967,6 @@ curl -X POST /api/installation/settings/network/timeout \\
                                 </div>
                             </div>
 
-                            <!-- Service Logs -->
-                            <div class="service-logs-section">
-                                <h3><i class="fas fa-file-alt"></i> System Logs</h3>
-                                <div class="logs-container">
-                                    <!-- Live Log Viewer -->
-                                    <div class="log-viewer-section">
-                                        <div class="log-viewer-header">
-                                            <h4><i class="fas fa-stream"></i> Live Log Tail</h4>
-                                            <div class="log-viewer-controls">
-                                                <button class="btn btn-small" id="refresh-logs">
-                                                    <i class="fas fa-sync"></i> Refresh
-                                                </button>
-                                                <button class="btn btn-small" id="clear-log-viewer">
-                                                    <i class="fas fa-trash"></i> Clear
-                                                </button>
-                                                <button class="btn btn-small" id="toggle-auto-refresh">
-                                                    <i class="fas fa-play"></i> Auto-refresh
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="log-viewer" id="log-viewer">
-                                            <div class="log-loading">
-                                                <i class="fas fa-spinner fa-spin"></i> Loading recent logs...
-                                            </div>
-                                        </div>
-                                        <div class="log-viewer-stats" id="log-viewer-stats">
-                                            <span class="log-count">0 entries</span>
-                                            <span class="log-last-update">Never updated</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Terminal Instructions -->
-                                    <div class="info-banner">
-                                        <h4>Terminal Access:</h4>
-                                        <p>For advanced diagnostics, you can also view logs directly from your terminal:</p>
-                                        <pre class="code-block" id="log-command-display">pm2 logs Up4Evr-Backend</pre>
-                                        <button class="btn btn-small" id="copy-log-command">
-                                            <i class="fas fa-copy"></i> Copy Command
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
                         </section>
                     </div>
 
@@ -1915,7 +1984,7 @@ curl -X POST /api/installation/settings/network/timeout \\
                                         <label for="installation-name">Installation Name</label>
                                         <input type="text" id="installation-name" placeholder="My Installation"
                                             value="">
-                                        <small>Unique identifier for this installation</small>
+                                        <small>Name shown in notifications, logs, and health reports - helps identify this installation</small>
                                     </div>
                                     <div class="config-item">
                                         <label for="installation-location">Location</label>
@@ -1973,38 +2042,6 @@ curl -X POST /api/installation/settings/network/timeout \\
                             </div>
 
 
-                            <!-- Auto-Recovery Settings -->
-                            <div class="config-section">
-                                <h3><i class="fas fa-magic"></i> Auto-Recovery Settings</h3>
-                                <div class="config-grid">
-                                    <div class="config-item">
-                                        <label for="auto-restart-apps">Auto-restart Crashed Apps</label>
-                                        <div class="toggle-switch">
-                                            <input type="checkbox" id="auto-restart-apps" checked>
-                                            <span class="toggle-slider"></span>
-                                        </div>
-                                        <small>Automatically restart applications that crash</small>
-                                    </div>
-                                    <div class="config-item">
-                                        <label for="restart-delay">Restart Delay (seconds)</label>
-                                        <input type="number" id="restart-delay" min="1" max="300" value="5">
-                                        <small>Wait time before restarting crashed apps</small>
-                                    </div>
-                                    <div class="config-item">
-                                        <label for="max-restart-attempts">Max Restart Attempts</label>
-                                        <input type="number" id="max-restart-attempts" min="1" max="10" value="3">
-                                        <small>Maximum restart attempts before giving up</small>
-                                    </div>
-                                    <div class="config-item">
-                                        <label for="auto-reboot">Auto-reboot on Critical Errors</label>
-                                        <div class="toggle-switch">
-                                            <input type="checkbox" id="auto-reboot">
-                                            <span class="toggle-slider"></span>
-                                        </div>
-                                        <small>Automatically reboot system for critical failures</small>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Maintenance & Scheduling -->
                             <div class="config-section">
@@ -2057,33 +2094,74 @@ curl -X POST /api/installation/settings/network/timeout \\
                                 </div>
                             </div>
 
-                            <!-- Security Settings -->
+                            <!-- Logging Configuration -->
                             <div class="config-section">
-                                <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                                <h3><i class="fas fa-file-alt"></i> Logging Configuration</h3>
                                 <div class="config-grid">
-                                    <div class="config-item">
-                                        <label for="remote-access">Enable Remote Access</label>
-                                        <div class="toggle-switch">
-                                            <input type="checkbox" id="remote-access" checked>
-                                            <span class="toggle-slider"></span>
-                                        </div>
-                                        <small>Allow remote control via API endpoints</small>
-                                    </div>
-                                    <div class="config-item">
-                                        <label for="api-key">API Access Key</label>
-                                        <div class="api-key-container">
-                                            <input type="password" id="api-key" placeholder="Enter API key" value="">
-                                            <button type="button" class="btn btn-small" id="generate-api-key">
-                                                <i class="fas fa-random"></i> Generate
+                                    <div class="config-item span-2">
+                                        <label for="log-directory">Log Directory</label>
+                                        <div class="log-directory-input-group">
+                                            <input type="text" id="log-directory" placeholder="Default: ~/.installation-up-4evr/logs" value="">
+                                            <button type="button" class="btn btn-small" id="browse-log-directory">
+                                                <i class="fas fa-folder-open"></i> Browse
+                                            </button>
+                                            <button type="button" class="btn btn-small btn-outline" id="reset-log-directory">
+                                                <i class="fas fa-undo"></i> Reset
                                             </button>
                                         </div>
-                                        <small>Required for remote API access</small>
+                                        <small>Directory where installation logs are stored. Leave empty for default location.</small>
+                                        <div class="log-directory-status" id="log-directory-status">
+                                            <span class="status-text">Status: <span id="log-directory-status-text">Checking...</span></span>
+                                            <span class="resolved-path">Resolved: <code id="log-directory-resolved-path">...</code></span>
+                                        </div>
                                     </div>
                                     <div class="config-item">
-                                        <label for="allowed-ips">Allowed IP Addresses</label>
-                                        <textarea id="allowed-ips" rows="3"
-                                            placeholder="192.168.1.0/24&#10;10.0.0.0/8"></textarea>
-                                        <small>CIDR notation, one per line (empty = allow all)</small>
+                                        <label for="log-level">Log Level</label>
+                                        <select id="log-level">
+                                            <option value="DEBUG">Debug (Most Verbose)</option>
+                                            <option value="INFO">Info (Recommended)</option>
+                                            <option value="WARN">Warnings Only</option>
+                                            <option value="ERROR">Errors Only</option>
+                                            <option value="CRITICAL">Critical Only</option>
+                                        </select>
+                                        <small>Minimum level of log messages to record</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="log-retention">Retention (days)</label>
+                                        <input type="number" id="log-retention" min="1" max="365" value="30">
+                                        <small>How long to keep log files (1-365 days)</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="enable-forensics">Enable Forensics</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="enable-forensics" checked>
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Enhanced logging for incident investigation</small>
+                                    </div>
+                                    <div class="config-item">
+                                        <label for="enable-console-logging">Console Logging</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="enable-console-logging" checked>
+                                            <span class="toggle-slider"></span>
+                                        </div>
+                                        <small>Also output logs to console/terminal</small>
+                                    </div>
+                                </div>
+
+                                <div class="log-actions">
+                                    <button type="button" class="btn btn-primary" id="apply-log-config">
+                                        <i class="fas fa-check"></i> Apply Changes
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="test-log-directory">
+                                        <i class="fas fa-vial"></i> Test Directory
+                                    </button>
+                                    <button type="button" class="btn btn-outline" id="open-log-directory-ui">
+                                        <i class="fas fa-external-link-alt"></i> Open Directory
+                                    </button>
+                                </div>
+                            </div>
+
                                     </div>
                                     <div class="config-item">
                                         <label for="encryption-enabled">Enable Encryption</label>

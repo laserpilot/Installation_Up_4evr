@@ -60,8 +60,6 @@ function populateConfigurationForm(config) {
     setCheckbox('app-restart-cycle', config.maintenance?.appRestartCycle || false);
     setValue('restart-cycle-hours', config.maintenance?.restartCycleHours || 24);
     
-    // Security Settings
-    setCheckbox('remote-access', config.security?.remoteAccess !== false);
 }
 
 function getDefaultConfiguration() {
@@ -91,9 +89,6 @@ function getDefaultConfiguration() {
             appRestartCycle: false,
             restartCycleHours: 24
         },
-        security: {
-            remoteAccess: true
-        }
     };
 }
 
@@ -124,9 +119,6 @@ function getCurrentConfiguration() {
             appRestartCycle: getCheckbox('app-restart-cycle'),
             restartCycleHours: parseInt(getValue('restart-cycle-hours')) || 24
         },
-        security: {
-            remoteAccess: getCheckbox('remote-access')
-        }
     };
 }
 
