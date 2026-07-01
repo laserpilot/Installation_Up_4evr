@@ -11,12 +11,18 @@ readable, reversible scripts using only each OS's built-in tooling — **no
 installer, no runtime, no dependencies**. A user can open any script and see
 exactly what it does. Take only the pieces you need.
 
-## Repo layout
-- `guide/` — the long-form knowledge base (the "tips" README + a WIP updated
-  version + original example scripts + screenshots). This is reference material;
-  `guide/README-Updated.md` is the user's in-progress comprehensive rewrite.
-- `toolkit/` — the automation. One folder per platform, each self-contained.
-- `README.md` — high-level entry point linking guide + toolkit.
+## Repo layout — organized by OS
+Top level is one folder per operating system; each holds both the guide and the
+toolkit:
+- `macos/`, `windows/`, `linux/` — each contains:
+  - `README.md` — the OS guide (long-form "why"). macOS is the full write-up
+    (plus `README-Updated.md` = the user's in-progress rewrite, `ScriptExamples/`,
+    `images/`); Windows/Linux guides are currently stubs pointing to the toolkit.
+  - `toolkit/` — the automation (three modules + its own `README.md`).
+- `README.md` (root) — high-level entry point + design principles, links to each OS.
+
+Paths that changed in the OS-first reorg: `guide/*` → `macos/*`;
+`toolkit/<os>/*` → `<os>/toolkit/*`.
 
 ## The toolkit: three modules per platform
 1. **1-system-settings** — read-only `check` + gated `apply` that auto-generates
@@ -29,14 +35,16 @@ exactly what it does. Take only the pieces you need.
    Reuses Module 1's check (`--drift` / `-Drift`) for settings-drift detection.
 
 ## Platform status
-- **macOS** (`toolkit/macos/`, bash + defaults/pmset/launchctl): **built and
+- **macOS** (`macos/toolkit/`, bash + defaults/pmset/launchctl): **built and
   verified on hardware.** Must stay bash-3.2 compatible (no associative arrays).
-- **Windows** (`toolkit/windows/`, PowerShell + registry/Task Scheduler): built,
-  **NOT yet tested on real hardware** — see `toolkit/windows/README.md`
+- **Windows** (`windows/toolkit/`, PowerShell + registry/Task Scheduler): built,
+  **NOT yet tested on real hardware** — see `windows/toolkit/README.md`
   checklist. `.bat` launchers wrap `.ps1` (Windows won't run `.ps1` on
   double-click). Targets Windows PowerShell 5.1 (no ternary; `try/catch` is a
   statement, use the `Get-Cur` helper).
-- **Linux/Ubuntu**: planned (bash + gsettings/systemd).
+- **Linux/Ubuntu** (`linux/toolkit/`, bash + gsettings/systemctl/systemd): built,
+  **NOT yet tested on real hardware** — see `linux/toolkit/README.md` checklist.
+  Targets Ubuntu 22.04+ GNOME; same table-driven engine as macOS.
 
 ## Key conventions
 - Each module's logic is data-driven from a single settings table shared by

@@ -10,7 +10,7 @@ installer, no dependencies. Modeled on the proven `kiosk-tools` approach.
 > before production use. See "Testing checklist" below.
 
 ```
-windows/
+windows/toolkit/
   1-system-settings/   check-settings.bat · apply-settings.bat · settings.conf
   2-keep-alive/         install / list / remove -keepalive.bat
   3-monitor/            monitor.bat · install-monitor.bat · remove-monitor.bat · monitor.conf

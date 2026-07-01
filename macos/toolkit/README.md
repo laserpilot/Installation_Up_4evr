@@ -1,13 +1,14 @@
-# Up 4evr — macOS
+# Up 4evr — macOS Toolkit
 
-The macOS half of the toolkit. Same three modules as the other platforms, built
-on tools already in macOS (`defaults`, `pmset`, `launchctl`, `system_profiler`,
-`curl`) — no installer, no dependencies, works with the system bash (3.2).
+The macOS toolkit. Same three modules as the other platforms, built on tools
+already in macOS (`defaults`, `pmset`, `launchctl`, `system_profiler`, `curl`) —
+no installer, no dependencies, works with the system bash (3.2). For the
+long-form *why* behind these settings, see the [macOS guide](../README.md).
 
 > Status: **built and tested end-to-end on macOS hardware.**
 
 ```
-macos/
+macos/toolkit/
   1-system-settings/   check-settings.sh · apply-settings.sh · settings.conf
   2-keep-alive/        install / list / remove -keepalive.command
   3-monitor/           monitor.sh · monitor.conf · install-monitor.command
@@ -21,7 +22,7 @@ from Terminal. Open any of them — there's nothing hidden.
 ## Quick start
 
 ```bash
-cd toolkit/macos
+cd macos/toolkit
 ```
 
 ### 1 · System settings  (`1-system-settings/`)

@@ -16,7 +16,7 @@ dependencies.
 > `xrandr` (X11); under pure Wayland it degrades gracefully.
 
 ```
-linux/
+linux/toolkit/
   1-system-settings/   check-settings.sh · apply-settings.sh · settings.conf
   2-keep-alive/        install / list / remove -keepalive.sh
   3-monitor/           monitor.sh · monitor.conf · install-monitor.sh
@@ -30,7 +30,7 @@ keep-alive need the session's DBus/display).
 ## Quick start
 
 ```bash
-cd toolkit/linux
+cd linux/toolkit
 ```
 
 ### 1 · System settings  (`1-system-settings/`)
