@@ -14,18 +14,22 @@ Three modules, each independent:
    app is alive and the display is connected, detect setting drift, and ping
    Slack when something's wrong.
 
-> Status: **macOS is built and tested.** `windows/` and `linux/` will mirror the
-> same three modules. The Windows versions follow the proven `kiosk-tools`
-> pattern (`.bat` + `.ps1`).
+> Status: **macOS is built and tested on hardware.** **Windows is built**
+> (PowerShell + `.bat`, following the proven `kiosk-tools` pattern) but **not yet
+> validated on a real Windows machine** — see `windows/README.md`. **Linux is
+> planned.**
 
 ```
 toolkit/
-  macos/
+  macos/                 built + tested
     1-system-settings/   check-settings.sh · apply-settings.sh · settings.conf
     2-keep-alive/        install / list / remove -keepalive.command
     3-monitor/           monitor.sh · monitor.conf · install-monitor.command
-  windows/   (planned)
-  linux/     (planned)
+  windows/               built, needs hardware test
+    1-system-settings/   check-settings.bat · apply-settings.bat · settings.conf
+    2-keep-alive/        install / list / remove -keepalive.bat
+    3-monitor/           monitor.bat · install-monitor.bat · monitor.conf
+  linux/                 planned
 ```
 
 There is **no installer and no CLI to learn.** Scripts are run directly or
