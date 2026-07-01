@@ -20,7 +20,7 @@ Three modules, each independent, mirrored across three platforms:
 |----------|--------|-------------|
 | **macOS**   | built + tested on hardware | [macos/README.md](macos/README.md) |
 | **Windows** | built, needs a hardware test | [windows/README.md](windows/README.md) |
-| **Linux**   | planned | — |
+| **Linux**   | built (Ubuntu/GNOME), needs a hardware test | [linux/README.md](linux/README.md) |
 
 Each platform folder is self-contained, uses only what ships with that OS (no
 installer, no runtime), and can be zipped and dropped on a target machine:
@@ -29,7 +29,7 @@ installer, no runtime), and can be zipped and dropped on a target machine:
 toolkit/
   macos/     bash + defaults/pmset/launchctl        (.command / .sh)
   windows/   PowerShell + registry/Task Scheduler   (.bat / .ps1)
-  linux/     bash + gsettings/systemd               (planned)
+  linux/     bash + gsettings/systemctl/systemd     (.sh)
 ```
 
 There is **no CLI to learn** and nothing to install. Scripts are run directly or

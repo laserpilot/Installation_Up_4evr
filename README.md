@@ -29,7 +29,7 @@ scripts, one set per platform. Three modules: **system settings**,
 - [`toolkit/README.md`](toolkit/README.md) — toolkit overview + design
 - [`toolkit/macos/`](toolkit/macos/) — macOS (built + tested)
 - [`toolkit/windows/`](toolkit/windows/) — Windows (built, needs a hardware test)
-- `toolkit/linux/` — Linux/Ubuntu (planned)
+- [`toolkit/linux/`](toolkit/linux/) — Linux/Ubuntu GNOME (built, needs a hardware test)
 
 ## Which do I want?
 
@@ -38,7 +38,3 @@ scripts, one set per platform. Three modules: **system settings**,
 - **"I want to understand what to change and why."** → `guide/`.
 
 ---
-
-*This is a ground-up rework of an earlier, much larger web/Electron tool, now
-distilled into these scripts. The old app is preserved at the git tag
-`archive/v1-app`.*
