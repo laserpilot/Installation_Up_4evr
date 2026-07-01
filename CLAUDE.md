@@ -1,90 +1,52 @@
-# Claude Context for Installation Up 4evr Automation Tool
+# Claude Context for Installation Up 4evr
 
-## Project Overview
-Building an automation tool to simplify Mac installation setup for creative technology installations. The tool will automate system preference changes, create launch agents, provide monitoring/logging dashboards, and health check scripts with a simple GUI interface.
+## What this project is now
+A **dependency-light, modular toolkit** for setting up always-on computers for
+creative installations (kiosks, exhibits, unattended machines). It replaces an
+earlier ~47k-line web/Electron app that had become over-engineered — that
+version is preserved at the git tag `archive/v1-app`.
 
-## Architecture Decision
-- **Platform**: Web app (local server + browser interface)
-- **Backend**: Node.js with shell script integration
-- **Frontend**: Modern web framework (React/Vue.js)
-- **Structure**: Modular design for easy maintenance
+The philosophy (modeled on a proven Windows `kiosk-tools` reference): plain,
+readable, reversible scripts using only each OS's built-in tooling — **no
+installer, no runtime, no dependencies**. A user can open any script and see
+exactly what it does. Take only the pieces you need.
 
-## Current Status - COMPLETE ✅
-- ✅ Analyzed existing README.md and shell scripts
-- ✅ Designed modular tool architecture  
-- ✅ Created system preferences automation module (12 settings)
-- ✅ Built launch agent generator and manager (full lifecycle)
-- ✅ Created installation profiles system (5 built-in templates)
-- ✅ Built comprehensive monitoring system (CPU, memory, disk, apps, displays)
-- ✅ Added remote control interface (10+ commands)
-- ✅ Implemented multi-channel notification system (Slack, Discord, webhooks)
-- ✅ Created persistent logging with file storage
-- ✅ Built heartbeat system for uptime monitoring
-- ✅ Created web server with 50+ API endpoints
-- ✅ Built complete frontend with drag-and-drop interface
-- ✅ Packaged as Electron app for native distribution
-- ✅ Written comprehensive documentation
-- ✅ All modules tested and working
-- ✅ Committed and pushed to GitHub (2025_updates branch)
+## Repo layout
+- `guide/` — the long-form knowledge base (the "tips" README + a WIP updated
+  version + original example scripts + screenshots). This is reference material;
+  `guide/README-Updated.md` is the user's in-progress comprehensive rewrite.
+- `toolkit/` — the automation. One folder per platform, each self-contained.
+- `README.md` — high-level entry point linking guide + toolkit.
 
-## Key Requirements
-- Automate all system preference changes from the README checklist
-- Generate and manage launch agents 
-- Monitoring dashboard with health checks
-- Logging and notification system (Slack integration)
-- Simple GUI interface
-- Modular design for easy extension
+## The toolkit: three modules per platform
+1. **1-system-settings** — read-only `check` + gated `apply` that auto-generates
+   an `undo`. Settings enabled/disabled via a `settings.conf`. A "danger zone"
+   (Gatekeeper/SIP/auto-login) is off by default.
+2. **2-keep-alive** — keep an app running via the OS-native supervisor, with
+   install/list/remove. macOS: `launchd` + `open -W`. Windows: Task Scheduler
+   watchdog.
+3. **3-monitor** — scheduled specs logging + app/display checks + Slack alerts.
+   Reuses Module 1's check (`--drift` / `-Drift`) for settings-drift detection.
 
-## Important Notes
-- All existing scripts are defensive/monitoring utilities (verified safe)
-- Focus on 2025 updates mentioned in README (Apple Silicon, SIP, signing requirements)
-- Must handle modern macOS security restrictions
-- Target audience: creative technologists setting up installation computers
+## Platform status
+- **macOS** (`toolkit/macos/`, bash + defaults/pmset/launchctl): **built and
+  verified on hardware.** Must stay bash-3.2 compatible (no associative arrays).
+- **Windows** (`toolkit/windows/`, PowerShell + registry/Task Scheduler): built,
+  **NOT yet tested on real hardware** — see `toolkit/windows/README.md`
+  checklist. `.bat` launchers wrap `.ps1` (Windows won't run `.ps1` on
+  double-click). Targets Windows PowerShell 5.1 (no ternary; `try/catch` is a
+  statement, use the `Get-Cur` helper).
+- **Linux/Ubuntu**: planned (bash + gsettings/systemd).
 
-## Test Commands
-- `cd backend && npm start` - Start web server
-- `cd backend && npm test` - Run test suite  
-- `cd backend && npm run test:system-prefs` - Test system preferences
-- `cd backend && npm run test:launch-agents` - Test launch agents
-- Open http://localhost:3001 in browser - Access web interface
+## Key conventions
+- Each module's logic is data-driven from a single settings table shared by
+  check + apply, so there's one source of truth (macOS: `settings-table.sh`;
+  Windows: `settings-table.ps1`).
+- Verify changes on real hardware before claiming done. macOS can be tested
+  locally; Windows/Linux need their own machines.
+- Branch: `toolkit`. Old app archived at tag `archive/v1-app`.
 
-## Final Implementation Summary
-
-### Core Modules Built:
-1. **system-prefs.js** - 12 automated macOS settings with verification
-2. **launch-agents.js** - Complete plist generation and management
-3. **profiles.js** - Installation profile system with 5 templates
-4. **monitoring.js** - Real-time system monitoring with alerts
-5. **remote-control.js** - 10+ remote control commands
-6. **notifications.js** - Multi-channel notification system
-
-### Frontend & Distribution:
-- **Web interface** - Apple-style design with drag-and-drop
-- **Electron app** - Native macOS app with file access and sudo
-- **API server** - 50+ REST endpoints for all functionality
-
-### Testing & Documentation:
-- **4 comprehensive test suites** - All modules verified working
-- **Complete documentation** - AUTOMATION-TOOL-README.md
-- **GitHub repository** - Pushed to 2025_updates branch
-
-## How to Use
-```bash
-# Web version
-cd backend && npm install && npm start
-# Open http://localhost:3001
-
-# Electron app  
-npm install && npm run dev
-
-# Run all tests
-cd backend && npm test
-```
-
-## Key Files
-- `AUTOMATION-TOOL-README.md` - Complete user documentation
-- `backend/modules/` - 6 core automation modules
-- `backend/test-*.js` - Test suites for all functionality
-- `frontend/` - Web interface (HTML/CSS/JS)
-- `electron/` - Native app wrapper
-- `ScriptExamples/` - Original shell scripts (preserved)
+## Reference
+- The Windows toolkit patterns were harvested from a `kiosk-tools` project
+  (setup-kiosk-pc.bat / audit-kiosk.ps1) — registry writes, undo generation,
+  scheduled tasks. BgInfo was intentionally omitted.
